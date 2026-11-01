@@ -1,0 +1,1668 @@
+<!-- ... existing code ... -->
+<html lang="fr" class="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EDT track - Pointage & Planning Administratif</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            frBlue: {
+              DEFAULT: '#002654',
+              hover: '#001a3a',
+              light: '#0b4da2',
+              50: '#f0f5fc',
+              100: '#e1ecf8',
+              200: '#c2d9f2'
+            },
+            frRed: {
+              DEFAULT: '#ED2939',
+              hover: '#d81829',
+              light: '#f84d5b',
+              50: '#fef2f2',
+              100: '#fee2e2',
+              200: '#fecaca'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #printReportArea, #printReportArea * {
+        visibility: visible;
+      }
+      #printReportArea {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        color: #0f172a !important;
+        background: #ffffff !important;
+        border: none !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen font-sans flex flex-col antialiased selection:bg-frBlue selection:text-white">
+
+  <!-- LOGIN SCREEN -->
+  <div id="loginContainer" class="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl w-full max-w-md p-8 shadow-2xl relative overflow-hidden">
+      <div class="absolute top-0 left-0 w-full h-2 flex">
+        <div class="h-full w-1/3 bg-[#002654]"></div>
+        <div class="h-full w-1/3 bg-white"></div>
+        <div class="h-full w-1/3 bg-[#ED2939]"></div>
+      </div>
+      <div class="flex flex-col items-center mb-8 mt-4">
+        <img src="image_ad5906.png" alt="ERT Logo" class="h-24 w-auto mb-4 drop-shadow-md">
+        <h2 class="text-2xl font-black text-slate-900">EDT track</h2>
+        <p class="text-sm text-slate-500 font-medium text-center mt-1">Portail d'Administration Sécurisé</p>
+      </div>
+
+      <div id="loginStep1">
+        <label class="block text-xs font-bold text-slate-700 mb-2">Adresse Email Autorisée</label>
+        <input type="email" id="loginEmail" placeholder="admin@ert.tn" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-900 focus:outline-none focus:border-frBlue focus:ring-1 focus:ring-frBlue transition mb-4">
+        <button onclick="verifyEmail()" class="w-full bg-[#002654] hover:bg-frBlue-hover text-white font-bold py-3 rounded-xl shadow-md transition flex items-center justify-center gap-2">
+          Suivant <i class="fa-solid fa-arrow-right"></i>
+        </button>
+        <p id="loginError1" class="text-xs text-frRed font-bold mt-3 text-center hidden">Accès refusé. Email non reconnu.</p>
+      </div>
+
+      <div id="loginStep2" class="hidden">
+        <p class="text-xs text-slate-500 mb-4 text-center">Un code de confirmation a été envoyé à <strong id="displayLoginEmail" class="text-slate-800"></strong>.<br>(Utilisez 123456 pour tester)</p>
+        <label class="block text-xs font-bold text-slate-700 mb-2">Code de Confirmation</label>
+        <input type="text" id="loginCode" placeholder="••••••" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-center tracking-widest text-lg font-mono text-slate-900 focus:outline-none focus:border-frBlue focus:ring-1 focus:ring-frBlue transition mb-4" maxlength="6">
+        <button onclick="verifyCode()" class="w-full bg-[#ED2939] hover:bg-frRed-hover text-white font-bold py-3 rounded-xl shadow-md transition flex items-center justify-center gap-2">
+          <i class="fa-solid fa-unlock"></i> Se Connecter
+        </button>
+        <button onclick="backToStep1()" class="w-full mt-3 text-xs font-bold text-slate-500 hover:text-slate-700 transition">
+          Changer d'email
+        </button>
+        <p id="loginError2" class="text-xs text-frRed font-bold mt-3 text-center hidden">Code incorrect.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN APP WRAPPER -->
+  <div id="appContainer" class="flex-1 flex flex-col hidden min-h-screen">
+  
+  <!-- TOP DECORATIVE TRICOLOR BAND -->
+  <div class="h-1.5 w-full flex">
+    <div class="h-full w-1/3 bg-[#002654]"></div>
+    <div class="h-full w-1/3 bg-white border-y border-slate-200"></div>
+    <div class="h-full w-1/3 bg-[#ED2939]"></div>
+  </div>
+
+  <!-- TOP NAVIGATION BAR -->
+  <header class="bg-white/95 backdrop-blur border-b border-slate-200 sticky top-0 z-40 px-4 lg:px-8 py-3 flex items-center justify-between shadow-sm">
+    <div class="flex items-center gap-3">
+      <!-- Logo Image -->
+      <img src="image_ad5906.png" alt="ERT Logo" class="h-11 w-auto drop-shadow-sm">
+      <div>
+        <h1 class="font-black text-xl leading-tight tracking-tight text-slate-900 flex items-center gap-2">
+          <span>EDT</span><span class="text-frRed font-extrabold">track</span>
+          <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-frBlue-50 text-frBlue border border-frBlue-200 uppercase tracking-wide">Administration</span>
+        </h1>
+        <p class="text-xs text-slate-500 font-medium">Pointage • Planning 12h • 3 Sites</p>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <nav class="hidden md:flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-xl border border-slate-200 text-sm">
+      <button onclick="switchTab('pointage')" id="tabBtn-pointage" class="nav-tab px-4 py-2 rounded-lg font-bold transition flex items-center gap-2 bg-[#002654] text-white shadow-sm">
+        <i class="fa-solid fa-fingerprint"></i> Pointage Direct
+      </button>
+      <button onclick="switchTab('employees')" id="tabBtn-employees" class="nav-tab px-4 py-2 rounded-lg font-semibold text-slate-600 hover:text-frBlue hover:bg-white/80 transition flex items-center gap-2">
+        <i class="fa-solid fa-users"></i> Personnel
+      </button>
+      <button onclick="switchTab('planning')" id="tabBtn-planning" class="nav-tab px-4 py-2 rounded-lg font-semibold text-slate-600 hover:text-frBlue hover:bg-white/80 transition flex items-center gap-2">
+        <i class="fa-solid fa-calendar-days"></i> Planning Programmable
+      </button>
+      <button onclick="switchTab('stats')" id="tabBtn-stats" class="nav-tab px-4 py-2 rounded-lg font-semibold text-slate-600 hover:text-frBlue hover:bg-white/80 transition flex items-center gap-2">
+        <i class="fa-solid fa-chart-pie"></i> Rapports & PDF
+      </button>
+      <button onclick="switchTab('admin')" id="tabBtn-admin" class="nav-tab px-4 py-2 rounded-lg font-semibold text-slate-600 hover:text-frBlue hover:bg-white/80 transition flex items-center gap-2">
+        <i class="fa-solid fa-gear"></i> Paramètres
+      </button>
+    </nav>
+
+    <!-- Quick Status / Live Clock -->
+    <div class="flex items-center gap-3">
+      <div class="text-right hidden sm:block">
+        <div id="liveClock" class="text-base font-extrabold text-frBlue tracking-wider font-mono">00:00:00</div>
+        <div id="liveDate" class="text-xs text-slate-500 capitalize font-medium">Date</div>
+      </div>
+      <button onclick="openModal('employeeModal')" class="bg-frRed hover:bg-frRed-hover text-white text-xs sm:text-sm font-bold px-3.5 py-2.5 rounded-xl flex items-center gap-2 shadow-sm transition">
+        <i class="fa-solid fa-user-plus"></i> <span class="hidden sm:inline">Ajouter Salarié</span>
+      </button>
+      <button onclick="logout()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs sm:text-sm font-bold px-3.5 py-2.5 rounded-xl flex items-center shadow-sm transition" title="Se déconnecter">
+        <i class="fa-solid fa-power-off"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- MOBILE NAVIGATION BAR -->
+  <div class="md:hidden flex items-center justify-around bg-white border-b border-slate-200 p-2 text-xs">
+    <button onclick="switchTab('pointage')" id="mTabBtn-pointage" class="px-3 py-1.5 rounded-md font-bold text-frBlue flex flex-col items-center">
+      <i class="fa-solid fa-fingerprint text-base"></i><span>Pointage</span>
+    </button>
+    <button onclick="switchTab('employees')" id="mTabBtn-employees" class="px-3 py-1.5 rounded-md font-medium text-slate-500 flex flex-col items-center">
+      <i class="fa-solid fa-users text-base"></i><span>Équipe</span>
+    </button>
+    <button onclick="switchTab('planning')" id="mTabBtn-planning" class="px-3 py-1.5 rounded-md font-medium text-slate-500 flex flex-col items-center">
+      <i class="fa-solid fa-calendar-days text-base"></i><span>Planning</span>
+    </button>
+    <button onclick="switchTab('stats')" id="mTabBtn-stats" class="px-3 py-1.5 rounded-md font-medium text-slate-500 flex flex-col items-center">
+      <i class="fa-solid fa-chart-pie text-base"></i><span>Rapports</span>
+    </button>
+    <button onclick="switchTab('admin')" id="mTabBtn-admin" class="px-3 py-1.5 rounded-md font-medium text-slate-500 flex flex-col items-center">
+      <i class="fa-solid fa-gear text-base"></i><span>Admin</span>
+    </button>
+  </div>
+
+  <!-- MAIN CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+
+    <!-- ========================================== -->
+    <!-- 1. TAB: POINTAGE DIRECT                    -->
+    <!-- ========================================== -->
+    <section id="tab-pointage" class="tab-content space-y-6">
+      
+      <!-- Top Overview Stats -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-white border border-slate-200 p-4 rounded-2xl flex items-center justify-between shadow-sm border-l-4 border-l-emerald-500">
+          <div>
+            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Présents en poste</p>
+            <h3 id="statCountPresent" class="text-2xl font-black text-emerald-600 mt-1">0</h3>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
+            <i class="fa-solid fa-user-check text-lg"></i>
+          </div>
+        </div>
+
+        <div class="bg-white border border-slate-200 p-4 rounded-2xl flex items-center justify-between shadow-sm border-l-4 border-l-frBlue">
+          <div>
+            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Effectif Total</p>
+            <h3 id="statCountTotal" class="text-2xl font-black text-frBlue mt-1">0</h3>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-frBlue-50 border border-frBlue-200 flex items-center justify-center text-frBlue">
+            <i class="fa-solid fa-id-badge text-lg"></i>
+          </div>
+        </div>
+
+        <div class="bg-white border border-slate-200 p-4 rounded-2xl flex items-center justify-between shadow-sm border-l-4 border-l-amber-500">
+          <div>
+            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Équipe Jour (12h)</p>
+            <h3 id="statCountDay" class="text-2xl font-black text-amber-600 mt-1">0</h3>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600">
+            <i class="fa-solid fa-sun text-lg"></i>
+          </div>
+        </div>
+
+        <div class="bg-white border border-slate-200 p-4 rounded-2xl flex items-center justify-between shadow-sm border-l-4 border-l-indigo-600">
+          <div>
+            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Équipe Nuit (12h)</p>
+            <h3 id="statCountNight" class="text-2xl font-black text-indigo-700 mt-1">0</h3>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-700">
+            <i class="fa-solid fa-moon text-lg"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Attendance Roster with Search and Filter -->
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-6 pb-4 border-b border-slate-200">
+          <div>
+            <h2 class="text-lg font-black text-slate-900 flex items-center gap-2">
+              <i class="fa-solid fa-id-card text-frBlue"></i> Registre de Pointage en Temps Réel
+            </h2>
+            <p class="text-xs text-slate-500 mt-0.5">Pointer les arrivées et départs, muter de site et enregistrer les heures supplémentaires.</p>
+          </div>
+
+          <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+            <div class="relative flex-1 sm:w-60">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-400"></i>
+              <input type="text" id="searchAttendance" oninput="renderAttendanceList()" placeholder="Rechercher nom ou matricule..." class="w-full bg-slate-50 border border-slate-300 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-frBlue focus:bg-white transition">
+            </div>
+            <select id="filterSiteAttendance" onchange="renderAttendanceList()" class="bg-slate-50 border border-slate-300 rounded-xl px-3 py-1.5 text-xs text-slate-700 font-medium focus:outline-none focus:border-frBlue focus:bg-white">
+              <option value="ALL">Tous les sites</option>
+              <option value="Pierre Mendès France">Pierre Mendès France</option>
+              <option value="Robert Desnos">Robert Desnos</option>
+              <option value="Georges Brassens">Georges Brassens</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Attendance Cards Grid -->
+        <div id="attendanceGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- Dynamic cards injected via JS -->
+        </div>
+      </div>
+
+      <!-- Pointing History of the Day -->
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-clock-rotate-left text-frBlue"></i> Journal des Événements du Jour
+          </h3>
+          <span class="text-xs bg-slate-100 text-slate-600 px-3 py-1 rounded-full font-bold font-mono border border-slate-200" id="logCountBadge">0 pointages</span>
+        </div>
+        <div class="overflow-x-auto custom-scroll max-h-72 border border-slate-200 rounded-xl">
+          <table class="w-full text-left text-xs text-slate-700">
+            <thead class="bg-slate-100 text-slate-600 uppercase text-[10px] tracking-wider sticky top-0 border-b border-slate-200">
+              <tr>
+                <th class="p-3">Collaborateur</th>
+                <th class="p-3">Heure</th>
+                <th class="p-3">Action</th>
+                <th class="p-3">Site Effectif</th>
+                <th class="p-3">Heures Supp</th>
+                <th class="p-3">Régime</th>
+              </tr>
+            </thead>
+            <tbody id="dailyLogTable" class="divide-y divide-slate-200 font-medium bg-white">
+              <!-- Injected via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 2. TAB: GESTION DU PERSONNEL               -->
+    <!-- ========================================== -->
+    <section id="tab-employees" class="tab-content hidden space-y-6">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+        <div>
+          <h2 class="text-lg font-black text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-users-gear text-frBlue"></i> Effectif & Fiches Collaborateurs
+          </h2>
+          <p class="text-xs text-slate-500">Photos, matricules, shifts (12h Jour / Nuit) et lieux d'affectation par défaut.</p>
+        </div>
+        <button onclick="openModal('employeeModal')" class="bg-frBlue hover:bg-frBlue-hover text-white font-bold text-xs sm:text-sm px-4 py-2.5 rounded-xl flex items-center gap-2 transition shadow-sm">
+          <i class="fa-solid fa-plus"></i> Créer Nouveau Salarié
+        </button>
+      </div>
+
+      <!-- Employees Table / Card List -->
+      <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+        <div class="overflow-x-auto custom-scroll">
+          <table class="w-full text-left text-xs sm:text-sm text-slate-700">
+            <thead class="bg-slate-100 text-slate-600 text-xs uppercase tracking-wider border-b border-slate-200 font-bold">
+              <tr>
+                <th class="p-4">Photo & Collaborateur</th>
+                <th class="p-4">Matricule</th>
+                <th class="p-4">Équipe (Shift)</th>
+                <th class="p-4">Lieu d'Affectation Principal</th>
+                <th class="p-4">Statut Actuel</th>
+                <th class="p-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="employeeTableBody" class="divide-y divide-slate-200 bg-white">
+              <!-- Injected via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 3. TAB: PLANNING PROGRAMMÉ                 -->
+    <!-- ========================================== -->
+    <section id="tab-planning" class="tab-content hidden space-y-6">
+      <div class="bg-white border border-slate-200 p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
+        <div>
+          <h2 class="text-lg font-black text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-calendar-week text-frBlue"></i> Emploi du Temps Hebdomadaire Programmable
+          </h2>
+          <p class="text-xs text-slate-500">Planifiez les rotations 12h (5j/semaine), Repos Hebdo (RH), Congés Annuels (CA) et mutations de site.</p>
+        </div>
+        
+        <div class="flex items-center gap-3">
+          <button onclick="changeWeek(-1)" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold border border-slate-300 transition">
+            <i class="fa-solid fa-chevron-left mr-1"></i> Semaine Préc.
+          </button>
+          <span id="currentWeekLabel" class="text-xs font-extrabold px-3.5 py-1.5 bg-frBlue-50 rounded-xl border border-frBlue-200 text-frBlue">
+            Semaine
+          </span>
+          <button onclick="changeWeek(1)" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold border border-slate-300 transition">
+            Semaine Suiv. <i class="fa-solid fa-chevron-right ml-1"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Planning Key Legend -->
+      <div class="flex flex-wrap items-center gap-2 text-xs bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+        <span class="text-slate-500 font-bold mr-2">Légende :</span>
+        <span class="flex items-center gap-1.5 bg-amber-50 text-amber-700 px-2.5 py-1 rounded-lg border border-amber-200 font-bold">
+          <i class="fa-solid fa-sun"></i> Jour (12h)
+        </span>
+        <span class="flex items-center gap-1.5 bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-lg border border-indigo-200 font-bold">
+          <i class="fa-solid fa-moon"></i> Nuit (12h)
+        </span>
+        <span class="flex items-center gap-1.5 bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg border border-slate-300 font-bold">
+          <i class="fa-solid fa-bed"></i> RH (Repos)
+        </span>
+        <span class="flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-lg border border-emerald-200 font-bold">
+          <i class="fa-solid fa-umbrella-beach"></i> CA (Congé)
+        </span>
+        <span class="text-slate-400 ml-auto italic text-[11px]">* Cliquez sur une case pour modifier</span>
+      </div>
+
+      <!-- Schedule Matrix Table -->
+      <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+        <div class="overflow-x-auto custom-scroll">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead id="planningTableHead" class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+              <!-- Injected headers with dynamic dates -->
+            </thead>
+            <tbody id="planningTableBody" class="divide-y divide-slate-200 bg-white">
+              <!-- Injected schedule lines -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 4. TAB: STATISTIQUES & RAPPORTS EXPORT PDF -->
+    <!-- ========================================== -->
+    <section id="stats" class="tab-content hidden space-y-6">
+      
+      <!-- Export Bar -->
+      <div class="bg-white border border-slate-200 p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+        <div>
+          <h2 class="text-lg font-black text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-chart-line text-frBlue"></i> Rapports d'Assiduité & Graphiques
+          </h2>
+          <p class="text-xs text-slate-500">Synthèse d'équipe, calcul des heures supplémentaires et édition officielle PDF.</p>
+        </div>
+        <button onclick="exportToPDF()" class="bg-frRed hover:bg-frRed-hover text-white font-bold text-xs sm:text-sm px-4 py-2.5 rounded-xl flex items-center gap-2 shadow-sm transition">
+          <i class="fa-solid fa-file-pdf"></i> Imprimer / Exporter en PDF
+        </button>
+      </div>
+
+      <!-- Charts Row -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div class="bg-white border border-slate-200 p-5 rounded-2xl flex flex-col items-center shadow-sm">
+          <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-4 w-full flex items-center justify-between">
+            <span>Répartition par Site</span>
+            <i class="fa-solid fa-location-dot text-frBlue"></i>
+          </h3>
+          <div class="relative w-full max-w-[240px] aspect-square">
+            <canvas id="sitePieChart"></canvas>
+          </div>
+        </div>
+
+        <div class="bg-white border border-slate-200 p-5 rounded-2xl flex flex-col items-center shadow-sm">
+          <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-4 w-full flex items-center justify-between">
+            <span>Équipes Jour (12h) vs Nuit (12h)</span>
+            <i class="fa-solid fa-arrows-split-up-and-left text-amber-500"></i>
+          </h3>
+          <div class="relative w-full max-w-[240px] aspect-square">
+            <canvas id="teamPieChart"></canvas>
+          </div>
+        </div>
+
+        <div class="bg-white border border-slate-200 p-5 rounded-2xl flex flex-col justify-between shadow-sm">
+          <div>
+            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-4 flex items-center justify-between">
+              <span>Volume des Heures</span>
+              <i class="fa-solid fa-clock text-emerald-600"></i>
+            </h3>
+            <div class="space-y-3 pt-1">
+              <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 flex justify-between items-center">
+                <span class="text-xs font-medium text-slate-600">Heures Normales de Service (12h/j)</span>
+                <span id="reportTotalRegularHours" class="text-base font-extrabold text-frBlue">0 h</span>
+              </div>
+              <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 flex justify-between items-center">
+                <span class="text-xs font-medium text-slate-600">Heures Supplémentaires (HS)</span>
+                <span id="reportTotalOvertimeHours" class="text-base font-extrabold text-amber-600">+0 h</span>
+              </div>
+              <div class="bg-frBlue-50 p-3.5 rounded-xl border border-frBlue-200 flex justify-between items-center">
+                <span class="text-xs font-bold text-frBlue">Volume Total Cumulé</span>
+                <span id="reportGrandTotalHours" class="text-xl font-black text-frBlue">0 h</span>
+              </div>
+            </div>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-4 italic">* Calcul basé sur les pointages enregistrés et déclarations d'heures supplémentaires.</p>
+        </div>
+      </div>
+
+      <!-- Printable Report View Section -->
+      <div id="printReportArea" class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+        <div class="border-b-2 border-slate-200 pb-4 mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg overflow-hidden flex border border-slate-300">
+              <div class="w-1/3 h-full bg-[#002654]"></div>
+              <div class="w-1/3 h-full bg-white"></div>
+              <div class="w-1/3 h-full bg-[#ED2939]"></div>
+            </div>
+            <div>
+              <h3 class="text-lg font-black text-slate-900 tracking-tight">RAPPORT OFFICIEL DE POINTAGE — EDT track</h3>
+              <p class="text-xs text-slate-500 font-medium">Sites : Pierre Mendès France • Robert Desnos • Georges Brassens</p>
+            </div>
+          </div>
+          <div class="text-right text-xs text-slate-500 mt-2 sm:mt-0">
+            <p>Date d'édition : <span id="reportPrintDate" class="font-bold text-slate-800"></span></p>
+            <p class="text-[11px] text-slate-400">Direction Administrative & RH</p>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border border-slate-300">
+            <thead class="bg-slate-100 text-slate-700 font-bold">
+              <tr>
+                <th class="p-3 border border-slate-300">Collaborateur & Photo</th>
+                <th class="p-3 border border-slate-300">Matricule</th>
+                <th class="p-3 border border-slate-300">Shift Normal</th>
+                <th class="p-3 border border-slate-300">Site Actuel</th>
+                <th class="p-3 border border-slate-300 text-center">Pointages</th>
+                <th class="p-3 border border-slate-300 text-center">Heures Normales</th>
+                <th class="p-3 border border-slate-300 text-center">Heures Supp (HS)</th>
+                <th class="p-3 border border-slate-300 text-center">Absences</th>
+                <th class="p-3 border border-slate-300 text-right">Total Heures</th>
+              </tr>
+            </thead>
+            <tbody id="reportTableBody" class="divide-y divide-slate-200 text-slate-700">
+              <!-- Injected via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 5. TAB: PARAMÈTRES ADMIN                   -->
+    <!-- ========================================== -->
+    <section id="tab-admin" class="tab-content hidden space-y-6">
+      <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
+        <div class="border-b border-slate-200 pb-4 mb-5">
+          <h2 class="text-lg font-black text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-shield-halved text-frBlue"></i> Gestion des Accès Administrateurs
+          </h2>
+          <p class="text-xs text-slate-500 mt-1">Gérez les adresses email autorisées à se connecter à ce portail sécurisé.</p>
+        </div>
+
+        <div class="max-w-xl">
+          <label class="block text-xs font-bold text-slate-700 mb-2">Ajouter un nouvel administrateur</label>
+          <div class="flex gap-2 mb-6">
+            <input type="email" id="newAdminEmail" placeholder="nouvel.admin@ert.tn" class="flex-1 bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-frBlue focus:bg-white transition">
+            <button onclick="addAdminEmail()" class="bg-frBlue hover:bg-frBlue-hover text-white font-bold px-4 py-2.5 rounded-xl shadow-sm transition flex items-center gap-2">
+              <i class="fa-solid fa-plus"></i> Ajouter
+            </button>
+          </div>
+
+          <h3 class="text-sm font-bold text-slate-800 mb-3">Comptes Autorisés</h3>
+          <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+            <ul id="adminEmailsList" class="divide-y divide-slate-100">
+              <!-- Injected via JS -->
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ========================================== -->
+  <!-- MODAL: AJOUT / MODIFICATION EMPLOYÉ       -->
+  <!-- ========================================== -->
+  <div id="employeeModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white border border-slate-200 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative">
+      <button onclick="closeModal('employeeModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-lg">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <h3 id="employeeModalTitle" class="text-lg font-black text-slate-900 mb-4 flex items-center gap-2">
+        <i class="fa-solid fa-user-plus text-frBlue"></i> Fiche Collaborateur
+      </h3>
+
+      <form id="employeeForm" onsubmit="saveEmployee(event)" class="space-y-4">
+        <input type="hidden" id="empId">
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Nom complet *</label>
+            <input type="text" id="empName" required placeholder="Ex: Sarah Ben Salem" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-frBlue focus:bg-white">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Matricule *</label>
+            <input type="text" id="empMatricule" required placeholder="Ex: ADM-204" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-frBlue focus:bg-white">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Équipe Affectée *</label>
+            <select id="empShift" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-frBlue focus:bg-white font-medium">
+              <option value="JOUR">Équipe de Jour (12h)</option>
+              <option value="NUIT">Équipe de Nuit (12h)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Lieu d'Affectation Principal *</label>
+            <select id="empSite" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-frBlue focus:bg-white font-medium">
+              <option value="Pierre Mendès France">Pierre Mendès France</option>
+              <option value="Robert Desnos">Robert Desnos</option>
+              <option value="Georges Brassens">Georges Brassens</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Lieu de travail (précision)</label>
+          <input type="text" id="empWorkLocation" placeholder="Ex: Accueil, Bureau 102, Poste de sécurité..." class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-frBlue focus:bg-white">
+        </div>
+
+        <!-- Image Upload or Preview -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Photo de l'employé (Obligatoire pour affichage dans la case)</label>
+          <div class="flex items-center gap-3">
+            <div id="imagePreviewContainer" class="w-14 h-14 rounded-2xl overflow-hidden border-2 border-slate-200 bg-slate-100 flex items-center justify-center shrink-0 shadow-inner">
+              <i id="defaultAvatarIcon" class="fa-solid fa-user text-slate-400 text-xl"></i>
+              <img id="imagePreview" src="" alt="Avatar" class="w-full h-full object-cover hidden">
+            </div>
+            <div class="flex-1">
+              <input type="file" id="empImageFile" accept="image/*" onchange="handleImageUpload(event)" class="text-xs text-slate-600 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-frBlue file:text-white hover:file:bg-frBlue-hover cursor-pointer w-full">
+              <p class="text-[10px] text-slate-500 mt-1">Téléversez un portrait (PNG, JPG). Il apparaîtra directement devant le nom et matricule.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-3 border-t border-slate-200">
+          <button type="button" onclick="closeModal('employeeModal')" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700 transition">
+            Annuler
+          </button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-frBlue hover:bg-frBlue-hover text-xs font-bold text-white shadow-sm transition">
+            Enregistrer Collaborateur
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL: GESTION PLANNING JOURNALIER         -->
+  <!-- ========================================== -->
+  <div id="scheduleModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white border border-slate-200 rounded-2xl w-full max-w-sm p-6 shadow-2xl relative">
+      <button onclick="closeModal('scheduleModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-lg">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <h3 class="text-base font-black text-slate-900 mb-1 flex items-center gap-2">
+        <i class="fa-solid fa-calendar-check text-frBlue"></i> Planification du Jour
+      </h3>
+      <p id="scheduleModalSubtitle" class="text-xs text-slate-500 mb-4 font-medium"></p>
+
+      <div class="space-y-4">
+        <input type="hidden" id="schedEmpId">
+        <input type="hidden" id="schedDateKey">
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Régime / Statut</label>
+          <select id="schedStatus" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-frBlue font-medium">
+            <option value="JOUR">Travail Jour (12h)</option>
+            <option value="NUIT">Travail Nuit (12h)</option>
+            <option value="RH">Repos Hebdomadaire (RH)</option>
+            <option value="CA">Congé Annuel (CA)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Affectation de Site</label>
+          <select id="schedSite" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-frBlue font-medium">
+            <option value="Pierre Mendès France">Pierre Mendès France</option>
+            <option value="Robert Desnos">Robert Desnos</option>
+            <option value="Georges Brassens">Georges Brassens</option>
+          </select>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2 border-t border-slate-200">
+          <button onclick="closeModal('scheduleModal')" class="px-3.5 py-1.5 rounded-xl bg-slate-100 text-xs font-bold text-slate-600">Annuler</button>
+          <button onclick="saveScheduleEntry()" class="px-4 py-1.5 rounded-xl bg-frBlue hover:bg-frBlue-hover text-xs font-bold text-white shadow-sm">Appliquer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: GESTION ABSENCE -->
+  <div id="absenceModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white border border-slate-200 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
+      <button type="button" onclick="closeModal('absenceModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-lg">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <h3 class="text-lg font-black text-slate-900 mb-1 flex items-center gap-2">
+        <i class="fa-solid fa-user-injured text-orange-500"></i> Signaler une Absence
+      </h3>
+      <p id="absenceModalSubtitle" class="text-xs text-slate-500 mb-4 font-medium"></p>
+
+      <form id="absenceForm" onsubmit="saveAbsence(event)" class="space-y-4">
+        <input type="hidden" id="absEmpId">
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Type d'absence *</label>
+          <select id="absType" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-orange-500 font-medium">
+            <option value="Congé">Congé (CA)</option>
+            <option value="Maladie">Maladie</option>
+            <option value="Accident de travail">Accident de travail</option>
+            <option value="Formation">Formation</option>
+            <option value="Événement familial">Événement familial</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Durée (ex: 1 jour, 4 heures) *</label>
+          <input type="text" id="absDuration" required placeholder="Ex: 1 jour" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-orange-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Date d'absence *</label>
+          <input type="date" id="absDate" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-orange-500">
+        </div>
+
+        <div class="flex justify-end gap-3 pt-3 border-t border-slate-200">
+          <button type="button" onclick="closeModal('absenceModal')" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700 transition">Annuler</button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-xs font-bold text-white shadow-sm transition">Enregistrer l'absence</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: CUSTOM MESSAGE BOX (Remplacement des alertes système) -->
+  <div id="messageBoxModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4 hidden">
+    <div class="bg-white border border-slate-200 rounded-2xl w-full max-w-sm p-6 shadow-2xl relative text-center">
+      <div class="w-12 h-12 rounded-full bg-frRed-50 text-frRed mx-auto flex items-center justify-center text-xl mb-4">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <h3 id="messageBoxTitle" class="text-lg font-black text-slate-900 mb-2">Attention</h3>
+      <p id="messageBoxText" class="text-sm text-slate-600 mb-6"></p>
+      <div id="messageBoxActions" class="flex justify-center gap-3">
+        <!-- Buttons injected dynamically -->
+      </div>
+    </div>
+  </div>
+  
+  </div> <!-- END OF APP CONTAINER -->
+
+  <!-- JAVASCRIPT CORE LOGIC -->
+  <script>
+    // ----------------------------------------------------
+    // INITIAL DATA CONSTANTS & SITES
+    // ----------------------------------------------------
+    const SITES = ["Pierre Mendès France", "Robert Desnos", "Georges Brassens"];
+
+    // Auth Data
+    const DEFAULT_ADMINS = ['elahssen.malek@gmail.com', 'seyma.elahsen@ert.tn'];
+    let allowedEmails = JSON.parse(localStorage.getItem('edt_allowedEmails')) || DEFAULT_ADMINS;
+
+    // Default employees with sample photos (high quality portrait avatars)
+    const DEFAULT_EMPLOYEES = [
+      {
+        id: "emp_1",
+        matricule: "PMF-010",
+        name: "Marc Benamou",
+        shift: "JOUR",
+        defaultSite: "Pierre Mendès France",
+        workLocation: "Accueil Principal",
+        currentSite: "Pierre Mendès France",
+        status: "PRESENT",
+        avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+        lastClockIn: "07:00",
+        lastClockOut: null,
+        overtimeToday: 0
+      },
+      {
+        id: "emp_2",
+        matricule: "RD-022",
+        name: "Amina Dridi",
+        shift: "NUIT",
+        defaultSite: "Robert Desnos",
+        workLocation: "Bureau 102",
+        currentSite: "Robert Desnos",
+        status: "ABSENT",
+        avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80",
+        lastClockIn: null,
+        lastClockOut: null,
+        overtimeToday: 0
+      },
+      {
+        id: "emp_3",
+        matricule: "GB-035",
+        name: "Karim Louati",
+        shift: "JOUR",
+        defaultSite: "Georges Brassens",
+        workLocation: "Entrée Sud",
+        currentSite: "Georges Brassens",
+        status: "PRESENT",
+        avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
+        lastClockIn: "07:15",
+        lastClockOut: null,
+        overtimeToday: 2
+      },
+      {
+        id: "emp_4",
+        matricule: "PMF-042",
+        name: "Sonia Guez",
+        shift: "JOUR",
+        defaultSite: "Pierre Mendès France",
+        workLocation: "Salle de réunion A",
+        currentSite: "Robert Desnos",
+        status: "PRESENT",
+        avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80",
+        lastClockIn: "06:55",
+        lastClockOut: null,
+        overtimeToday: 1
+      }
+    ];
+
+    // State Variables
+    let employees = JSON.parse(localStorage.getItem('edt_employees')) || DEFAULT_EMPLOYEES;
+    let attendanceLogs = JSON.parse(localStorage.getItem('edt_attendanceLogs')) || [];
+    let scheduleData = JSON.parse(localStorage.getItem('edt_schedules')) || {};
+    let currentWeekOffset = 0;
+    let sitePieChartInstance = null;
+    let teamPieChartInstance = null;
+    let currentLoginEmail = '';
+
+    // Helper for rendering Photo Avatar in all sections
+    function getEmployeeAvatarHTML(emp, sizeClass = "w-12 h-12") {
+      if (emp.avatar && emp.avatar.trim() !== "") {
+        return `<img src="${emp.avatar}" alt="${emp.name}" class="${sizeClass} rounded-2xl object-cover border-2 border-slate-200 shadow-sm shrink-0" onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\\'${sizeClass} rounded-2xl bg-frBlue-50 border-2 border-frBlue-200 text-frBlue flex items-center justify-center font-extrabold text-sm shadow-sm shrink-0\\'>${emp.name.charAt(0)}</div>'">`;
+      }
+      return `<div class="${sizeClass} rounded-2xl bg-frBlue-50 border-2 border-frBlue-200 text-frBlue flex items-center justify-center font-extrabold text-sm shadow-sm shrink-0">${emp.name ? emp.name.charAt(0).toUpperCase() : '?'}</div>`;
+    }
+
+    // ----------------------------------------------------
+    // PERSISTENCE HELPERS
+    // ----------------------------------------------------
+    function saveData() {
+      localStorage.setItem('edt_employees', JSON.stringify(employees));
+      localStorage.setItem('edt_attendanceLogs', JSON.stringify(attendanceLogs));
+      localStorage.setItem('edt_schedules', JSON.stringify(scheduleData));
+      localStorage.setItem('edt_allowedEmails', JSON.stringify(allowedEmails));
+      updateOverviewStats();
+    }
+
+    // ----------------------------------------------------
+    // CUSTOM MESSAGE BOX (Replacing alert/confirm)
+    // ----------------------------------------------------
+    function showMessage(title, text, onConfirm = null) {
+      document.getElementById('messageBoxTitle').textContent = title;
+      document.getElementById('messageBoxText').textContent = text;
+      
+      const actions = document.getElementById('messageBoxActions');
+      actions.innerHTML = '';
+      
+      if (onConfirm) {
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = "px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700 transition";
+        cancelBtn.textContent = "Annuler";
+        cancelBtn.onclick = () => document.getElementById('messageBoxModal').classList.add('hidden');
+        
+        const confirmBtn = document.createElement('button');
+        confirmBtn.className = "px-4 py-2 rounded-xl bg-frRed hover:bg-frRed-hover text-xs font-bold text-white shadow-sm transition";
+        confirmBtn.textContent = "Confirmer";
+        confirmBtn.onclick = () => {
+          document.getElementById('messageBoxModal').classList.add('hidden');
+          onConfirm();
+        };
+        
+        actions.appendChild(cancelBtn);
+        actions.appendChild(confirmBtn);
+      } else {
+        const okBtn = document.createElement('button');
+        okBtn.className = "px-4 py-2 rounded-xl bg-frBlue hover:bg-frBlue-hover text-xs font-bold text-white shadow-sm transition";
+        okBtn.textContent = "OK";
+        okBtn.onclick = () => document.getElementById('messageBoxModal').classList.add('hidden');
+        actions.appendChild(okBtn);
+      }
+      
+      document.getElementById('messageBoxModal').classList.remove('hidden');
+    }
+
+    // ----------------------------------------------------
+    // AUTHENTICATION LOGIC
+    // ----------------------------------------------------
+    function verifyEmail() {
+      const emailInput = document.getElementById('loginEmail').value.trim().toLowerCase();
+      const errorMsg = document.getElementById('loginError1');
+      
+      if (allowedEmails.includes(emailInput)) {
+        currentLoginEmail = emailInput;
+        errorMsg.classList.add('hidden');
+        document.getElementById('loginStep1').classList.add('hidden');
+        document.getElementById('loginStep2').classList.remove('hidden');
+        document.getElementById('displayLoginEmail').textContent = currentLoginEmail;
+      } else {
+        errorMsg.classList.remove('hidden');
+      }
+    }
+
+    function verifyCode() {
+      const codeInput = document.getElementById('loginCode').value.trim();
+      const errorMsg = document.getElementById('loginError2');
+      
+      // Universal code for testing
+      if (codeInput === '123456') {
+        errorMsg.classList.add('hidden');
+        sessionStorage.setItem('edt_isLoggedIn', 'true');
+        document.getElementById('loginContainer').classList.add('hidden');
+        document.getElementById('appContainer').classList.remove('hidden');
+        document.getElementById('appContainer').classList.add('flex');
+        
+        // Render initial data once logged in
+        updateOverviewStats();
+        renderAttendanceList();
+        renderAdminEmails();
+      } else {
+        errorMsg.classList.remove('hidden');
+      }
+    }
+
+    function backToStep1() {
+      document.getElementById('loginCode').value = '';
+      document.getElementById('loginError2').classList.add('hidden');
+      document.getElementById('loginStep2').classList.add('hidden');
+      document.getElementById('loginStep1').classList.remove('hidden');
+    }
+
+    function logout() {
+      sessionStorage.removeItem('edt_isLoggedIn');
+      document.getElementById('appContainer').classList.add('hidden');
+      document.getElementById('appContainer').classList.remove('flex');
+      
+      document.getElementById('loginContainer').classList.remove('hidden');
+      document.getElementById('loginEmail').value = '';
+      document.getElementById('loginCode').value = '';
+      backToStep1();
+    }
+
+    // ----------------------------------------------------
+    // NAVIGATION TABS
+    // ----------------------------------------------------
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.getElementById('tab-' + tabId).classList.remove('hidden');
+
+      // Desktop nav button active styling
+      document.querySelectorAll('.nav-tab').forEach(b => {
+        b.className = 'nav-tab px-4 py-2 rounded-lg font-semibold text-slate-600 hover:text-frBlue hover:bg-white/80 transition flex items-center gap-2';
+      });
+      const activeBtn = document.getElementById('tabBtn-' + tabId);
+      if (activeBtn) {
+        activeBtn.className = 'nav-tab px-4 py-2 rounded-lg font-bold transition flex items-center gap-2 bg-[#002654] text-white shadow-sm';
+      }
+
+      // Mobile nav
+      const mTabs = ['pointage', 'employees', 'planning', 'stats', 'admin'];
+      mTabs.forEach(t => {
+        const btn = document.getElementById('mTabBtn-' + t);
+        if (btn) {
+          if (t === tabId) {
+            btn.className = 'px-3 py-1.5 rounded-md font-bold text-frBlue flex flex-col items-center';
+          } else {
+            btn.className = 'px-3 py-1.5 rounded-md font-medium text-slate-500 flex flex-col items-center';
+          }
+        }
+      });
+
+      if (tabId === 'pointage') renderAttendanceList();
+      if (tabId === 'employees') renderEmployeeTable();
+      if (tabId === 'planning') renderPlanning();
+      if (tabId === 'stats') renderStatistics();
+      if (tabId === 'admin') renderAdminEmails();
+    }
+
+    // ----------------------------------------------------
+    // LIVE CLOCK & DATE
+    // ----------------------------------------------------
+    function updateClock() {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('fr-FR', { hour12: false });
+      const dateStr = now.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      
+      const clockEl = document.getElementById('liveClock');
+      const dateEl = document.getElementById('liveDate');
+      if (clockEl) clockEl.textContent = timeStr;
+      if (dateEl) dateEl.textContent = dateStr;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // ----------------------------------------------------
+    // 1. POINTAGE / ATTENDANCE RENDERING & ACTIONS
+    // ----------------------------------------------------
+    function renderAttendanceList() {
+      const grid = document.getElementById('attendanceGrid');
+      const searchTerm = (document.getElementById('searchAttendance').value || '').toLowerCase();
+      const filterSite = document.getElementById('filterSiteAttendance').value;
+
+      grid.innerHTML = '';
+
+      const filtered = employees.filter(emp => {
+        const matchSearch = emp.name.toLowerCase().includes(searchTerm) || emp.matricule.toLowerCase().includes(searchTerm);
+        const matchSite = filterSite === 'ALL' || emp.currentSite === filterSite;
+        return matchSearch && matchSite;
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full py-12 text-center text-slate-400 bg-slate-50 rounded-2xl border border-dashed border-slate-300">
+            <i class="fa-solid fa-user-slash text-3xl mb-2 text-slate-300"></i>
+            <p class="font-medium text-sm">Aucun collaborateur trouvé pour ce critère.</p>
+          </div>
+        `;
+        return;
+      }
+
+      filtered.forEach(emp => {
+        const isPresent = emp.status === 'PRESENT';
+        const shiftBadge = emp.shift === 'JOUR' 
+          ? `<span class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1"><i class="fa-solid fa-sun"></i> JOUR 12h</span>`
+          : `<span class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center gap-1"><i class="fa-solid fa-moon"></i> NUIT 12h</span>`;
+
+        const statusBadge = isPresent 
+          ? `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200"><span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> PRÉSENT</span>`
+          : `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-500 border border-slate-200"><span class="w-2 h-2 rounded-full bg-slate-400"></span> ABSENT</span>`;
+
+        const isMutated = emp.currentSite !== emp.defaultSite;
+
+        const card = document.createElement('div');
+        card.className = "bg-white border border-slate-200 hover:border-frBlue rounded-2xl p-5 shadow-sm hover:shadow-md transition space-y-4 flex flex-col justify-between";
+        card.innerHTML = `
+          <div>
+            <!-- Header case: PHOTO, NOM & MATRICULE -->
+            <div class="flex items-start justify-between gap-3 pb-3 border-b border-slate-100">
+              <div class="flex items-center gap-3">
+                ${getEmployeeAvatarHTML(emp, "w-14 h-14")}
+                <div>
+                  <h4 class="font-black text-slate-900 text-base leading-tight">${emp.name}</h4>
+                  <div class="flex items-center gap-2 mt-1">
+                    <span class="text-xs font-mono font-bold text-frBlue bg-frBlue-50 px-2 py-0.5 rounded border border-frBlue-200">${emp.matricule}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="flex flex-col items-end gap-1.5">
+                ${shiftBadge}
+                ${statusBadge}
+              </div>
+            </div>
+
+            <!-- Site Selection (Mutation on the fly) -->
+            <div class="mt-3 flex flex-col gap-1.5">
+              <div class="flex justify-between items-center text-xs font-bold">
+                <span class="text-slate-600">Site d'affectation :</span>
+                ${isMutated ? `<span class="text-[10px] text-frRed font-bold uppercase tracking-wider bg-frRed-50 px-2 py-0.5 rounded border border-frRed-200">Mutation Active</span>` : ''}
+              </div>
+              <div class="relative">
+                <select onchange="updateEmployeeSite('${emp.id}', this.value)" class="w-full bg-slate-50 border border-slate-300 text-slate-800 font-semibold text-xs rounded-xl px-3 py-2 appearance-none focus:outline-none focus:border-frBlue focus:bg-white pr-8">
+                  ${SITES.map(s => `<option value="${s}" ${emp.currentSite === s ? 'selected' : ''}>${s}</option>`).join('')}
+                </select>
+                <i class="fa-solid fa-location-dot absolute right-3 top-2.5 text-xs text-frBlue pointer-events-none"></i>
+              </div>
+              <div class="relative mt-0.5">
+                <input type="text" onchange="updateWorkLocation('${emp.id}', this.value)" value="${emp.workLocation || ''}" placeholder="Lieu de travail manuel (ex: Bureau 102)..." class="w-full bg-slate-50 border border-slate-200 text-slate-700 font-medium text-[11px] rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-frBlue focus:bg-white placeholder-slate-400 shadow-inner">
+                <i class="fa-solid fa-building-user absolute right-2.5 top-1.5 text-[11px] text-slate-400 pointer-events-none"></i>
+              </div>
+            </div>
+
+            <!-- Overtime Input (Heures Supplémentaires Manuelles) -->
+            <div class="mt-3 flex items-center justify-between bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+              <span class="text-xs text-slate-700 font-bold flex items-center gap-1.5">
+                <i class="fa-solid fa-stopwatch text-amber-500"></i> Heures Supp (HS) :
+              </span>
+              <div class="flex items-center gap-1">
+                <button onclick="adjustOvertime('${emp.id}', -1)" class="w-7 h-7 rounded-lg bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 flex items-center justify-center font-bold text-sm shadow-sm">-</button>
+                <input type="number" min="0" max="12" value="${emp.overtimeToday || 0}" onchange="setOvertime('${emp.id}', this.value)" class="w-12 text-center bg-white border border-slate-300 rounded-lg py-1 text-xs font-black text-amber-600 focus:outline-none focus:border-amber-500">
+                <button onclick="adjustOvertime('${emp.id}', 1)" class="w-7 h-7 rounded-lg bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 flex items-center justify-center font-bold text-sm shadow-sm">+</button>
+              </div>
+            </div>
+
+            <!-- Shift Information -->
+            <div class="mt-3 text-[11px] text-slate-500 flex justify-between font-medium">
+              <span>Arrivée: <strong class="text-slate-800">${emp.lastClockIn || '--:--'}</strong></span>
+              <span>Départ: <strong class="text-slate-800">${emp.lastClockOut || '--:--'}</strong></span>
+            </div>
+          </div>
+
+          <!-- Clock In / Out Action Buttons (French Blue & Red theme) -->
+          <div class="pt-2 grid grid-cols-2 gap-2">
+            <button onclick="clockIn('${emp.id}')" ${isPresent ? 'disabled' : ''} class="${isPresent ? 'opacity-40 cursor-not-allowed bg-slate-200 text-slate-500' : 'bg-[#002654] hover:bg-frBlue-hover text-white shadow-sm'} py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition">
+              <i class="fa-solid fa-right-to-bracket"></i> Pointer Arrivée
+            </button>
+            <button onclick="clockOut('${emp.id}')" ${!isPresent ? 'disabled' : ''} class="${!isPresent ? 'opacity-40 cursor-not-allowed bg-slate-200 text-slate-500' : 'bg-[#ED2939] hover:bg-frRed-hover text-white shadow-sm'} py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition">
+              <i class="fa-solid fa-right-from-bracket"></i> Pointer Départ
+            </button>
+          </div>
+          <div class="pt-2">
+            <button onclick="openAbsenceModal('${emp.id}')" class="w-full bg-orange-500 hover:bg-orange-600 text-white shadow-sm py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition">
+              <i class="fa-solid fa-user-injured"></i> Signaler Absence
+            </button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+
+      renderDailyLogs();
+    }
+
+    // Quick clock actions
+    function clockIn(empId) {
+      const emp = employees.find(e => e.id === empId);
+      if (!emp) return;
+
+      const timeNow = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      emp.status = 'PRESENT';
+      emp.lastClockIn = timeNow;
+      emp.lastClockOut = null;
+
+      attendanceLogs.unshift({
+        id: 'log_' + Date.now(),
+        timestamp: new Date().toISOString(),
+        timeDisplay: timeNow,
+        employeeName: emp.name,
+        matricule: emp.matricule,
+        avatar: emp.avatar,
+        action: 'ARRIVÉE',
+        site: emp.currentSite,
+        shift: emp.shift,
+        overtime: emp.overtimeToday || 0,
+        regularHours: 12
+      });
+
+      saveData();
+      renderAttendanceList();
+    }
+
+    function clockOut(empId) {
+      const emp = employees.find(e => e.id === empId);
+      if (!emp) return;
+
+      const timeNow = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      emp.status = 'ABSENT';
+      emp.lastClockOut = timeNow;
+
+      attendanceLogs.unshift({
+        id: 'log_' + Date.now(),
+        timestamp: new Date().toISOString(),
+        timeDisplay: timeNow,
+        employeeName: emp.name,
+        matricule: emp.matricule,
+        avatar: emp.avatar,
+        action: 'DÉPART',
+        site: emp.currentSite,
+        shift: emp.shift,
+        overtime: emp.overtimeToday || 0,
+        regularHours: 12
+      });
+
+      saveData();
+      renderAttendanceList();
+    }
+
+    function updateEmployeeSite(empId, newSite) {
+      const emp = employees.find(e => e.id === empId);
+      if (!emp) return;
+      emp.currentSite = newSite;
+      
+      attendanceLogs.unshift({
+        id: 'log_' + Date.now(),
+        timestamp: new Date().toISOString(),
+        timeDisplay: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+        employeeName: emp.name,
+        matricule: emp.matricule,
+        avatar: emp.avatar,
+        action: 'MUTATION SITE',
+        site: newSite,
+        shift: emp.shift,
+        overtime: emp.overtimeToday || 0
+      });
+
+      saveData();
+      renderAttendanceList();
+    }
+
+    function adjustOvertime(empId, delta) {
+      const emp = employees.find(e => e.id === empId);
+      if (!emp) return;
+      emp.overtimeToday = Math.max(0, (emp.overtimeToday || 0) + delta);
+      saveData();
+      renderAttendanceList();
+    }
+
+    function setOvertime(empId, val) {
+      const emp = employees.find(e => e.id === empId);
+      if (!emp) return;
+      emp.overtimeToday = Math.max(0, parseInt(val) || 0);
+      saveData();
+      renderAttendanceList();
+    }
+
+    // Render Daily Log
+    function renderDailyLogs() {
+      const tbody = document.getElementById('dailyLogTable');
+      const badge = document.getElementById('logCountBadge');
+      tbody.innerHTML = '';
+
+      badge.textContent = `${attendanceLogs.length} action(s)`;
+
+      if (attendanceLogs.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400 font-medium">Aucun pointage enregistré aujourd'hui.</td></tr>`;
+        return;
+      }
+
+      attendanceLogs.slice(0, 15).forEach(log => {
+        const actionBadge = log.action === 'ARRIVÉE' 
+          ? `<span class="text-frBlue font-bold bg-frBlue-50 border border-frBlue-200 px-2.5 py-1 rounded-lg text-xs"><i class="fa-solid fa-arrow-right-to-bracket mr-1"></i>Arrivée</span>`
+          : log.action === 'DÉPART'
+          ? `<span class="text-frRed font-bold bg-frRed-50 border border-frRed-200 px-2.5 py-1 rounded-lg text-xs"><i class="fa-solid fa-arrow-right-from-bracket mr-1"></i>Départ</span>`
+          : log.action === 'ABSENCE'
+          ? `<span class="text-orange-700 font-bold bg-orange-50 border border-orange-200 px-2.5 py-1 rounded-lg text-xs flex flex-col items-start"><span class="flex items-center"><i class="fa-solid fa-user-injured mr-1"></i>Absence</span><span class="text-[9px] mt-0.5 font-semibold text-orange-600">${log.absenceType} (${log.duration})</span></span>`
+          : `<span class="text-amber-700 font-bold bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg text-xs"><i class="fa-solid fa-shuffle mr-1"></i>Mutation</span>`;
+
+        // Dummy object for avatar renderer
+        const dummyEmp = { name: log.employeeName, avatar: log.avatar };
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 transition";
+        tr.innerHTML = `
+          <td class="p-3 flex items-center gap-2.5 font-bold text-slate-900">
+            ${getEmployeeAvatarHTML(dummyEmp, "w-8 h-8")}
+            <div>
+              <span>${log.employeeName}</span>
+              <span class="block text-[10px] text-slate-500 font-mono">${log.matricule}</span>
+            </div>
+          </td>
+          <td class="p-3 font-mono font-bold text-slate-600">${log.timeDisplay}</td>
+          <td class="p-3">${actionBadge}</td>
+          <td class="p-3 text-slate-800 font-semibold"><i class="fa-solid fa-map-pin text-frBlue mr-1"></i>${log.site}</td>
+          <td class="p-3 text-amber-600 font-black">${log.overtime > 0 ? '+' + log.overtime + 'h' : '0h'}</td>
+          <td class="p-3 text-slate-600 text-[11px] font-semibold">${log.shift === 'JOUR' ? 'Jour (12h)' : 'Nuit (12h)'}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // ----------------------------------------------------
+    // 2. GESTION DU PERSONNEL (PHOTO DEVANT NOM & MATRICULE)
+    // ----------------------------------------------------
+    function renderEmployeeTable() {
+      const tbody = document.getElementById('employeeTableBody');
+      tbody.innerHTML = '';
+
+      if (employees.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400 font-medium">Aucun collaborateur dans la base de données.</td></tr>`;
+        return;
+      }
+
+      employees.forEach(emp => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 transition";
+        tr.innerHTML = `
+          <td class="p-4 flex items-center gap-3">
+            ${getEmployeeAvatarHTML(emp, "w-11 h-11")}
+            <div>
+              <span class="font-black text-slate-900 block text-sm">${emp.name}</span>
+              <span class="text-[11px] text-slate-500">Personnel Administratif</span>
+            </div>
+          </td>
+          <td class="p-4 font-mono font-bold text-frBlue text-xs">
+            <span class="bg-frBlue-50 border border-frBlue-200 px-2 py-1 rounded">${emp.matricule}</span>
+          </td>
+          <td class="p-4">
+            <span class="px-2.5 py-1 rounded-lg text-xs font-bold ${emp.shift === 'JOUR' ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-indigo-50 text-indigo-700 border border-indigo-200'}">
+              ${emp.shift === 'JOUR' ? 'Jour (12h)' : 'Nuit (12h)'}
+            </span>
+          </td>
+          <td class="p-4 text-slate-700 text-xs font-semibold">
+            <div class="flex items-center"><i class="fa-solid fa-building text-frBlue mr-1"></i>${emp.defaultSite}</div>
+            <div class="text-[10px] text-slate-500 mt-1.5"><i class="fa-solid fa-building-user mr-1 text-slate-400"></i>Lieu: ${emp.workLocation || '<em class="text-slate-400">Non précisé</em>'}</div>
+          </td>
+          <td class="p-4">
+            ${emp.status === 'PRESENT' 
+              ? `<span class="text-xs text-emerald-700 font-bold bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full"><i class="fa-solid fa-circle text-[7px] mr-1 text-emerald-500"></i>En Poste</span>` 
+              : `<span class="text-xs text-slate-500 font-medium bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-full"><i class="fa-solid fa-circle text-[7px] mr-1 text-slate-400"></i>Absent</span>`}
+          </td>
+          <td class="p-4 text-right space-x-2">
+            <button onclick="editEmployee('${emp.id}')" class="p-2 rounded-lg bg-slate-100 hover:bg-frBlue-50 hover:text-frBlue text-slate-600 transition text-xs border border-slate-200" title="Modifier">
+              <i class="fa-solid fa-pen-to-square"></i>
+            </button>
+            <button onclick="deleteEmployee('${emp.id}')" class="p-2 rounded-lg bg-frRed-50 hover:bg-frRed hover:text-white text-frRed transition text-xs border border-frRed-200" title="Supprimer">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function handleImageUpload(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          const img = document.getElementById('imagePreview');
+          const defaultIcon = document.getElementById('defaultAvatarIcon');
+          img.src = event.target.result;
+          img.classList.remove('hidden');
+          defaultIcon.classList.add('hidden');
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function saveEmployee(e) {
+      e.preventDefault();
+      const id = document.getElementById('empId').value;
+      const name = document.getElementById('empName').value.trim();
+      const matricule = document.getElementById('empMatricule').value.trim();
+      const shift = document.getElementById('empShift').value;
+      const defaultSite = document.getElementById('empSite').value;
+      const workLocation = document.getElementById('empWorkLocation').value.trim();
+      const previewImg = document.getElementById('imagePreview');
+      const avatar = !previewImg.classList.contains('hidden') ? previewImg.src : '';
+
+      if (id) {
+        const emp = employees.find(e => e.id === id);
+        if (emp) {
+          emp.name = name;
+          emp.matricule = matricule;
+          emp.shift = shift;
+          emp.defaultSite = defaultSite;
+          emp.workLocation = workLocation;
+          if (avatar) emp.avatar = avatar;
+        }
+      } else {
+        const newEmp = {
+          id: 'emp_' + Date.now(),
+          name,
+          matricule,
+          shift,
+          defaultSite,
+          workLocation,
+          currentSite: defaultSite,
+          status: 'ABSENT',
+          avatar,
+          lastClockIn: null,
+          lastClockOut: null,
+          overtimeToday: 0
+        };
+        employees.push(newEmp);
+      }
+
+      saveData();
+      renderAttendanceList();
+    }
+
+    function updateWorkLocation(empId, newLocation) {
+      const emp = employees.find(e => e.id === empId);
+      if (!emp) return;
+      emp.workLocation = newLocation.trim();
+      saveData();
+      // Sauvegardé en temps réel (pas besoin de re-rendre la grille entière pour ne pas perturber la saisie)
+    }
+
+    function adjustOvertime(empId, delta) {
+      const emp = employees.find(e => e.id === empId);
+      if (!emp) return;
+
+      document.getElementById('schedEmpId').value = empId;
+      document.getElementById('schedDateKey').value = dateKey;
+      document.getElementById('scheduleModalSubtitle').textContent = `${emp.name} (${emp.matricule}) — Date: ${dateKey}`;
+      document.getElementById('schedStatus').value = currentStatus;
+      document.getElementById('schedSite').value = currentSite;
+
+      openModal('scheduleModal');
+    }
+
+    function saveScheduleEntry() {
+      const empId = document.getElementById('schedEmpId').value;
+      const dateKey = document.getElementById('schedDateKey').value;
+      const status = document.getElementById('schedStatus').value;
+      const site = document.getElementById('schedSite').value;
+
+      const cellKey = `${empId}_${dateKey}`;
+      scheduleData[cellKey] = { status, site };
+
+      saveData();
+      closeModal('scheduleModal');
+      renderPlanning();
+    }
+
+    // ----------------------------------------------------
+    // 4. STATISTIQUES, CHARTS & PDF EXPORT
+    // ----------------------------------------------------
+    function renderStatistics() {
+      renderCharts();
+      renderReportTable();
+    }
+
+    function renderCharts() {
+      const siteCounts = {
+        "Pierre Mendès France": 0,
+        "Robert Desnos": 0,
+        "Georges Brassens": 0
+      };
+
+      employees.forEach(e => {
+        if (siteCounts[e.currentSite] !== undefined) {
+          siteCounts[e.currentSite]++;
+        }
+      });
+
+      const ctxSite = document.getElementById('sitePieChart').getContext('2d');
+      if (sitePieChartInstance) sitePieChartInstance.destroy();
+      sitePieChartInstance = new Chart(ctxSite, {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(siteCounts),
+          datasets: [{
+            data: Object.values(siteCounts),
+            backgroundColor: ['#002654', '#ED2939', '#64748b'],
+            borderWidth: 2,
+            borderColor: '#ffffff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: { color: '#475569', font: { size: 10, weight: 'bold' } }
+            }
+          }
+        }
+      });
+
+      let countDay = 0;
+      let countNight = 0;
+      employees.forEach(e => {
+        if (e.shift === 'JOUR') countDay++;
+        else countNight++;
+      });
+
+      const ctxTeam = document.getElementById('teamPieChart').getContext('2d');
+      if (teamPieChartInstance) teamPieChartInstance.destroy();
+      teamPieChartInstance = new Chart(ctxTeam, {
+        type: 'pie',
+        data: {
+          labels: ['Équipe Jour (12h)', 'Équipe Nuit (12h)'],
+          datasets: [{
+            data: [countDay, countNight],
+            backgroundColor: ['#f59e0b', '#002654'],
+            borderWidth: 2,
+            borderColor: '#ffffff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: { color: '#475569', font: { size: 10, weight: 'bold' } }
+            }
+          }
+        }
+      });
+    }
+
+    function renderReportTable() {
+      const tbody = document.getElementById('reportTableBody');
+      const dateSpan = document.getElementById('reportPrintDate');
+      dateSpan.textContent = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+
+      tbody.innerHTML = '';
+
+      let grandRegular = 0;
+      let grandOvertime = 0;
+
+      employees.forEach(emp => {
+        const empLogs = attendanceLogs.filter(l => l.matricule === emp.matricule);
+        const clockCount = empLogs.filter(l => l.action === 'ARRIVÉE' || l.action === 'DÉPART').length;
+        const hasPresenceLog = clockCount > 0;
+        
+        const absences = empLogs.filter(l => l.action === 'ABSENCE');
+        const absenceText = absences.length > 0 ? absences.map(a => `<span class="block text-[10px] bg-orange-50 text-orange-700 border border-orange-200 px-1 py-0.5 rounded mb-0.5">${a.absenceType}: ${a.duration}</span>`).join('') : '-';
+
+        const regHours = (emp.status === 'PRESENT' || hasPresenceLog) ? 12 : 0;
+        const ovHours = emp.overtimeToday || 0;
+        const totalEmpHours = regHours + ovHours;
+
+        grandRegular += regHours;
+        grandOvertime += ovHours;
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50";
+        tr.innerHTML = `
+          <td class="p-3 border border-slate-300 flex items-center gap-2 font-bold text-slate-900">
+            ${getEmployeeAvatarHTML(emp, "w-8 h-8")}
+            <span>${emp.name}</span>
+          </td>
+          <td class="p-3 border border-slate-300 font-mono font-bold text-frBlue text-xs">${emp.matricule}</td>
+          <td class="p-3 border border-slate-300 font-semibold">${emp.shift === 'JOUR' ? 'Jour (12h)' : 'Nuit (12h)'}</td>
+          <td class="p-3 border border-slate-300 font-semibold">${emp.currentSite}</td>
+          <td class="p-3 border border-slate-300 text-center font-bold">${clockCount}</td>
+          <td class="p-3 border border-slate-300 text-center font-semibold">${regHours} h</td>
+          <td class="p-3 border border-slate-300 text-center font-black text-amber-600">+${ovHours} h</td>
+          <td class="p-3 border border-slate-300 text-center font-semibold text-xs">${absenceText}</td>
+          <td class="p-3 border border-slate-300 text-right font-black text-frBlue">${totalEmpHours} h</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('reportTotalRegularHours').textContent = `${grandRegular} h`;
+      document.getElementById('reportTotalOvertimeHours').textContent = `+${grandOvertime} h`;
+      document.getElementById('reportGrandTotalHours').textContent = `${grandRegular + grandOvertime} h`;
+    }
+
+    function exportToPDF() {
+      window.print();
+    }
+
+    // ----------------------------------------------------
+    // 5. ADMIN SETTINGS
+    // ----------------------------------------------------
+    function renderAdminEmails() {
+      const list = document.getElementById('adminEmailsList');
+      list.innerHTML = '';
+      
+      allowedEmails.forEach(email => {
+        const li = document.createElement('li');
+        li.className = "flex items-center justify-between p-3 hover:bg-slate-50 transition";
+        li.innerHTML = `
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
+              <i class="fa-solid fa-user-shield"></i>
+            </div>
+            <span class="text-sm font-bold text-slate-800">${email}</span>
+          </div>
+          <button onclick="removeAdminEmail('${email}')" class="text-slate-400 hover:text-frRed transition p-2" title="Retirer l'accès">
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
+        `;
+        list.appendChild(li);
+      });
+    }
+
+    function addAdminEmail() {
+      const input = document.getElementById('newAdminEmail');
+      const email = input.value.trim().toLowerCase();
+      
+      if (email && !allowedEmails.includes(email)) {
+        allowedEmails.push(email);
+        saveData();
+        renderAdminEmails();
+        input.value = '';
+      }
+    }
+
+    function removeAdminEmail(emailToRemove) {
+      if (allowedEmails.length <= 1) {
+        showMessage("Action impossible", "Vous ne pouvez pas supprimer le dernier administrateur.");
+        return;
+      }
+      
+      let warningText = `Voulez-vous vraiment retirer l'accès pour ${emailToRemove} ?`;
+      if (emailToRemove === currentLoginEmail) {
+         warningText = "Vous êtes sur le point de supprimer votre PROPRE accès. Vous serez déconnecté. Continuer ?";
+      }
+      
+      showMessage("Confirmer la révocation", warningText, () => {
+        allowedEmails = allowedEmails.filter(email => email !== emailToRemove);
+        saveData();
+        renderAdminEmails();
+        if (emailToRemove === currentLoginEmail) {
+            logout();
+        }
+      });
+    }
+
+    // ----------------------------------------------------
+    // ABSENCES LOGIC
+    // ----------------------------------------------------
+    function openAbsenceModal(empId) {
+      const emp = employees.find(e => e.id === empId);
+      if (!emp) return;
+
+      document.getElementById('absEmpId').value = empId;
+      document.getElementById('absDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('absenceForm').reset();
+      document.getElementById('absenceModalSubtitle').textContent = `Collaborateur : ${emp.name} (${emp.matricule})`;
+      
+      openModal('absenceModal');
+    }
+
+    function saveAbsence(e) {
+      e.preventDefault();
+      
+      const empId = document.getElementById('absEmpId').value;
+      const type = document.getElementById('absType').value;
+      const duration = document.getElementById('absDuration').value;
+      const date = document.getElementById('absDate').value;
+
+      const emp = employees.find(e => e.id === empId);
+      if (!emp) return;
+
+      // Un employé absent ne peut pas être en poste
+      if (emp.status === 'PRESENT') {
+        emp.status = 'ABSENT';
+        emp.lastClockOut = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      }
+
+      const timeNow = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+
+      attendanceLogs.unshift({
+        id: 'abs_' + Date.now(),
+        timestamp: new Date().toISOString(),
+        timeDisplay: timeNow,
+        dateDisplay: date,
+        employeeName: emp.name,
+        matricule: emp.matricule,
+        avatar: emp.avatar,
+        action: 'ABSENCE',
+        absenceType: type,
+        duration: duration,
+        site: emp.currentSite,
+        shift: emp.shift,
+        overtime: 0,
+        regularHours: 0
+      });
+
+      saveData();
+      closeModal('absenceModal');
+      renderAttendanceList();
+      renderEmployeeTable();
+    }
+
+    // ----------------------------------------------------
+    // OVERVIEW STATS (DASHBOARD HEADER)
+    // ----------------------------------------------------
+    function updateOverviewStats() {
+      const presentCount = employees.filter(e => e.status === 'PRESENT').length;
+      const totalCount = employees.length;
+      const dayCount = employees.filter(e => e.shift === 'JOUR').length;
+      const nightCount = employees.filter(e => e.shift === 'NUIT').length;
+
+      document.getElementById('statCountPresent').textContent = presentCount;
+      document.getElementById('statCountTotal').textContent = totalCount;
+      document.getElementById('statCountDay').textContent = dayCount;
+      document.getElementById('statCountNight').textContent = nightCount;
+    }
+
+    // ----------------------------------------------------
+    // MODAL UTILITIES
+    // ----------------------------------------------------
+    function openModal(id) {
+      if (id === 'employeeModal' && !document.getElementById('empId').value) {
+        document.getElementById('employeeModalTitle').textContent = "Ajouter un Salarié";
+        document.getElementById('employeeForm').reset();
+        document.getElementById('imagePreview').classList.add('hidden');
+        document.getElementById('defaultAvatarIcon').classList.remove('hidden');
+      }
+      document.getElementById(id).classList.remove('hidden');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+      if (id === 'employeeModal') {
+        document.getElementById('empId').value = '';
+      }
+    }
+
+    // ----------------------------------------------------
+    // INITIALIZATION
+    // ----------------------------------------------------
+    window.onload = function() {
+      if (sessionStorage.getItem('edt_isLoggedIn') === 'true') {
+        document.getElementById('loginContainer').classList.add('hidden');
+        document.getElementById('appContainer').classList.remove('hidden');
+        document.getElementById('appContainer').classList.add('flex');
+        updateOverviewStats();
+        renderAttendanceList();
+        renderAdminEmails();
+      } else {
+        document.getElementById('loginContainer').classList.remove('hidden');
+        document.getElementById('appContainer').classList.add('hidden');
+      }
+    };
+  </script>
+</body>
+</html>
