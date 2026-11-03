@@ -39,6 +39,8 @@
         .logo-login { width: 130px; height: 130px; }
         .modal { display: none; position: fixed; z-index: 50; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
         .modal.active { display: flex; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     </style>
 </head>
 <body class="text-gray-800 h-screen flex flex-col overflow-hidden">
@@ -125,7 +127,7 @@
             </div>
         </header>
 
-        <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-ert-bg">
+        <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-ert-bg custom-scrollbar">
             <div class="max-w-7xl mx-auto h-full">
                 
                 <!-- TAB: POINTAGE -->
@@ -139,7 +141,7 @@
                             <option value="Georges Brassens">Georges Brassens</option>
                         </select>
                     </div>
-                    <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 overflow-y-auto pb-20" id="pointageCardsContainer"></div>
+                    <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 overflow-y-auto pb-20 custom-scrollbar" id="pointageCardsContainer"></div>
                 </div>
 
                 <!-- TAB: PERSONNEL -->
@@ -149,7 +151,7 @@
                         <button onclick="app.openEmployeeModal()" class="btn-blue px-4 py-2 rounded-md text-sm font-medium shadow-sm"><i class="fas fa-plus mr-2"></i> Ajouter</button>
                     </div>
                     <div class="card flex-1 overflow-hidden flex flex-col">
-                        <div class="overflow-x-auto">
+                        <div class="overflow-x-auto custom-scrollbar">
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>
@@ -176,42 +178,34 @@
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
                         <div class="lg:col-span-2 card p-4 flex flex-col">
                             
-                            <!-- CONTROLES DU PLANNING ET EXPORT -->
-                            <div class="flex justify-between items-end mb-4 border-b pb-3">
-                                <div>
-                                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Affectations & Repos Hebdomadaires</h3>
-                                    <select id="planningTeamFilter" onchange="app.renderPlanning()" class="border border-gray-300 rounded-md px-3 py-1.5 text-sm w-48">
-                                        <option value="all">Toutes les équipes</option>
-                                        <option value="Jour">Équipe de Jour</option>
-                                        <option value="Nuit">Équipe de Nuit</option>
-                                    </select>
+                            <!-- CONTROLES DU PLANNING (SEMAINE ET EXPORT) -->
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-4 border-b pb-3 gap-4">
+                                <div class="w-full sm:w-auto">
+                                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Affectations & Repos</h3>
+                                    <div class="flex gap-2 w-full">
+                                        <select id="planningTeamFilter" onchange="app.renderPlanning()" class="border border-gray-300 rounded-md px-3 py-1.5 text-sm flex-1 sm:w-32">
+                                            <option value="all">Toutes équipes</option>
+                                            <option value="Jour">Équipe Jour</option>
+                                            <option value="Nuit">Équipe Nuit</option>
+                                        </select>
+                                        <input type="week" id="planningWeekFilter" onchange="app.renderPlanning()" class="border border-gray-300 rounded-md px-3 py-1.5 text-sm flex-1 sm:w-auto" title="Sélectionner la semaine">
+                                    </div>
                                 </div>
-                                <div class="flex flex-col items-end gap-2">
+                                <div class="flex flex-col items-end gap-2 w-full sm:w-auto">
                                     <div class="flex gap-2">
                                         <button onclick="app.toggleAllPlanning(true)" class="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded hover:bg-gray-200 border border-gray-300">Tout cocher</button>
                                         <button onclick="app.toggleAllPlanning(false)" class="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded hover:bg-gray-200 border border-gray-300">Tout décocher</button>
                                     </div>
-                                    <button onclick="app.exportSelectedPlanningPDF()" class="text-sm btn-blue px-4 py-2 rounded shadow-sm flex items-center">
-                                        <i class="fas fa-file-pdf mr-2"></i> Exporter PDF Sélectionnés
+                                    <button onclick="app.exportSelectedPlanningPDF()" class="text-sm btn-blue px-3 py-1.5 rounded shadow-sm flex items-center w-full sm:w-auto justify-center">
+                                        <i class="fas fa-file-pdf mr-2"></i> PDF Sélection
                                     </button>
                                 </div>
                             </div>
 
-                            <div class="flex-1 overflow-auto">
+                            <div class="flex-1 overflow-auto custom-scrollbar">
                                 <table class="min-w-full border-collapse border border-gray-200 text-sm">
-                                    <thead class="bg-gray-50">
-                                        <tr>
-                                            <th class="border border-gray-200 p-2 text-center w-8"><i class="fas fa-check-square text-gray-400"></i></th>
-                                            <th class="border border-gray-200 p-2 text-left">Employé</th>
-                                            <th class="border border-gray-200 p-2 text-center w-20">Lun</th>
-                                            <th class="border border-gray-200 p-2 text-center w-20">Mar</th>
-                                            <th class="border border-gray-200 p-2 text-center w-20">Mer</th>
-                                            <th class="border border-gray-200 p-2 text-center w-20">Jeu</th>
-                                            <th class="border border-gray-200 p-2 text-center w-20">Ven</th>
-                                            <th class="border border-gray-200 p-2 text-center w-20">Sam</th>
-                                            <th class="border border-gray-200 p-2 text-center w-20">Dim</th>
-                                            <th class="border border-gray-200 p-2 text-center w-10">PDF</th>
-                                        </tr>
+                                    <thead class="bg-gray-50" id="planningTableHeader">
+                                        <!-- Injecté dynamiquement par JS selon la semaine -->
                                     </thead>
                                     <tbody id="planningTableBody"></tbody>
                                 </table>
@@ -219,7 +213,7 @@
                         </div>
                         <div class="card p-4 flex flex-col">
                             <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Registre HS</h3>
-                            <div class="flex-1 overflow-y-auto" id="hsLogContainer"></div>
+                            <div class="flex-1 overflow-y-auto custom-scrollbar" id="hsLogContainer"></div>
                         </div>
                     </div>
                 </div>
@@ -230,9 +224,10 @@
                         <h2 class="text-2xl font-bold text-ert-blue">Rapports & Historique</h2>
                         <div class="flex gap-2">
                             <button onclick="app.exportHistoryJSON()" class="bg-gray-800 hover:bg-gray-900 text-white px-3 py-2 rounded-md text-sm font-medium shadow-sm"><i class="fas fa-download mr-2"></i> Journal JSON</button>
-                            <button onclick="app.generatePDF()" class="btn-red px-4 py-2 rounded-md text-sm font-medium shadow-sm"><i class="fas fa-file-pdf mr-2"></i> Télécharger PDF Global</button>
+                            <button onclick="app.generatePDF()" class="btn-red px-4 py-2 rounded-md text-sm font-medium shadow-sm"><i class="fas fa-file-pdf mr-2"></i> PDF Effectifs</button>
                         </div>
                     </div>
+                    
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                         <div class="card p-4 text-center border-t-4 border-t-ert-blue">
                             <div class="text-gray-500 text-sm font-medium">Effectif Total</div>
@@ -251,14 +246,49 @@
                             <div class="text-3xl font-bold text-ert-red mt-1" id="stat-hs">0h</div>
                         </div>
                     </div>
+
+                    <!-- NOUVEAU : ANALYSE DES HEURES -->
+                    <div class="card p-4 flex flex-col mb-6">
+                        <div class="flex justify-between items-center border-b pb-2 mb-4">
+                            <h3 class="text-lg font-semibold text-gray-800"><i class="fas fa-chart-line text-ert-blue mr-2"></i> Analyse des Heures Effectuées</h3>
+                            <div class="flex gap-2 items-center">
+                                <span class="text-sm text-gray-500">Période:</span>
+                                <select id="reportPeriodFilter" onchange="app.renderHoursChart()" class="border border-gray-300 rounded text-sm px-2 py-1 focus:ring-1 focus:ring-ert-blue">
+                                    <option value="week">7 derniers jours</option>
+                                    <option value="month" selected>30 derniers jours</option>
+                                    <option value="year">12 derniers mois</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="flex flex-col md:flex-row gap-4 h-72">
+                            <!-- Sidebar sélection agents -->
+                            <div class="w-full md:w-1/4 border border-gray-200 rounded p-2 overflow-y-auto bg-gray-50 custom-scrollbar">
+                                <div class="flex justify-between items-center mb-2 pb-1 border-b border-gray-300">
+                                    <span class="text-xs font-bold text-gray-500 uppercase">Sélection Agents</span>
+                                    <div class="text-[10px]">
+                                        <button onclick="app.toggleAllReportCb(true)" class="text-ert-blue hover:underline">Tous</button> |
+                                        <button onclick="app.toggleAllReportCb(false)" class="text-ert-red hover:underline">Aucun</button>
+                                    </div>
+                                </div>
+                                <div id="reportEmpCheckboxes" class="flex flex-col gap-1.5 text-sm">
+                                    <!-- Injecté dynamiquement -->
+                                </div>
+                            </div>
+                            <!-- Zone Graphique -->
+                            <div class="w-full md:w-3/4 relative h-full">
+                                <canvas id="hoursAnalysisChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-[300px]">
                         <div class="card p-4 flex flex-col">
                             <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Répartition par Site</h3>
                             <div class="flex-1 relative w-full h-full min-h-[250px]"><canvas id="siteChart"></canvas></div>
                         </div>
                         <div class="card p-4 flex flex-col">
-                            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Journal d'Activité & Historique</h3>
-                            <div class="flex-1 overflow-y-auto pr-2" id="activityLogContainer"></div>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Journal d'Activité (Temps Réel)</h3>
+                            <div class="flex-1 overflow-y-auto pr-2 custom-scrollbar" id="activityLogContainer"></div>
                         </div>
                     </div>
                 </div>
@@ -283,31 +313,28 @@
 
                         <!-- Gestion des Accès (Super Admin) -->
                         <div class="card p-6 hidden" id="superAdminPanel">
-                            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2 flex items-center"><i class="fas fa-shield-alt text-ert-red mr-2"></i> Gestion des Accès (Super Admin)</h3>
-                            <p class="text-sm text-gray-600 mb-4">Ajouter de nouveaux utilisateurs pour accéder à l'application.</p>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2 flex items-center"><i class="fas fa-shield-alt text-ert-red mr-2"></i> Gestion des Accès (Admin)</h3>
+                            <p class="text-sm text-gray-600 mb-4">Gérer les accès à la plateforme.</p>
                             
                             <div class="grid grid-cols-1 gap-2 mb-3">
                                 <input type="email" id="newAccountEmail" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-ert-blue" placeholder="E-mail du nouvel utilisateur">
                                 <div class="flex gap-2">
-                                    <input type="password" id="newAccountPwd" class="border border-gray-300 rounded-md px-3 py-2 text-sm flex-1 focus:ring-1 focus:ring-ert-blue" placeholder="Mot de passe temporaire">
+                                    <input type="password" id="newAccountPwd" class="border border-gray-300 rounded-md px-3 py-2 text-sm flex-1 focus:ring-1 focus:ring-ert-blue" placeholder="Mot de passe provisoire">
                                     <select id="newAccountRole" class="border border-gray-300 rounded-md px-3 py-2 text-sm w-1/3">
-                                        <option value="user">Utilisateur standard</option>
-                                        <option value="superadmin">Super Admin</option>
+                                        <option value="user">Standard</option>
+                                        <option value="superadmin">Admin</option>
                                     </select>
                                 </div>
                                 <button onclick="app.addUserAccount()" class="btn-blue px-4 py-2 rounded-md text-sm font-medium mt-1">Créer le compte</button>
                             </div>
-                            
-                            <h4 class="text-sm font-semibold text-gray-700 mt-5 mb-2">Comptes actifs</h4>
-                            <ul id="usersList" class="divide-y divide-gray-200 border border-gray-200 rounded-md max-h-40 overflow-y-auto"></ul>
+                            <ul id="usersList" class="divide-y divide-gray-200 border border-gray-200 rounded-md max-h-32 overflow-y-auto custom-scrollbar mt-3"></ul>
                         </div>
 
                         <!-- Reset Data -->
                         <div class="card p-6 md:col-span-2">
                             <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Données de l'Application</h3>
-                            <button onclick="app.resetData()" class="btn-red px-4 py-2 rounded-md text-sm font-medium w-full md:w-auto flex justify-center items-center"><i class="fas fa-trash-alt mr-2"></i> Effacer toutes les données</button>
+                            <button onclick="app.resetData()" class="btn-red px-4 py-2 rounded-md text-sm font-medium w-full md:w-auto flex justify-center items-center"><i class="fas fa-trash-alt mr-2"></i> Effacer toutes les données (Employés & Historiques)</button>
                         </div>
-
                     </div>
                 </div>
             </div>
@@ -322,7 +349,7 @@
                 <h3 class="text-lg font-semibold text-gray-800" id="employeeModalTitle">Ajouter un employé</h3>
                 <button onclick="app.closeModals()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
             </div>
-            <div class="p-6 overflow-y-auto">
+            <div class="p-6 overflow-y-auto custom-scrollbar">
                 <input type="hidden" id="empId">
                 <div class="mb-4 flex flex-col items-center">
                     <div id="empPhotoPreview" class="w-20 h-20 rounded-full bg-gray-200 mb-2 border-2 border-dashed border-gray-400 flex items-center justify-center overflow-hidden">
@@ -334,14 +361,8 @@
                     </label>
                     <input type="hidden" id="empPhotoData">
                 </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Nom complet</label>
-                    <input type="text" id="empName" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue">
-                </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Matricule</label>
-                    <input type="text" id="empMatricule" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue">
-                </div>
+                <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Nom complet</label><input type="text" id="empName" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue"></div>
+                <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Matricule</label><input type="text" id="empMatricule" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue"></div>
                 <div class="grid grid-cols-2 gap-2 mb-4">
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Heure Arrivée</label><input type="time" id="empHeureArrivee" value="08:00" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue"></div>
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Heure Départ</label><input type="time" id="empHeureDepart" value="20:00" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue"></div>
@@ -385,7 +406,7 @@
             <div class="p-6">
                 <input type="hidden" id="absenceEmpId">
                 <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Type d'absence</label><select id="absenceType" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue"><option value="Congé annuel">Congé annuel</option><option value="Maladie">Maladie</option><option value="Accident de travail">Accident de travail</option><option value="Formation">Formation</option><option value="Événement familial">Événement familial</option></select></div>
-                <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Durée (Jours ou Heures)</label><input type="text" id="absenceDuration" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue"></div>
+                <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Durée (Jours/Heures)</label><input type="text" id="absenceDuration" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue"></div>
             </div>
             <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3"><button onclick="app.closeModals()" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700">Annuler</button><button onclick="app.saveAbsence()" class="btn-orange px-4 py-2 rounded-md text-sm font-medium">Valider</button></div>
         </div>
@@ -407,30 +428,59 @@
         try {
             firebase.initializeApp(firebaseConfig);
             database = firebase.database();
-        } catch (error) {
-            console.warn("Firebase hors ligne. Mode local.");
-        }
+        } catch (error) { console.warn("Firebase hors ligne. Mode local."); }
 
         const app = {
             data: { employees: [], logs: [], hs: [], users: [] },
             currentUserEmail: null,
             currentUserRole: null,
             chartInstance: null,
+            hoursAnalysisChart: null,
+            currentPlanningWeekDates: [], // Dates de la semaine sélectionnée
 
             init() {
+                // Set default dates
                 try { document.getElementById('hsDate').value = new Date().toISOString().split('T')[0]; } catch(e) {}
+                this.initWeekPicker();
                 this.loadData();
+            },
+
+            initWeekPicker() {
+                const today = new Date();
+                const year = today.getFullYear();
+                const jan1 = new Date(year, 0, 1);
+                const days = Math.floor((today - jan1) / (24 * 60 * 60 * 1000));
+                const weekNum = Math.ceil((today.getDay() + 1 + days) / 7);
+                const weekStr = `${year}-W${weekNum.toString().padStart(2, '0')}`;
+                
+                const weekInput = document.getElementById('planningWeekFilter');
+                if(weekInput) weekInput.value = weekStr;
+                this.calculateWeekDates(weekStr);
+            },
+
+            calculateWeekDates(weekValue) {
+                if(!weekValue) return;
+                let year = parseInt(weekValue.substring(0, 4));
+                let week = parseInt(weekValue.substring(6, 8));
+                let simple = new Date(year, 0, 1 + (week - 1) * 7);
+                let dow = simple.getDay();
+                let ISOweekStart = simple;
+                if (dow <= 4) ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
+                else ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
+                
+                this.currentPlanningWeekDates = [];
+                for (let i = 0; i < 7; i++) {
+                    let d = new Date(ISOweekStart);
+                    d.setDate(d.getDate() + i);
+                    this.currentPlanningWeekDates.push(d);
+                }
             },
 
             loadData() {
                 if (database) {
-                    database.ref('edt_data').on('value', (snapshot) => {
-                        this.syncData(snapshot.val());
-                    }, (error) => {
-                        this.syncData(JSON.parse(localStorage.getItem('edt_data_v15')));
-                    });
+                    database.ref('edt_data').on('value', (snapshot) => { this.syncData(snapshot.val()); }, (error) => { this.syncData(JSON.parse(localStorage.getItem('edt_data_v16'))); });
                 } else {
-                    this.syncData(JSON.parse(localStorage.getItem('edt_data_v15')));
+                    this.syncData(JSON.parse(localStorage.getItem('edt_data_v16')));
                 }
             },
 
@@ -443,22 +493,13 @@
                 if (!this.data.users) this.data.users = [];
 
                 if (this.data.users.length === 0) {
-                    this.data.users = [
-                        { email: 'elahssen.malek@gmail.com', password: '123456', role: 'superadmin' },
-                        { email: 'seyma.elahsen@ert.tn', password: '123456', role: 'superadmin' }
-                    ];
+                    this.data.users = [{ email: 'elahssen.malek@gmail.com', password: '123456', role: 'superadmin' }, { email: 'seyma.elahsen@ert.tn', password: '123456', role: 'superadmin' }];
                 }
 
                 if (sessionStorage.getItem('edt_logged_in') === 'true' && !this.currentUserEmail) {
                     const savedEmail = sessionStorage.getItem('edt_user_email');
                     const user = this.data.users.find(u => u.email === savedEmail);
-                    if (user) {
-                        this.currentUserEmail = user.email;
-                        this.currentUserRole = user.role;
-                        this.showMainApp();
-                    } else {
-                        this.logout();
-                    }
+                    if (user) { this.currentUserEmail = user.email; this.currentUserRole = user.role; this.showMainApp(); } else { this.logout(); }
                 } else if (!this.currentUserEmail) {
                     document.getElementById('loginScreen').classList.remove('hidden');
                 }
@@ -470,14 +511,12 @@
             },
 
             saveData() {
-                localStorage.setItem('edt_data_v15', JSON.stringify(this.data));
-                if (database) {
-                    try { database.ref('edt_data').set(this.data); } catch (e) {}
-                }
+                localStorage.setItem('edt_data_v16', JSON.stringify(this.data));
+                if (database) { try { database.ref('edt_data').set(this.data); } catch (e) {} }
             },
             
             resetData() {
-                if(confirm("Êtes-vous sûr de vouloir tout effacer ? (Les comptes utilisateurs seront conservés)")) {
+                if(confirm("Êtes-vous sûr de vouloir tout effacer ? (Comptes admin conservés)")) {
                     this.data.employees = []; this.data.logs = []; this.data.hs = [];
                     this.saveData();
                 }
@@ -488,12 +527,7 @@
                     const email = document.getElementById('loginEmail').value.trim().toLowerCase();
                     const pass = document.getElementById('loginPassword').value;
                     const errorEl = document.getElementById('loginError');
-                    
-                    if (!email || !pass) { 
-                        errorEl.textContent = "Veuillez remplir tous les champs."; 
-                        errorEl.classList.remove('hidden'); 
-                        return; 
-                    }
+                    if (!email || !pass) { errorEl.textContent = "Veuillez remplir tous les champs."; errorEl.classList.remove('hidden'); return; }
 
                     if (!this.data) this.data = { users: [] };
                     if (!this.data.users) this.data.users = [];
@@ -502,47 +536,34 @@
 
                     if (!user && (email === 'elahssen.malek@gmail.com' || email === 'seyma.elahsen@ert.tn') && pass === '123456') {
                         user = { email: email, password: pass, role: 'superadmin' };
-                        this.data.users.push(user);
-                        this.saveData(); 
+                        this.data.users.push(user); this.saveData(); 
                     }
 
                     if (user) {
-                        sessionStorage.setItem('edt_logged_in', 'true');
-                        sessionStorage.setItem('edt_user_email', user.email);
+                        sessionStorage.setItem('edt_logged_in', 'true'); sessionStorage.setItem('edt_user_email', user.email);
                         errorEl.classList.add('hidden');
-                        this.currentUserEmail = user.email;
-                        this.currentUserRole = user.role;
+                        this.currentUserEmail = user.email; this.currentUserRole = user.role;
                         this.showMainApp();
                     } else {
-                        errorEl.textContent = "Identifiants ou mot de passe incorrects.";
-                        errorEl.classList.remove('hidden');
+                        errorEl.textContent = "Identifiants ou mot de passe incorrects."; errorEl.classList.remove('hidden');
                     }
                 } catch (error) {}
             },
 
             logout() {
-                sessionStorage.removeItem('edt_logged_in');
-                sessionStorage.removeItem('edt_user_email');
-                this.currentUserEmail = null;
-                this.currentUserRole = null;
-                document.getElementById('mainApp').classList.add('hidden');
-                document.getElementById('loginScreen').classList.remove('hidden');
-                document.getElementById('loginEmail').value = '';
-                document.getElementById('loginPassword').value = '';
+                sessionStorage.removeItem('edt_logged_in'); sessionStorage.removeItem('edt_user_email');
+                this.currentUserEmail = null; this.currentUserRole = null;
+                document.getElementById('mainApp').classList.add('hidden'); document.getElementById('loginScreen').classList.remove('hidden');
+                document.getElementById('loginEmail').value = ''; document.getElementById('loginPassword').value = '';
             },
 
             changePassword() {
-                const oldPw = document.getElementById('oldPassword').value;
-                const newPw = document.getElementById('newPassword').value;
-                const msg = document.getElementById('pwdMsg');
+                const oldPw = document.getElementById('oldPassword').value; const newPw = document.getElementById('newPassword').value; const msg = document.getElementById('pwdMsg');
                 msg.classList.remove('hidden', 'text-green-600', 'text-ert-red');
                 if(!oldPw || !newPw) { msg.textContent = "Remplissez les deux champs."; msg.classList.add('text-ert-red'); return; }
-
                 const userIndex = this.data.users.findIndex(u => u.email === this.currentUserEmail);
                 if (this.data.users[userIndex].password !== oldPw) { msg.textContent = "L'ancien mot de passe est incorrect."; msg.classList.add('text-ert-red'); return; }
-
-                this.data.users[userIndex].password = newPw;
-                this.saveData();
+                this.data.users[userIndex].password = newPw; this.saveData();
                 msg.textContent = "Mot de passe mis à jour."; msg.classList.add('text-green-600');
                 document.getElementById('oldPassword').value = ''; document.getElementById('newPassword').value = '';
             },
@@ -551,90 +572,64 @@
                 const email = document.getElementById('newAccountEmail').value.trim().toLowerCase();
                 const pwd = document.getElementById('newAccountPwd').value;
                 const role = document.getElementById('newAccountRole').value;
-
                 if (!email || !pwd) return alert("Remplissez l'email et le mot de passe.");
                 if (this.data.users.find(u => u.email === email)) return alert("Cet email existe déjà.");
-
-                this.data.users.push({ email, password: pwd, role });
-                this.saveData();
+                this.data.users.push({ email, password: pwd, role }); this.saveData();
                 document.getElementById('newAccountEmail').value = ''; document.getElementById('newAccountPwd').value = '';
             },
 
             removeUserAccount(email) {
                 if (email === this.currentUserEmail) return alert("Impossible de supprimer votre propre compte actif.");
-                if (confirm(`Supprimer l'accès pour ${email} ?`)) {
-                    this.data.users = this.data.users.filter(u => u.email !== email);
-                    this.saveData();
-                }
+                if (confirm(`Supprimer l'accès pour ${email} ?`)) { this.data.users = this.data.users.filter(u => u.email !== email); this.saveData(); }
             },
 
             renderUsersList() {
-                const list = document.getElementById('usersList');
-                if (!list) return;
-                list.innerHTML = this.data.users.map(u => `
-                    <li class="px-4 py-3 flex justify-between items-center text-sm">
-                        <div>
-                            <span class="text-gray-800 font-medium">${u.email}</span>
-                            <span class="ml-2 text-xs px-2 py-0.5 rounded ${u.role === 'superadmin' ? 'bg-ert-red text-white' : 'bg-gray-200 text-gray-700'}">${u.role === 'superadmin' ? 'Super Admin' : 'Utilisateur'}</span>
-                        </div>
-                        ${u.email !== this.currentUserEmail ? `<button onclick="app.removeUserAccount('${u.email}')" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>` : `<span class="text-xs text-green-600 font-bold">Moi</span>`}
-                    </li>
-                `).join('');
+                const list = document.getElementById('usersList'); if (!list) return;
+                list.innerHTML = this.data.users.map(u => `<li class="px-4 py-2 flex justify-between items-center text-sm border-b last:border-0"><div><span class="text-gray-800 font-medium">${u.email}</span><span class="ml-2 text-[10px] px-2 py-0.5 rounded ${u.role === 'superadmin' ? 'bg-ert-red text-white' : 'bg-gray-200 text-gray-700'}">${u.role === 'superadmin' ? 'Super Admin' : 'Standard'}</span></div>${u.email !== this.currentUserEmail ? `<button onclick="app.removeUserAccount('${u.email}')" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>` : `<span class="text-[10px] text-green-600 font-bold uppercase">Moi</span>`}</li>`).join('');
             },
 
             showMainApp() {
-                document.getElementById('loginScreen').classList.add('hidden');
-                document.getElementById('mainApp').classList.remove('hidden');
+                document.getElementById('loginScreen').classList.add('hidden'); document.getElementById('mainApp').classList.remove('hidden');
                 document.getElementById('currentUserDisplay').textContent = this.currentUserEmail.split('@')[0];
                 document.getElementById('currentUserRoleDisplay').textContent = this.currentUserRole === 'superadmin' ? 'Super Administrateur' : 'Utilisateur autorisé';
-                this.renderAll();
-                this.switchTab('pointage');
+                this.renderAll(); this.switchTab('pointage');
             },
 
             switchTab(tabId) {
                 ['pointage', 'personnel', 'planning', 'rapports', 'parametres'].forEach(id => {
                     document.getElementById(`tab-${id}`).classList.add('hidden');
-                    const nav = document.getElementById(`nav-${id}`);
-                    nav.classList.remove('tab-active'); nav.classList.add('tab-inactive');
+                    const nav = document.getElementById(`nav-${id}`); nav.classList.remove('tab-active'); nav.classList.add('tab-inactive');
                 });
                 document.getElementById(`tab-${tabId}`).classList.remove('hidden');
-                const activeNav = document.getElementById(`nav-${tabId}`);
-                activeNav.classList.remove('tab-inactive'); activeNav.classList.add('tab-active');
+                const activeNav = document.getElementById(`nav-${tabId}`); activeNav.classList.remove('tab-inactive'); activeNav.classList.add('tab-active');
 
-                if (tabId === 'rapports') this.renderChart();
+                if (tabId === 'rapports') {
+                    this.renderChart();
+                    this.renderReportCheckboxes();
+                    this.renderHoursChart();
+                }
                 if (tabId === 'parametres') {
-                    if (this.currentUserRole === 'superadmin') {
-                        document.getElementById('superAdminPanel').classList.remove('hidden');
-                        this.renderUsersList();
-                    } else {
-                        document.getElementById('superAdminPanel').classList.add('hidden');
-                    }
+                    if (this.currentUserRole === 'superadmin') { document.getElementById('superAdminPanel').classList.remove('hidden'); this.renderUsersList(); } 
+                    else { document.getElementById('superAdminPanel').classList.add('hidden'); }
                 }
             },
             closeModals() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('active')); },
 
             handlePhotoUpload(event) {
-                const file = event.target.files[0];
-                if (!file) return;
+                const file = event.target.files[0]; if (!file) return;
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const img = new Image();
                     img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        let w = img.width; let h = img.height;
+                        const canvas = document.createElement('canvas'); let w = img.width; let h = img.height;
                         if (w > h) { if (w > 150) { h *= 150/w; w = 150; } } else { if (h > 150) { w *= 150/h; h = 150; } }
-                        canvas.width = w; canvas.height = h;
-                        const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, w, h);
+                        canvas.width = w; canvas.height = h; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, w, h);
                         const compressed = canvas.toDataURL('image/jpeg', 0.7); 
                         document.getElementById('empPhotoData').value = compressed;
                         document.getElementById('empPhotoPreview').innerHTML = `<img src="${compressed}" class="w-full h-full object-cover">`;
-                    };
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-                event.target.value = '';
+                    }; img.src = e.target.result;
+                }; reader.readAsDataURL(file); event.target.value = '';
             },
-            
             getAvatarHtml(emp) {
                 if (emp && emp.photo) return `<img src="${emp.photo}" class="avatar-img shadow-sm">`;
                 return `<div class="avatar-placeholder shadow-sm">${emp && emp.name ? emp.name.charAt(0).toUpperCase() : '?'}</div>`;
@@ -643,159 +638,228 @@
             openEmployeeModal(id = null) {
                 document.getElementById('employeeModalTitle').textContent = id ? 'Modifier employé' : 'Ajouter un employé';
                 const emp = id ? this.data.employees.find(e => String(e.id) === String(id)) : null;
-                
-                document.getElementById('empId').value = emp ? emp.id : '';
-                document.getElementById('empName').value = emp ? emp.name : '';
-                document.getElementById('empMatricule').value = emp ? emp.matricule : '';
-                document.getElementById('empEquipe').value = emp ? emp.equipe : 'Jour';
-                document.getElementById('empSite').value = emp ? emp.site : 'Pierre Mendès France';
-                document.getElementById('empLieu').value = emp && emp.lieu ? emp.lieu : '';
-                document.getElementById('empHeureArrivee').value = emp && emp.heureArrivee ? emp.heureArrivee : '08:00';
-                document.getElementById('empHeureDepart').value = emp && emp.heureDepart ? emp.heureDepart : '20:00';
-                document.getElementById('empRepos1').value = emp && emp.repos1 ? emp.repos1 : 'Sam';
-                document.getElementById('empRepos2').value = emp && emp.repos2 ? emp.repos2 : 'Dim';
-                document.getElementById('empPhotoData').value = emp && emp.photo ? emp.photo : '';
-                document.getElementById('empPhotoPreview').innerHTML = (emp && emp.photo) ? `<img src="${emp.photo}" class="w-full h-full object-cover">` : `<i class="fas fa-camera text-gray-400 text-2xl"></i>`;
+                document.getElementById('empId').value = emp ? emp.id : ''; document.getElementById('empName').value = emp ? emp.name : ''; document.getElementById('empMatricule').value = emp ? emp.matricule : ''; document.getElementById('empEquipe').value = emp ? emp.equipe : 'Jour'; document.getElementById('empSite').value = emp ? emp.site : 'Pierre Mendès France'; document.getElementById('empLieu').value = emp && emp.lieu ? emp.lieu : ''; document.getElementById('empHeureArrivee').value = emp && emp.heureArrivee ? emp.heureArrivee : '08:00'; document.getElementById('empHeureDepart').value = emp && emp.heureDepart ? emp.heureDepart : '20:00'; document.getElementById('empRepos1').value = emp && emp.repos1 ? emp.repos1 : 'Sam'; document.getElementById('empRepos2').value = emp && emp.repos2 ? emp.repos2 : 'Dim'; document.getElementById('empPhotoData').value = emp && emp.photo ? emp.photo : ''; document.getElementById('empPhotoPreview').innerHTML = (emp && emp.photo) ? `<img src="${emp.photo}" class="w-full h-full object-cover">` : `<i class="fas fa-camera text-gray-400 text-2xl"></i>`;
                 document.getElementById('employeeModal').classList.add('active');
             },
             saveEmployee() {
-                const id = document.getElementById('empId').value || Date.now().toString();
-                const name = document.getElementById('empName').value;
-                const matricule = document.getElementById('empMatricule').value;
+                const id = document.getElementById('empId').value || Date.now().toString(); const name = document.getElementById('empName').value; const matricule = document.getElementById('empMatricule').value;
                 if (!name || !matricule) return alert('Nom et Matricule requis');
-
-                const empData = { 
-                    id, name, matricule, 
-                    equipe: document.getElementById('empEquipe').value, 
-                    site: document.getElementById('empSite').value, 
-                    lieu: document.getElementById('empLieu').value, 
-                    heureArrivee: document.getElementById('empHeureArrivee').value, 
-                    heureDepart: document.getElementById('empHeureDepart').value, 
-                    repos1: document.getElementById('empRepos1').value, 
-                    repos2: document.getElementById('empRepos2').value, 
-                    photo: document.getElementById('empPhotoData').value 
-                };
-
+                const empData = { id, name, matricule, equipe: document.getElementById('empEquipe').value, site: document.getElementById('empSite').value, lieu: document.getElementById('empLieu').value, heureArrivee: document.getElementById('empHeureArrivee').value, heureDepart: document.getElementById('empHeureDepart').value, repos1: document.getElementById('empRepos1').value, repos2: document.getElementById('empRepos2').value, photo: document.getElementById('empPhotoData').value };
                 const existingIndex = this.data.employees.findIndex(e => String(e.id) === String(id));
-                if (existingIndex >= 0) {
-                    empData.status = this.data.employees[existingIndex].status;
-                    this.data.employees[existingIndex] = empData;
-                } else {
-                    empData.status = 'absent';
-                    this.data.employees.push(empData);
-                    this.addLog(id, name, empData.site, 'creation', 'Création du profil');
-                }
+                if (existingIndex >= 0) { empData.status = this.data.employees[existingIndex].status; this.data.employees[existingIndex] = empData; } 
+                else { empData.status = 'absent'; this.data.employees.push(empData); this.addLog(id, name, empData.site, 'creation', 'Création profil'); }
                 this.saveData(); this.closeModals();
             },
-            
             deleteEmployee(id) {
-                if (confirm('Supprimer cet employé ?')) {
-                    const emp = this.data.employees.find(e => String(e.id) === String(id));
-                    if(emp) this.addLog(id, emp.name, emp.site, 'suppression', 'Agent supprimé');
-                    this.data.employees = this.data.employees.filter(e => String(e.id) !== String(id));
-                    this.saveData();
-                }
+                if (confirm('Supprimer cet employé ?')) { const emp = this.data.employees.find(e => String(e.id) === String(id)); if(emp) this.addLog(id, emp.name, emp.site, 'suppression', 'Agent supprimé'); this.data.employees = this.data.employees.filter(e => String(e.id) !== String(id)); this.saveData(); }
             },
-            
-            updateLieuDirect(id, newLieu) {
-                const emp = this.data.employees.find(e => String(e.id) === String(id));
-                if (emp) { emp.lieu = newLieu; this.saveData(); }
-            },
+            updateLieuDirect(id, newLieu) { const emp = this.data.employees.find(e => String(e.id) === String(id)); if (emp) { emp.lieu = newLieu; this.saveData(); } },
 
             addLog(empId, empName, site, action, detail) {
                 this.data.logs.unshift({ id: Date.now(), empId, empName, site, action, detail, timestamp: new Date().toISOString() });
-                if (this.data.logs.length > 200) this.data.logs.pop();
+                if (this.data.logs.length > 500) this.data.logs.pop();
                 this.saveData();
             },
 
             logAction(empId, action) {
                 const emp = this.data.employees.find(e => String(e.id) === String(empId));
                 if (!emp) return;
-                if (action === 'arrivee') { emp.status = 'present'; this.addLog(empId, emp.name, emp.site, 'arrivee', `Arrivée à ${emp.heureArrivee}`); } 
-                else if (action === 'depart') { emp.status = 'absent'; this.addLog(empId, emp.name, emp.site, 'depart', `Départ à ${emp.heureDepart}`); }
+                
+                const timeNow = new Date().toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
+                if (action === 'arrivee') { 
+                    emp.status = 'present'; 
+                    this.addLog(empId, emp.name, emp.site, 'arrivee', `Pointage Arrivée`); 
+                } 
+                else if (action === 'depart') { 
+                    emp.status = 'absent'; 
+                    this.addLog(empId, emp.name, emp.site, 'depart', `Pointage Départ`); 
+                }
                 this.saveData();
             },
             
-            openAbsenceModal(empId) {
-                document.getElementById('absenceEmpId').value = empId;
-                document.getElementById('absenceModal').classList.add('active');
-            },
+            openAbsenceModal(empId) { document.getElementById('absenceEmpId').value = empId; document.getElementById('absenceModal').classList.add('active'); },
             saveAbsence() {
-                const empId = document.getElementById('absenceEmpId').value;
-                const type = document.getElementById('absenceType').value;
-                const duration = document.getElementById('absenceDuration').value;
+                const empId = document.getElementById('absenceEmpId').value; const type = document.getElementById('absenceType').value; const duration = document.getElementById('absenceDuration').value;
                 if(!duration) return alert("Préciser la durée.");
-                const emp = this.data.employees.find(e => String(e.id) === String(empId));
-                if (!emp) return;
-                emp.status = 'conge';
-                this.addLog(empId, emp.name, emp.site, 'absence', `${type} (${duration})`);
+                const emp = this.data.employees.find(e => String(e.id) === String(empId)); if (!emp) return;
+                emp.status = 'conge'; this.addLog(empId, emp.name, emp.site, 'absence', `${type} (${duration})`);
                 this.saveData(); this.closeModals();
             },
 
-            openHsModal() {
-                document.getElementById('hsEmpId').innerHTML = this.data.employees.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
-                document.getElementById('hsModal').classList.add('active');
-            },
+            openHsModal() { document.getElementById('hsEmpId').innerHTML = this.data.employees.map(e => `<option value="${e.id}">${e.name}</option>`).join(''); document.getElementById('hsModal').classList.add('active'); },
             saveHs() {
-                const empId = document.getElementById('hsEmpId').value;
-                const date = document.getElementById('hsDate').value;
-                const hours = document.getElementById('hsHours').value;
-                const motif = document.getElementById('hsMotif').value;
+                const empId = document.getElementById('hsEmpId').value; const date = document.getElementById('hsDate').value; const hours = document.getElementById('hsHours').value; const motif = document.getElementById('hsMotif').value;
                 if (!empId || !date || !hours || !motif) return alert('Champs requis');
                 const emp = this.data.employees.find(e => String(e.id) === String(empId));
-                this.data.hs.unshift({ id: Date.now(), empName: emp ? emp.name : 'Inconnu', date, hours: parseFloat(hours), motif });
+                this.data.hs.unshift({ id: Date.now(), empId: empId, empName: emp ? emp.name : 'Inconnu', date, hours: parseFloat(hours), motif });
                 if(emp) this.addLog(empId, emp.name, emp.site, 'hs', `Sup: +${hours}h (${motif})`);
                 this.saveData(); this.closeModals();
             },
 
             exportHistoryJSON() {
                 const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.data.logs, null, 2));
-                const a = document.createElement('a'); a.href = dataStr; a.download = `EDT-journal.json`;
-                document.body.appendChild(a); a.click(); a.remove();
+                const a = document.createElement('a'); a.href = dataStr; a.download = `EDT-journal.json`; document.body.appendChild(a); a.click(); a.remove();
             },
 
-            // --- NOUVELLES FONCTIONS PDF PLANNING ---
-            toggleAllPlanning(checked) {
-                document.querySelectorAll('.planning-cb').forEach(cb => cb.checked = checked);
-            },
-
+            // --- NOUVEAUTÉ : PDF PLANNING ---
+            toggleAllPlanning(checked) { document.querySelectorAll('.planning-cb').forEach(cb => cb.checked = checked); },
             exportSelectedPlanningPDF() {
                 const checkedIds = Array.from(document.querySelectorAll('.planning-cb:checked')).map(cb => cb.value);
-                if (checkedIds.length === 0) return alert("Veuillez sélectionner au moins un employé (case à cocher).");
+                if (checkedIds.length === 0) return alert("Cochez au moins un employé.");
                 this.exportPlanningPDF(checkedIds);
             },
-
             exportPlanningPDF(empIds) {
-                const { jsPDF } = window.jspdf; 
-                const doc = new jsPDF('landscape'); // Format paysage pour le planning
-                const d = new Date().toLocaleDateString('fr-FR');
+                const { jsPDF } = window.jspdf; const doc = new jsPDF('landscape');
+                
+                // Déterminer la semaine pour le titre PDF
+                const weekStr = document.getElementById('planningWeekFilter').value;
                 
                 doc.setFontSize(16); doc.setTextColor(0, 38, 84); doc.text("EDT-track - Planning Hebdomadaire", 14, 15);
-                doc.setFontSize(10); doc.setTextColor(100); doc.text(`ERT - Généré le ${d}`, 14, 22);
+                doc.setFontSize(10); doc.setTextColor(100); doc.text(`Semaine sélectionnée : ${weekStr || 'Actuelle'}`, 14, 22);
                 
+                // Noms courts des jours selon currentPlanningWeekDates
+                const jours = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+                const headerDates = this.currentPlanningWeekDates.length === 7 ? this.currentPlanningWeekDates.map((d,i) => `${jours[i]} ${d.getDate()}/${d.getMonth()+1}`) : jours;
+
                 const empsToExport = this.data.employees.filter(e => empIds.includes(e.id));
                 const tableData = empsToExport.map(emp => {
-                    const days = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map(d => {
-                        return (d === emp.repos1 || d === emp.repos2) ? 'Repos' : `${emp.site}\n${emp.heureArrivee} - ${emp.heureDepart}`;
-                    });
-                    return [emp.name, emp.equipe, ...days];
+                    const daily = jours.map(d => (d === emp.repos1 || d === emp.repos2) ? 'Repos' : `${emp.site}\n${emp.heureArrivee} - ${emp.heureDepart}`);
+                    return [emp.name, emp.equipe, ...daily];
                 });
 
                 doc.autoTable({
                     startY: 28,
-                    head: [['Employé', 'Équipe', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']],
+                    head: [['Employé', 'Équipe', ...headerDates]],
                     body: tableData,
                     headStyles: { fillColor: [0, 38, 84], halign: 'center' },
                     styles: { fontSize: 8, cellPadding: 2, valign: 'middle', halign: 'center' },
                     columnStyles: { 0: { halign: 'left', fontStyle: 'bold' } }
                 });
-
-                doc.save(`Planning_${d.replace(/\//g, '-')}.pdf`);
+                doc.save(`Planning_${weekStr || 'Semaine'}.pdf`);
             },
 
+            // --- NOUVEAUTÉ : ANALYSE DES HEURES ---
+            toggleAllReportCb(checked) {
+                document.querySelectorAll('.report-emp-cb').forEach(cb => cb.checked = checked);
+                this.renderHoursChart();
+            },
+            renderReportCheckboxes() {
+                const container = document.getElementById('reportEmpCheckboxes');
+                if(!container) return;
+                container.innerHTML = this.data.employees.map(emp => `
+                    <label class="flex items-center gap-2 cursor-pointer p-1 hover:bg-gray-100 rounded">
+                        <input type="checkbox" class="report-emp-cb text-ert-blue rounded" value="${emp.id}" checked onchange="app.renderHoursChart()">
+                        <span class="truncate" title="${emp.name}">${emp.name}</span>
+                    </label>
+                `).join('');
+            },
+            renderHoursChart() {
+                const ctx = document.getElementById('hoursAnalysisChart');
+                if (!ctx) return;
+                if (this.hoursAnalysisChart) this.hoursAnalysisChart.destroy();
+
+                const period = document.getElementById('reportPeriodFilter').value; // 'week', 'month', 'year'
+                const selectedIds = Array.from(document.querySelectorAll('.report-emp-cb:checked')).map(cb => cb.value);
+                const emps = this.data.employees.filter(e => selectedIds.includes(e.id));
+
+                if (emps.length === 0) return; // Rien à afficher
+
+                // Déterminer la plage de dates
+                const now = new Date();
+                let daysToAnalyze = 7;
+                if (period === 'month') daysToAnalyze = 30;
+                else if (period === 'year') daysToAnalyze = 365;
+
+                const startDate = new Date(now);
+                startDate.setDate(startDate.getDate() - daysToAnalyze + 1);
+                startDate.setHours(0,0,0,0);
+
+                // Fonction utilitaire pour calculer les heures d'un jour normal
+                const getScheduledHours = (arr, dep) => {
+                    if (!arr || !dep) return 0;
+                    const a = new Date('1970/01/01 ' + arr);
+                    const d = new Date('1970/01/01 ' + dep);
+                    let diff = (d - a) / 3600000;
+                    if (diff < 0) diff += 24; // si nuit (ex: 20:00 -> 08:00)
+                    return diff;
+                };
+
+                // Labels : par jour (ou par mois si 'year')
+                let labels = [];
+                let datasetData = emps.map(emp => {
+                    return { label: emp.name, data: [], scheduledH: getScheduledHours(emp.heureArrivee, emp.heureDepart) };
+                });
+
+                if (period === 'week' || period === 'month') {
+                    for (let i = 0; i < daysToAnalyze; i++) {
+                        let currentD = new Date(startDate);
+                        currentD.setDate(currentD.getDate() + i);
+                        let dateString = currentD.toISOString().split('T')[0];
+                        labels.push(currentD.toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit' }));
+
+                        // Calcul pour chaque employé pour ce jour
+                        datasetData.forEach(ds => {
+                            let totalHours = 0;
+                            // A-t-il été présent ce jour-là selon les logs ? (approximation: un log d'arrivée existe ce jour)
+                            const wasPresent = this.data.logs.some(l => String(l.empId) === ds.empId && l.action === 'arrivee' && l.timestamp.startsWith(dateString));
+                            
+                            // Par simplification, on accorde ses heures prévues s'il n'est pas "absent" dans les logs ce jour.
+                            // Pour être ultra précis, on donne le quota s'il n'a PAS de log "absence" ce jour.
+                            const wasAbsent = this.data.logs.some(l => String(l.empId) === ds.empId && l.action === 'absence' && l.timestamp.startsWith(dateString));
+                            
+                            // Logique de simulation: S'il n'était pas expressément absent, on compte ses heures. 
+                            // (Dans un cas réel de pointage strict, on croise les timestamps Arrivée/Départ).
+                            if (!wasAbsent) totalHours += ds.scheduledH;
+
+                            // Ajouter les HS de ce jour
+                            const hsDay = this.data.hs.filter(h => String(h.empId) === ds.empId && h.date === dateString);
+                            hsDay.forEach(h => totalHours += h.hours);
+
+                            ds.data.push(totalHours);
+                        });
+                    }
+                } else {
+                    // Vue Annuelle : regroupement par mois (les 12 derniers mois)
+                    for (let i = 11; i >= 0; i--) {
+                        let currentM = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                        let monthStr = currentM.toISOString().substring(0, 7); // YYYY-MM
+                        labels.push(currentM.toLocaleDateString('fr-FR', { month:'short', year:'2-digit' }));
+
+                        datasetData.forEach(ds => {
+                            let totalHoursMonth = ds.scheduledH * 22; // approx 22 jours ouvrés (simplification IA)
+                            // Ajouter HS du mois
+                            const hsMonth = this.data.hs.filter(h => String(h.empId) === ds.empId && h.date.startsWith(monthStr));
+                            hsMonth.forEach(h => totalHoursMonth += h.hours);
+                            ds.data.push(totalHoursMonth);
+                        });
+                    }
+                }
+
+                // Couleurs dynamiques
+                const colors = ['#002654', '#ED2939', '#f59e0b', '#10b981', '#8b5cf6', '#06b6d4', '#ec4899'];
+                const datasets = datasetData.map((ds, index) => ({
+                    label: ds.label,
+                    data: ds.data,
+                    backgroundColor: colors[index % colors.length],
+                    borderRadius: 3
+                }));
+
+                this.hoursAnalysisChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: { labels: labels, datasets: datasets },
+                    options: { 
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { position: 'top', labels: { boxWidth: 12 } } },
+                        scales: { y: { beginAtZero: true, title: { display: true, text: 'Heures' } } }
+                    }
+                });
+            },
+
+            // --- RENDERING DES ONGLETS ---
             renderAll() {
-                this.renderPointageCards(); this.renderEmployeeTable(); this.renderPlanning(); 
-                this.renderHs(); this.renderStats(); this.renderActivityLog();
+                this.renderPointageCards(); this.renderEmployeeTable(); 
+                this.renderPlanning(); this.renderHs(); 
+                this.renderStats(); this.renderActivityLog();
             },
 
             renderPointageCards() {
@@ -803,21 +867,20 @@
                 const filtered = filter === 'all' ? this.data.employees : this.data.employees.filter(e => e.site === filter);
                 
                 document.getElementById('pointageCardsContainer').innerHTML = filtered.map(emp => {
-                    
-                    // Récupération du dernier log pour l'affichage visuel
+                    // Notification Pointage (Dernier log)
                     const empLogs = this.data.logs.filter(l => String(l.empId) === String(emp.id) && (l.action === 'arrivee' || l.action === 'depart'));
                     const lastLog = empLogs.length > 0 ? empLogs[0] : null;
                     let pointageMsg = '';
                     
                     if (lastLog) {
                         const timeStr = new Date(lastLog.timestamp).toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
-                        const actionLabel = lastLog.action === 'arrivee' ? 'Arrivée' : 'Départ';
+                        const actionLabel = lastLog.action === 'arrivee' ? 'Pointé Présent' : 'Pointé Parti';
                         const msgStyle = lastLog.action === 'arrivee' ? 'bg-green-100 text-green-800 border-green-500' : 'bg-red-100 text-red-800 border-red-500';
                         
                         pointageMsg = `
                         <div class="mt-2 text-[11px] p-2 rounded ${msgStyle} border-l-4 shadow-sm mb-3">
                             <div class="font-bold mb-0.5">${emp.name}</div>
-                            <div>${actionLabel} : <strong>${timeStr}</strong></div>
+                            <div>${actionLabel} à <strong>${timeStr}</strong></div>
                             <div class="text-[10px] mt-0.5"><i class="fas fa-map-marker-alt"></i> ${emp.lieu || emp.site}</div>
                         </div>`;
                     }
@@ -826,38 +889,52 @@
                     <div class="card p-4 flex flex-col justify-between border-l-4 ${emp.status === 'present' ? 'border-l-ert-blue' : emp.status === 'conge' ? 'border-l-fuchsia-500' : 'border-l-gray-300'}">
                         <div>
                             <div class="flex items-start gap-3 mb-2">${this.getAvatarHtml(emp)}<div><div class="font-bold text-gray-800">${emp.name}</div><div class="text-xs text-gray-500 font-mono">${emp.matricule}</div></div></div>
-                            <div class="mt-3 mb-2"><span class="text-xs font-semibold px-2 py-1 rounded bg-gray-100 block w-max mb-1">${emp.site}</span><input type="text" value="${emp.lieu || ''}" placeholder="Lieu..." onchange="app.updateLieuDirect('${emp.id}', this.value)" class="text-sm border-b border-dashed border-gray-300 w-full bg-transparent p-1"></div>
-                            <div class="text-xs text-gray-600 mb-2 bg-gray-50 p-1.5 rounded"><i class="fas fa-clock text-ert-blue"></i> ${emp.heureArrivee || '08:00'} ➔ ${emp.heureDepart || '20:00'}</div>
+                            <div class="mt-3 mb-2"><span class="text-xs font-semibold px-2 py-1 rounded bg-gray-100 block w-max mb-1">${emp.site}</span><input type="text" value="${emp.lieu || ''}" placeholder="Lieu/Poste..." onchange="app.updateLieuDirect('${emp.id}', this.value)" class="text-sm border-b border-dashed border-gray-300 w-full bg-transparent p-1 focus:border-ert-blue focus:outline-none"></div>
                             
                             ${pointageMsg}
 
                         </div>
                         <div class="grid grid-cols-3 gap-2 mt-auto pt-2 border-t border-gray-100">
-                            <button onclick="app.logAction('${emp.id}', 'arrivee')" class="btn-blue text-xs py-2 rounded" ${emp.status === 'present' ? 'opacity-50' : ''}><i class="fas fa-sign-in-alt mb-1"></i><br>Arrivée</button>
-                            <button onclick="app.logAction('${emp.id}', 'depart')" class="btn-red text-xs py-2 rounded" ${emp.status === 'absent' ? 'opacity-50' : ''}><i class="fas fa-sign-out-alt mb-1"></i><br>Départ</button>
-                            <button onclick="app.openAbsenceModal('${emp.id}')" class="btn-orange text-xs py-2 rounded"><i class="fas fa-user-clock mb-1"></i><br>Absence</button>
+                            <button onclick="app.logAction('${emp.id}', 'arrivee')" class="btn-blue text-xs py-2 rounded flex flex-col items-center" ${emp.status === 'present' ? 'opacity-50' : ''}><i class="fas fa-sign-in-alt mb-1"></i> Arrivée</button>
+                            <button onclick="app.logAction('${emp.id}', 'depart')" class="btn-red text-xs py-2 rounded flex flex-col items-center" ${emp.status === 'absent' ? 'opacity-50' : ''}><i class="fas fa-sign-out-alt mb-1"></i> Départ</button>
+                            <button onclick="app.openAbsenceModal('${emp.id}')" class="btn-orange text-xs py-2 rounded flex flex-col items-center"><i class="fas fa-user-clock mb-1"></i> Absence</button>
                         </div>
                     </div>`;
                 }).join('');
             },
 
-            renderEmployeeTable() {
-                document.getElementById('employeeTableBody').innerHTML = this.data.employees.map(emp => `
-                    <tr><td class="px-6 py-4"><div class="flex items-center gap-3">${this.getAvatarHtml(emp)}<span class="text-sm font-medium">${emp.name}</span></div></td><td class="px-6 py-4 text-sm text-gray-500">${emp.matricule}</td><td class="px-6 py-4 text-sm">${emp.site}<br><span class="text-xs">${emp.lieu || '-'}</span></td><td class="px-6 py-4 text-sm font-semibold">${emp.heureArrivee || '08:00'} ➔ ${emp.heureDepart || '20:00'}</td><td class="px-6 py-4 text-sm text-gray-500"><span class="bg-gray-100 px-2 py-0.5 rounded text-xs">${emp.repos1 || 'Sam'}, ${emp.repos2 || 'Dim'}</span></td><td class="px-6 py-4 text-right"><button onclick="app.openEmployeeModal('${emp.id}')" class="text-ert-blue mr-3"><i class="fas fa-edit"></i></button><button onclick="app.deleteEmployee('${emp.id}')" class="text-ert-red"><i class="fas fa-trash"></i></button></td></tr>`).join('');
-            },
-
             renderPlanning() {
+                const weekInput = document.getElementById('planningWeekFilter').value;
+                this.calculateWeekDates(weekInput); // S'assure que les dates sont à jour
+
                 const filter = document.getElementById('planningTeamFilter').value;
                 const filtered = filter === 'all' ? this.data.employees : this.data.employees.filter(e => e.equipe === filter);
+                
+                // Mettre à jour l'en-tête du tableau dynamiquement
+                const jours = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+                let theadHtml = `<tr><th class="border border-gray-200 p-2 text-center w-8"><i class="fas fa-check-square text-gray-400"></i></th><th class="border border-gray-200 p-2 text-left">Employé</th>`;
+                
+                if (this.currentPlanningWeekDates.length === 7) {
+                    this.currentPlanningWeekDates.forEach((d, i) => {
+                        theadHtml += `<th class="border border-gray-200 p-2 text-center w-20 text-xs">${jours[i]}<br><span class="font-normal text-[10px] text-gray-500">${d.getDate()}/${d.getMonth()+1}</span></th>`;
+                    });
+                }
+                theadHtml += `<th class="border border-gray-200 p-2 text-center w-10">PDF</th></tr>`;
+                document.getElementById('planningTableHeader').innerHTML = theadHtml;
+
+                // Mettre à jour le corps du tableau
                 document.getElementById('planningTableBody').innerHTML = filtered.map(emp => {
-                    const days = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map(d => (d === emp.repos1 || d === emp.repos2) ? `<td class="border p-2 text-center text-xs text-gray-400 bg-gray-50">Repos</td>` : `<td class="border p-1"><div class="${emp.equipe === 'Jour' ? 'bg-blue-50 text-ert-blue' : 'bg-indigo-50 text-indigo-700'} text-xs p-1 rounded text-center">${emp.site}<br><span class="text-[10px] text-gray-600 font-bold">${emp.heureArrivee || '08:00'} - ${emp.heureDepart || '20:00'}</span></div></td>`).join('');
+                    const daysHtml = jours.map(d => {
+                        if (d === emp.repos1 || d === emp.repos2) return `<td class="border p-2 text-center text-xs text-gray-400 bg-gray-50 font-medium">Repos</td>`;
+                        return `<td class="border p-1"><div class="${emp.equipe === 'Jour' ? 'bg-blue-50 text-ert-blue' : 'bg-indigo-50 text-indigo-700'} text-xs p-1 rounded text-center">${emp.site}<br><span class="text-[10px] text-gray-600 font-bold">${emp.heureArrivee || '08:00'} - ${emp.heureDepart || '20:00'}</span></div></td>`;
+                    }).join('');
                     
                     return `
                     <tr>
                         <td class="border p-2 text-center"><input type="checkbox" class="planning-cb w-4 h-4 text-ert-blue" value="${emp.id}"></td>
                         <td class="border p-2"><div class="flex items-center gap-2">${this.getAvatarHtml(emp).replace('40px', '24px').replace('40px', '24px')}<div><span class="text-sm font-medium">${emp.name}</span><span class="text-[10px] text-gray-400 block">${emp.equipe}</span></div></div></td>
-                        ${days}
-                        <td class="border p-2 text-center"><button onclick="app.exportPlanningPDF(['${emp.id}'])" class="text-red-500 hover:text-red-700 p-1" title="Télécharger PDF de l'agent"><i class="fas fa-file-pdf"></i></button></td>
+                        ${daysHtml}
+                        <td class="border p-2 text-center"><button onclick="app.exportPlanningPDF(['${emp.id}'])" class="text-red-500 hover:text-red-700 p-1" title="Télécharger PDF de l'agent"><i class="fas fa-file-pdf text-lg"></i></button></td>
                     </tr>`;
                 }).join('');
             },
@@ -871,8 +948,8 @@
                     const t = new Date(log.timestamp);
                     const emp = this.data.employees.find(e => String(e.id) === String(log.empId));
                     let color = 'text-gray-500', icon = 'fa-circle';
-                    if (log.action === 'arrivee') { color = 'text-ert-blue'; icon = 'fa-arrow-right'; } else if (log.action === 'depart') { color = 'text-ert-red'; icon = 'fa-arrow-left'; } else if (log.action === 'absence') { color = 'text-orange-500'; icon = 'fa-user-clock'; } else if (log.action === 'creation') { color = 'text-green-600'; icon = 'fa-user-plus'; }
-                    return `<div class="flex items-start gap-3 mb-3 pb-3 border-b"><div class="mt-1">${emp && emp.photo ? `<img src="${emp.photo}" class="w-8 h-8 rounded-full object-cover">` : `<div class="w-8 h-8 rounded-full bg-gray-200 text-xs flex items-center justify-center font-bold">${emp ? emp.name.charAt(0) : '?'}</div>`}</div><div class="flex-1"><div class="text-sm font-medium">${emp ? emp.name : log.empName} <span class="text-xs text-gray-500">(${log.site})</span></div><div class="text-xs text-gray-600"><i class="fas ${icon} ${color} mr-1"></i> ${log.detail}</div></div><div class="text-right text-xs"><div class="font-semibold">${t.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'})}</div><div class="text-[10px] text-gray-400">${t.toLocaleDateString('fr-FR')}</div></div></div>`;
+                    if (log.action === 'arrivee') { color = 'text-green-600'; icon = 'fa-arrow-right'; } else if (log.action === 'depart') { color = 'text-red-600'; icon = 'fa-arrow-left'; } else if (log.action === 'absence') { color = 'text-orange-500'; icon = 'fa-user-clock'; } else if (log.action === 'creation') { color = 'text-ert-blue'; icon = 'fa-user-plus'; }
+                    return `<div class="flex items-start gap-3 mb-3 pb-3 border-b"><div class="mt-1">${emp && emp.photo ? `<img src="${emp.photo}" class="w-8 h-8 rounded-full object-cover">` : `<div class="w-8 h-8 rounded-full bg-gray-200 text-xs flex items-center justify-center font-bold">${emp ? emp.name.charAt(0) : '?'}</div>`}</div><div class="flex-1"><div class="text-sm font-medium">${emp ? emp.name : log.empName} <span class="text-xs text-gray-500">(${log.site})</span></div><div class="text-xs text-gray-600 font-medium"><i class="fas ${icon} ${color} mr-1"></i> ${log.detail}</div></div><div class="text-right text-xs"><div class="font-semibold">${t.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'})}</div><div class="text-[10px] text-gray-400">${t.toLocaleDateString('fr-FR')}</div></div></div>`;
                 }).join('');
             },
 
@@ -890,10 +967,10 @@
 
             generatePDF() {
                 const { jsPDF } = window.jspdf; const doc = new jsPDF(); const d = new Date().toLocaleDateString('fr-FR');
-                doc.setFontSize(20); doc.setTextColor(0, 38, 84); doc.text("Rapport d'Effectifs", 14, 20);
+                doc.setFontSize(20); doc.setTextColor(0, 38, 84); doc.text("Rapport Global d'Effectifs", 14, 20);
                 doc.setFontSize(10); doc.setTextColor(100); doc.text(`ERT - ${d}`, 14, 28);
                 doc.autoTable({ startY: 40, head: [['Matricule', 'Nom', 'Site', 'Horaires', 'Repos', 'Statut']], body: this.data.employees.map(e => [ e.matricule, e.name, e.site, `${e.heureArrivee} - ${e.heureDepart}`, `${e.repos1}, ${e.repos2}`, e.status ]), headStyles: { fillColor: [0, 38, 84] } });
-                doc.save(`EDT-Rapport-${d.replace(/\//g, '-')}.pdf`);
+                doc.save(`EDT-Rapport-Effectifs-${d.replace(/\//g, '-')}.pdf`);
             }
         };
 
