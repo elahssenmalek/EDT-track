@@ -44,7 +44,18 @@
     <!-- LOGIN SCREEN -->
     <div id="loginScreen" class="fixed inset-0 bg-ert-bg z-[100] flex flex-col items-center justify-center">
         <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-200 w-96 max-w-[90%] text-center">
-            <img src="logo.png" alt="ERT Logo" class="h-24 mx-auto mb-4" onerror="this.src='https://i.imgur.com/kS5x8R3.png'">
+            <svg class="h-24 mx-auto mb-4" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="100" cy="100" r="90" fill="none" stroke="#002654" stroke-width="6"/>
+                <text x="100" y="35" font-family="Arial" font-size="11" font-weight="bold" fill="#002654" text-anchor="middle">ETABLISSEMENT REGIONAL DE TUNIS</text>
+                <text x="35" y="120" font-family="Arial" font-size="11" font-weight="bold" fill="#002654" transform="rotate(-90 35 120)" text-anchor="middle">G. BRASSENS</text>
+                <text x="165" y="120" font-family="Arial" font-size="11" font-weight="bold" fill="#002654" transform="rotate(90 165 120)" text-anchor="middle">R. DESNOS</text>
+                <text x="100" y="178" font-family="Arial" font-size="11" font-weight="bold" fill="#002654" text-anchor="middle">P. MENDES FRANCE</text>
+                <g transform="translate(50, 60)">
+                    <text x="0" y="55" font-family="Arial" font-size="65" font-weight="bold" fill="#002654">E</text>
+                    <text x="35" y="55" font-family="Arial" font-size="65" font-weight="bold" fill="#ED2939">R</text>
+                    <text x="75" y="55" font-family="Arial" font-size="65" font-weight="bold" fill="#002654">T</text>
+                </g>
+            </svg>
             <h1 class="text-2xl font-bold text-ert-blue mb-1">EDT-track</h1>
             <p class="text-sm text-gray-500 mb-6">Établissement Régional de Tunis</p>
             
@@ -73,7 +84,18 @@
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between h-16">
                     <div class="flex items-center gap-4">
-                        <img src="logo.png" alt="ERT Logo" class="logo-ert" onerror="this.src='https://i.imgur.com/kS5x8R3.png'">
+                        <svg class="logo-ert" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="100" cy="100" r="90" fill="none" stroke="#002654" stroke-width="6"/>
+                            <text x="100" y="35" font-family="Arial" font-size="11" font-weight="bold" fill="#002654" text-anchor="middle">ETABLISSEMENT REGIONAL DE TUNIS</text>
+                            <text x="35" y="120" font-family="Arial" font-size="11" font-weight="bold" fill="#002654" transform="rotate(-90 35 120)" text-anchor="middle">G. BRASSENS</text>
+                            <text x="165" y="120" font-family="Arial" font-size="11" font-weight="bold" fill="#002654" transform="rotate(90 165 120)" text-anchor="middle">R. DESNOS</text>
+                            <text x="100" y="178" font-family="Arial" font-size="11" font-weight="bold" fill="#002654" text-anchor="middle">P. MENDES FRANCE</text>
+                            <g transform="translate(50, 60)">
+                                <text x="0" y="55" font-family="Arial" font-size="65" font-weight="bold" fill="#002654">E</text>
+                                <text x="35" y="55" font-family="Arial" font-size="65" font-weight="bold" fill="#ED2939">R</text>
+                                <text x="75" y="55" font-family="Arial" font-size="65" font-weight="bold" fill="#002654">T</text>
+                            </g>
+                        </svg>
                         <div>
                             <span class="text-xl font-bold text-ert-blue tracking-tight">EDT-track</span>
                             <span class="text-xs block text-gray-500 -mt-1">Établissement Régional de Tunis</span>
@@ -129,9 +151,9 @@
                                     <tr>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employé</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matricule</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Site</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lieu</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Équipe</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Site / Lieu</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Horaires</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jours de Repos</th>
                                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                     </tr>
                                 </thead>
@@ -149,7 +171,7 @@
                     </div>
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
                         <div class="lg:col-span-2 card p-4 flex flex-col">
-                            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Affectations</h3>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Affectations & Repos Hebdomadaires</h3>
                             <select id="planningTeamFilter" onchange="app.renderPlanning()" class="mb-4 border border-gray-300 rounded-md px-3 py-1.5 text-sm w-48">
                                 <option value="all">Toutes les équipes</option>
                                 <option value="Jour">Équipe de Jour</option>
@@ -271,6 +293,42 @@
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Matricule</label>
                     <input type="text" id="empMatricule" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue">
+                </div>
+                <div class="grid grid-cols-2 gap-2 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Heure Arrivée</label>
+                        <input type="time" id="empHeureArrivee" value="08:00" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Heure Départ</label>
+                        <input type="time" id="empHeureDepart" value="20:00" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">1er jour de repos</label>
+                        <select id="empRepos1" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue">
+                            <option value="Sam">Samedi</option>
+                            <option value="Dim" selected>Dimanche</option>
+                            <option value="Ven">Vendredi</option>
+                            <option value="Lun">Lundi</option>
+                            <option value="Mar">Mardi</option>
+                            <option value="Mer">Mercredi</option>
+                            <option value="Jeu">Jeudi</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">2ème jour de repos</label>
+                        <select id="empRepos2" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue">
+                            <option value="Sam" selected>Samedi</option>
+                            <option value="Dim">Dimanche</option>
+                            <option value="Ven">Vendredi</option>
+                            <option value="Lun">Lundi</option>
+                            <option value="Mar">Mardi</option>
+                            <option value="Mer">Mercredi</option>
+                            <option value="Jeu">Jeudi</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Équipe</label>
@@ -440,26 +498,26 @@
             },
 
             loadData() {
-                const saved = localStorage.getItem('edt_data_v6'); 
+                const saved = localStorage.getItem('edt_data_v8'); 
                 if (saved) {
                     this.data = JSON.parse(saved);
                 } else {
-                    const savedV5 = localStorage.getItem('edt_data_v5');
-                    if (savedV5) {
-                        this.data = JSON.parse(savedV5);
+                    const savedV7 = localStorage.getItem('edt_data_v7');
+                    if (savedV7) {
+                        this.data = JSON.parse(savedV7);
                     } else {
                         this.data.employees = [
-                            { id: '1', name: 'Agent 01', matricule: 'ERT-1001', equipe: 'Jour', site: 'Pierre Mendès France', lieu: '', status: 'absent', photo: null }
+                            { id: '1', name: 'Agent 01', matricule: 'ERT-1001', equipe: 'Jour', site: 'Pierre Mendès France', lieu: '', heureArrivee: '08:00', heureDepart: '20:00', repos1: 'Sam', repos2: 'Dim', status: 'absent', photo: null }
                         ];
                     }
                     this.saveData();
                 }
             },
-            saveData() { localStorage.setItem('edt_data_v6', JSON.stringify(this.data)); },
+            saveData() { localStorage.setItem('edt_data_v8', JSON.stringify(this.data)); },
             resetData() {
                 if(confirm("Êtes-vous sûr de vouloir tout effacer ?")) {
-                    localStorage.removeItem('edt_data_v6');
-                    localStorage.removeItem('edt_data_v5');
+                    localStorage.removeItem('edt_data_v8');
+                    localStorage.removeItem('edt_data_v7');
                     location.reload();
                 }
             },
@@ -536,6 +594,10 @@
                 document.getElementById('empEquipe').value = emp ? emp.equipe : 'Jour';
                 document.getElementById('empSite').value = emp ? emp.site : 'Pierre Mendès France';
                 document.getElementById('empLieu').value = emp && emp.lieu ? emp.lieu : '';
+                document.getElementById('empHeureArrivee').value = emp && emp.heureArrivee ? emp.heureArrivee : '08:00';
+                document.getElementById('empHeureDepart').value = emp && emp.heureDepart ? emp.heureDepart : '20:00';
+                document.getElementById('empRepos1').value = emp && emp.repos1 ? emp.repos1 : 'Sam';
+                document.getElementById('empRepos2').value = emp && emp.repos2 ? emp.repos2 : 'Dim';
                 
                 document.getElementById('empPhotoData').value = emp && emp.photo ? emp.photo : '';
                 if (emp && emp.photo) {
@@ -553,18 +615,21 @@
                 const equipe = document.getElementById('empEquipe').value;
                 const site = document.getElementById('empSite').value;
                 const lieu = document.getElementById('empLieu').value;
+                const heureArrivee = document.getElementById('empHeureArrivee').value;
+                const heureDepart = document.getElementById('empHeureDepart').value;
+                const repos1 = document.getElementById('empRepos1').value;
+                const repos2 = document.getElementById('empRepos2').value;
                 const photo = document.getElementById('empPhotoData').value;
 
                 if (!name || !matricule) return alert('Nom et Matricule requis');
 
                 const existingIndex = this.data.employees.findIndex(e => String(e.id) === String(id));
-                const empData = { id, name, matricule, equipe, site, lieu, status: existingIndex >= 0 ? this.data.employees[existingIndex].status : 'absent', photo };
+                const empData = { id, name, matricule, equipe, site, lieu, heureArrivee, heureDepart, repos1, repos2, status: existingIndex >= 0 ? this.data.employees[existingIndex].status : 'absent', photo };
 
                 if (existingIndex >= 0) {
                     this.data.employees[existingIndex] = empData;
                 } else {
                     this.data.employees.push(empData);
-                    // Log creation in history
                     this.addLog(id, name, site, 'creation', 'Création du profil agent');
                 }
 
@@ -603,7 +668,7 @@
                     detail,
                     timestamp: new Date().toISOString()
                 });
-                if (this.data.logs.length > 200) this.data.logs.pop(); // Keep up to 200 logs
+                if (this.data.logs.length > 200) this.data.logs.pop();
                 this.saveData();
             },
 
@@ -613,10 +678,10 @@
 
                 if (action === 'arrivee') {
                     emp.status = 'present';
-                    this.addLog(empId, emp.name, emp.site, 'arrivee', 'Arrivée sur site');
+                    this.addLog(empId, emp.name, emp.site, 'arrivee', `Arrivée prévue à ${emp.heureArrivee}`);
                 } else if (action === 'depart') {
                     emp.status = 'absent';
-                    this.addLog(empId, emp.name, emp.site, 'depart', 'Départ du site');
+                    this.addLog(empId, emp.name, emp.site, 'depart', `Départ prévu à ${emp.heureDepart}`);
                 }
                 
                 this.saveData();
@@ -746,6 +811,9 @@
                                     onchange="app.updateLieuDirect('${emp.id}', this.value)"
                                     class="text-sm text-gray-600 border-b border-dashed border-gray-300 hover:border-ert-blue focus:outline-none focus:border-ert-blue w-full bg-transparent p-1 transition-colors">
                             </div>
+                            <div class="text-xs text-gray-500 mb-2 bg-gray-50 p-1.5 rounded">
+                                <i class="fas fa-clock mr-1 text-ert-blue"></i> ${emp.heureArrivee || '08:00'} - ${emp.heureDepart || '20:00'}
+                            </div>
                             <div class="mt-2 mb-4">
                                 <span class="text-xs font-semibold px-2 py-1 rounded ${
                                     emp.status === 'present' ? 'bg-blue-100 text-ert-blue' : 
@@ -773,9 +841,9 @@
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">${emp.matricule}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${emp.site}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${emp.lieu || '-'}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${emp.equipe}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${emp.site} <br><span class="text-xs text-gray-400">${emp.lieu || '-'}</span></td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">${emp.heureArrivee || '08:00'} ➔ ${emp.heureDepart || '20:00'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-xs">${emp.repos1 || 'Sam'}, ${emp.repos2 || 'Dim'}</span></td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <button onclick="app.openEmployeeModal('${emp.id}')" class="text-ert-blue hover:text-blue-900 mr-3" title="Modifier"><i class="fas fa-edit"></i></button>
                             <button onclick="app.deleteEmployee('${emp.id}')" class="text-ert-red hover:text-red-900" title="Supprimer"><i class="fas fa-trash"></i></button>
@@ -792,11 +860,13 @@
                 tbody.innerHTML = filtered.map(emp => {
                     const isJour = emp.equipe === 'Jour';
                     const cellColor = isJour ? 'bg-blue-50 text-ert-blue' : 'bg-indigo-50 text-indigo-700';
+                    
+                    const daysMap = { 'Lun': 'Lun', 'Mar': 'Mar', 'Mer': 'Mer', 'Jeu': 'Jeu', 'Ven': 'Ven', 'Sam': 'Sam', 'Dim': 'Dim' };
+                    
                     const days = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map(d => {
-                        const idNum = parseInt(emp.id) || Math.floor(Math.random() * 10);
-                        const isOff = (idNum % 7 === 5 && d === 'Sam') || (idNum % 7 === 6 && d === 'Dim') || (idNum % 2 === 0 && d === 'Dim');
-                        if (isOff) return `<td class="border border-gray-200 p-2 text-center text-xs text-gray-400 bg-gray-50">Repos</td>`;
-                        return `<td class="border border-gray-200 p-1"><div class="${cellColor} text-xs p-1 rounded font-medium text-center shadow-sm">${emp.site}<br><span class="text-[10px] text-gray-500">${emp.lieu || ''}</span></div></td>`;
+                        const isOff = (d === emp.repos1 || d === emp.repos2);
+                        if (isOff) return `<td class="border border-gray-200 p-2 text-center text-xs text-gray-400 bg-gray-50 font-semibold">Repos</td>`;
+                        return `<td class="border border-gray-200 p-1"><div class="${cellColor} text-xs p-1 rounded font-medium text-center shadow-sm">${emp.site}<br><span class="text-[10px] text-gray-600 font-bold">${emp.heureArrivee || '08h'} - ${emp.heureDepart || '20h'}</span></div></td>`;
                     }).join('');
                     
                     return `
@@ -804,7 +874,10 @@
                             <td class="border border-gray-200 p-2">
                                 <div class="flex items-center gap-2">
                                     ${this.getAvatarHtml(emp).replace('40px', '24px').replace('40px', '24px')}
-                                    <span class="text-sm font-medium">${emp.name}</span>
+                                    <div>
+                                        <span class="text-sm font-medium">${emp.name}</span>
+                                        <span class="text-[10px] text-gray-400 block">${emp.equipe}</span>
+                                    </div>
                                 </div>
                             </td>
                             ${days}
@@ -906,7 +979,7 @@
 
                 doc.setFontSize(20);
                 doc.setTextColor(blue[0], blue[1], blue[2]);
-                doc.text("EDT-track - Rapport de Pointage & Historique", 14, 20);
+                doc.text("EDT-track - Rapport de Pointage & Horaires", 14, 20);
                 
                 doc.setFontSize(10); doc.setTextColor(100);
                 doc.text(`Établissement Régional de Tunis - Généré le ${today}`, 14, 28);
@@ -926,20 +999,20 @@
                 doc.text(`Heures Sup (Mois): ${hsTotal}h`, 20, 62);
 
                 const tableData = this.data.employees.map(emp => [
-                    emp.matricule, emp.name, emp.site, emp.lieu || '-', emp.equipe,
+                    emp.matricule, emp.name, emp.site, `${emp.heureArrivee || '08:00'} - ${emp.heureDepart || '20:00'}`, `${emp.repos1}, ${emp.repos2}`,
                     emp.status === 'present' ? 'Présent' : emp.status === 'conge' ? 'Absence' : 'Non pointé'
                 ]);
 
                 doc.autoTable({
                     startY: 75,
-                    head: [['Matricule', 'Nom', 'Site', 'Lieu de travail', 'Équipe', 'Statut']],
+                    head: [['Matricule', 'Nom', 'Site', 'Horaires (Arrivée/Départ)', 'Jours de Repos', 'Statut']],
                     body: tableData,
                     headStyles: { fillColor: blue, textColor: 255 },
                     alternateRowStyles: { fillColor: [248, 250, 252] },
                     styles: { font: 'helvetica', fontSize: 9 }
                 });
 
-                doc.save(`EDT-Rapport-${today.replace(/\//g, '-')}.pdf`);
+                doc.save(`EDT-Rapport-Horaires-${today.replace(/\//g, '-')}.pdf`);
             }
         };
 
