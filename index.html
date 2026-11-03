@@ -34,8 +34,8 @@
         .btn-orange:hover { background-color: #d97706; }
         .avatar-placeholder { width: 40px; height: 40px; border-radius: 50%; background-color: #002654; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem;}
         .avatar-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid #e2e8f0;}
-        .logo-ert { height: 45px; width: auto; object-fit: contain; }
-        .logo-login { height: 90px; width: auto; object-fit: contain; }
+        .logo-ert { height: 50px; width: 50px; object-fit: contain; }
+        .logo-login { width: 130px; height: 130px; }
         .modal { display: none; position: fixed; z-index: 50; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
         .modal.active { display: flex; }
     </style>
@@ -45,25 +45,33 @@
     <!-- LOGIN SCREEN -->
     <div id="loginScreen" class="fixed inset-0 bg-ert-bg z-[100] flex flex-col items-center justify-center">
         <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-200 w-96 max-w-[90%] text-center flex flex-col items-center">
-            <!-- Utilisation du fichier logo.png du répertoire GitHub -->
-            <img src="logo.png" alt="Logo ERT" class="logo-login mb-4" onerror="this.src='https://i.imgur.com/kS5x8R3.png'">
+            <svg class="logo-login mb-3" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="150" cy="150" r="130" fill="none" stroke="#002654" stroke-width="6"/>
+                <circle cx="150" cy="150" r="115" fill="none" stroke="#002654" stroke-width="2"/>
+                <path id="curveLogin" fill="transparent" d="M 40,150 A 110,110 0 1,1 260,150" />
+                <text font-family="Arial" font-size="13" font-weight="bold" fill="#002654" letter-spacing="2">
+                    <textPath href="#curveLogin" startOffset="50%" text-anchor="middle">ETABLISSEMENT REGIONAL DE TUNIS</textPath>
+                </text>
+                <text x="35" y="155" font-family="Arial" font-size="11" font-weight="bold" fill="#002654">G. BRASSENS</text>
+                <text x="185" y="155" font-family="Arial" font-size="11" font-weight="bold" fill="#002654">R. DESNOS</text>
+                <text x="85" y="250" font-family="Arial" font-size="11" font-weight="bold" fill="#002654">P. MENDES FRANCE</text>
+                <g transform="translate(92, 115)">
+                    <text x="0" y="35" font-family="Arial" font-size="52" font-weight="bold" fill="#002654">E</text>
+                    <text x="32" y="35" font-family="Arial" font-size="52" font-weight="bold" fill="#ED2939">R</text>
+                    <text x="68" y="35" font-family="Arial" font-size="52" font-weight="bold" fill="#002654">T</text>
+                </g>
+            </svg>
             <h1 class="text-2xl font-bold text-ert-blue mb-1">EDT-track</h1>
             <p class="text-sm text-gray-500 mb-6">Établissement Régional de Tunis</p>
             
-            <div id="loginStep1" class="w-full text-left">
-                <p class="text-sm text-gray-600 mb-4">Veuillez saisir votre e-mail administrateur :</p>
+            <div id="loginForm" class="w-full text-left">
+                <label class="text-sm font-medium text-gray-700 mb-1 block">Adresse e-mail</label>
                 <input type="email" id="loginEmail" class="w-full border border-gray-300 rounded-md px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-ert-blue" placeholder="prenom.nom@exemple.com">
-                <button onclick="app.checkEmail()" class="w-full btn-blue py-2 rounded-md font-medium transition">Suivant</button>
-            </div>
-            
-            <div id="loginStep2" class="hidden w-full text-left">
-                <p class="text-sm text-gray-600 mb-4">E-mail reconnu. Saisissez le code de sécurité :</p>
-                <p class="text-xs text-ert-red mb-2 italic">Indice : 123456</p>
-                <input type="password" id="loginCode" class="w-full border border-gray-300 rounded-md px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-ert-blue" placeholder="Code à 6 chiffres">
-                <div class="flex gap-2">
-                    <button onclick="app.backToEmail()" class="w-1/3 bg-gray-200 text-gray-700 py-2 rounded-md font-medium hover:bg-gray-300 transition">Retour</button>
-                    <button onclick="app.verifyCode()" class="w-2/3 btn-blue py-2 rounded-md font-medium transition">Se connecter</button>
-                </div>
+                
+                <label class="text-sm font-medium text-gray-700 mb-1 block">Mot de passe</label>
+                <input type="password" id="loginPassword" class="w-full border border-gray-300 rounded-md px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-ert-blue" placeholder="Votre mot de passe">
+                
+                <button onclick="app.login()" class="w-full btn-blue py-2 rounded-md font-medium transition">Se connecter</button>
             </div>
             <p id="loginError" class="text-ert-red text-sm mt-3 hidden"></p>
         </div>
@@ -75,7 +83,22 @@
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between h-16">
                     <div class="flex items-center gap-3">
-                        <img src="logo.png" alt="Logo ERT" class="logo-ert" onerror="this.src='https://i.imgur.com/kS5x8R3.png'">
+                        <svg class="logo-ert" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="150" cy="150" r="130" fill="none" stroke="#002654" stroke-width="6"/>
+                            <circle cx="150" cy="150" r="115" fill="none" stroke="#002654" stroke-width="2"/>
+                            <path id="curveHeader" fill="transparent" d="M 40,150 A 110,110 0 1,1 260,150" />
+                            <text font-family="Arial" font-size="13" font-weight="bold" fill="#002654" letter-spacing="2">
+                                <textPath href="#curveHeader" startOffset="50%" text-anchor="middle">ETABLISSEMENT REGIONAL DE TUNIS</textPath>
+                            </text>
+                            <text x="35" y="155" font-family="Arial" font-size="11" font-weight="bold" fill="#002654">G. BRASSENS</text>
+                            <text x="185" y="155" font-family="Arial" font-size="11" font-weight="bold" fill="#002654">R. DESNOS</text>
+                            <text x="85" y="250" font-family="Arial" font-size="11" font-weight="bold" fill="#002654">P. MENDES FRANCE</text>
+                            <g transform="translate(92, 115)">
+                                <text x="0" y="35" font-family="Arial" font-size="52" font-weight="bold" fill="#002654">E</text>
+                                <text x="32" y="35" font-family="Arial" font-size="52" font-weight="bold" fill="#ED2939">R</text>
+                                <text x="68" y="35" font-family="Arial" font-size="52" font-weight="bold" fill="#002654">T</text>
+                            </g>
+                        </svg>
                         <div>
                             <span class="text-xl font-bold text-ert-blue tracking-tight">EDT-track</span>
                             <span class="text-xs block text-gray-500 -mt-1">Établissement Régional de Tunis</span>
@@ -91,10 +114,10 @@
                         </nav>
                         <div class="flex items-center gap-3 pl-4 border-l border-gray-200">
                             <div class="text-right hidden sm:block">
-                                <div id="currentUserDisplay" class="text-sm font-medium text-gray-700">Admin</div>
-                                <div class="text-xs text-green-600">Connecté</div>
+                                <div id="currentUserDisplay" class="text-sm font-medium text-gray-700">Utilisateur</div>
+                                <div id="currentUserRoleDisplay" class="text-xs text-green-600">Connecté</div>
                             </div>
-                            <button onclick="app.logout()" class="text-gray-400 hover:text-ert-red transition"><i class="fas fa-sign-out-alt text-xl"></i></button>
+                            <button onclick="app.logout()" class="text-gray-400 hover:text-ert-red transition" title="Se déconnecter"><i class="fas fa-sign-out-alt text-xl"></i></button>
                         </div>
                     </div>
                 </div>
@@ -187,7 +210,7 @@
                     <div class="flex justify-between items-center mb-6">
                         <h2 class="text-2xl font-bold text-ert-blue">Rapports & Historique</h2>
                         <div class="flex gap-2">
-                            <button onclick="app.exportHistoryJSON()" class="bg-gray-800 hover:bg-gray-900 text-white px-3 py-2 rounded-md text-sm font-medium shadow-sm"><i class="fas fa-download mr-2"></i> Exporter Journal JSON</button>
+                            <button onclick="app.exportHistoryJSON()" class="bg-gray-800 hover:bg-gray-900 text-white px-3 py-2 rounded-md text-sm font-medium shadow-sm"><i class="fas fa-download mr-2"></i> Journal JSON</button>
                             <button onclick="app.generatePDF()" class="btn-red px-4 py-2 rounded-md text-sm font-medium shadow-sm"><i class="fas fa-file-pdf mr-2"></i> Télécharger PDF</button>
                         </div>
                     </div>
@@ -215,7 +238,7 @@
                             <div class="flex-1 relative w-full h-full min-h-[250px]"><canvas id="siteChart"></canvas></div>
                         </div>
                         <div class="card p-4 flex flex-col">
-                            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Journal d'Activité & Historique Complet</h3>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Journal d'Activité & Historique</h3>
                             <div class="flex-1 overflow-y-auto pr-2" id="activityLogContainer"></div>
                         </div>
                     </div>
@@ -226,27 +249,54 @@
                     <div class="flex justify-between items-center mb-6">
                         <h2 class="text-2xl font-bold text-ert-blue">Paramètres du Système</h2>
                     </div>
+                    
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        
+                        <!-- Mon Profil (Changement de mot de passe) -->
                         <div class="card p-6">
-                            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Accès Administrateurs</h3>
-                            <div class="flex gap-2 mb-4">
-                                <input type="email" id="newAdminEmail" class="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ert-blue" placeholder="Nouvel e-mail admin...">
-                                <button onclick="app.addAdmin()" class="btn-blue px-4 py-2 rounded-md text-sm font-medium">Ajouter</button>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Mon Profil</h3>
+                            <p class="text-sm text-gray-600 mb-4">Modifier votre mot de passe d'accès.</p>
+                            <input type="password" id="oldPassword" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm mb-3 focus:ring-1 focus:ring-ert-blue" placeholder="Ancien mot de passe">
+                            <input type="password" id="newPassword" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm mb-3 focus:ring-1 focus:ring-ert-blue" placeholder="Nouveau mot de passe">
+                            <button onclick="app.changePassword()" class="btn-blue px-4 py-2 rounded-md text-sm font-medium">Mettre à jour le mot de passe</button>
+                            <p id="pwdMsg" class="text-sm mt-3 hidden"></p>
+                        </div>
+
+                        <!-- Gestion des Accès (Super Admin Only) -->
+                        <div class="card p-6 hidden" id="superAdminPanel">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2 flex items-center"><i class="fas fa-shield-alt text-ert-red mr-2"></i> Gestion des Accès (Super Admin)</h3>
+                            <p class="text-sm text-gray-600 mb-4">Ajouter de nouveaux utilisateurs pour accéder à l'application.</p>
+                            
+                            <div class="grid grid-cols-1 gap-2 mb-3">
+                                <input type="email" id="newAccountEmail" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-ert-blue" placeholder="E-mail du nouvel utilisateur">
+                                <div class="flex gap-2">
+                                    <input type="password" id="newAccountPwd" class="border border-gray-300 rounded-md px-3 py-2 text-sm flex-1 focus:ring-1 focus:ring-ert-blue" placeholder="Mot de passe temporaire">
+                                    <select id="newAccountRole" class="border border-gray-300 rounded-md px-3 py-2 text-sm w-1/3">
+                                        <option value="user">Utilisateur standard</option>
+                                        <option value="superadmin">Super Admin</option>
+                                    </select>
+                                </div>
+                                <button onclick="app.addUserAccount()" class="btn-blue px-4 py-2 rounded-md text-sm font-medium mt-1">Créer le compte</button>
                             </div>
-                            <ul id="adminList" class="divide-y divide-gray-200 border border-gray-200 rounded-md"></ul>
+                            
+                            <h4 class="text-sm font-semibold text-gray-700 mt-5 mb-2">Comptes actifs</h4>
+                            <ul id="usersList" class="divide-y divide-gray-200 border border-gray-200 rounded-md max-h-40 overflow-y-auto"></ul>
                         </div>
-                        <div class="card p-6">
+
+                        <!-- Reset Data -->
+                        <div class="card p-6 md:col-span-2">
                             <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Données de l'Application</h3>
-                            <button onclick="app.resetData()" class="btn-red px-4 py-2 rounded-md text-sm font-medium w-full flex justify-center items-center"><i class="fas fa-trash-alt mr-2"></i> Effacer toutes les données</button>
-                            <p class="text-xs text-red-500 mt-2 text-center">Attention : Cette action est irréversible.</p>
+                            <button onclick="app.resetData()" class="btn-red px-4 py-2 rounded-md text-sm font-medium w-full md:w-auto flex justify-center items-center"><i class="fas fa-trash-alt mr-2"></i> Effacer toutes les données</button>
+                            <p class="text-xs text-red-500 mt-2">Attention : Cette action est irréversible et supprimera employés et historiques.</p>
                         </div>
+
                     </div>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- MODALS -->
+    <!-- MODALS (Employee, HS, Absence) -->
     <!-- Employee Modal -->
     <div id="employeeModal" class="modal">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 overflow-hidden flex flex-col max-h-[90vh]">
@@ -261,7 +311,7 @@
                         <i class="fas fa-camera text-gray-400 text-2xl"></i>
                     </div>
                     <label class="cursor-pointer text-sm text-ert-blue font-medium hover:underline">
-                        Charger une photo (compressée auto)
+                        Charger une photo
                         <input type="file" id="empPhotoInput" accept="image/*" class="hidden" onchange="app.handlePhotoUpload(event)">
                     </label>
                     <input type="hidden" id="empPhotoData">
@@ -286,27 +336,15 @@
                 </div>
                 <div class="grid grid-cols-2 gap-2 mb-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">1er jour de repos</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Repos 1</label>
                         <select id="empRepos1" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue">
-                            <option value="Sam">Samedi</option>
-                            <option value="Dim" selected>Dimanche</option>
-                            <option value="Ven">Vendredi</option>
-                            <option value="Lun">Lundi</option>
-                            <option value="Mar">Mardi</option>
-                            <option value="Mer">Mercredi</option>
-                            <option value="Jeu">Jeudi</option>
+                            <option value="Sam">Samedi</option><option value="Dim" selected>Dimanche</option><option value="Ven">Vendredi</option><option value="Lun">Lundi</option><option value="Mar">Mardi</option><option value="Mer">Mercredi</option><option value="Jeu">Jeudi</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">2ème jour de repos</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Repos 2</label>
                         <select id="empRepos2" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue">
-                            <option value="Sam" selected>Samedi</option>
-                            <option value="Dim">Dimanche</option>
-                            <option value="Ven">Vendredi</option>
-                            <option value="Lun">Lundi</option>
-                            <option value="Mar">Mardi</option>
-                            <option value="Mer">Mercredi</option>
-                            <option value="Jeu">Jeudi</option>
+                            <option value="Sam" selected>Samedi</option><option value="Dim">Dimanche</option><option value="Ven">Vendredi</option><option value="Lun">Lundi</option><option value="Mar">Mardi</option><option value="Mer">Mercredi</option><option value="Jeu">Jeudi</option>
                         </select>
                     </div>
                 </div>
@@ -318,7 +356,7 @@
                     </select>
                 </div>
                 <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Site d'affectation principal</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Site</label>
                     <select id="empSite" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue">
                         <option value="Pierre Mendès France">Pierre Mendès France</option>
                         <option value="Robert Desnos">Robert Desnos</option>
@@ -326,8 +364,8 @@
                     </select>
                 </div>
                 <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Lieu de travail (Bureau, Poste...)</label>
-                    <input type="text" id="empLieu" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue" placeholder="Ex: Accueil, Entrepôt B...">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Lieu de travail</label>
+                    <input type="text" id="empLieu" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue" placeholder="Ex: Accueil, Entrepôt...">
                 </div>
             </div>
             <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3">
@@ -402,104 +440,178 @@
 
     <script>
         const app = {
-            data: { employees: [], logs: [], hs: [], admins: ['elahssen.malek@gmail.com', 'seyma.elahsen@ert.tn'] },
-            currentUser: null,
+            data: { employees: [], logs: [], hs: [], users: [] },
+            currentUserEmail: null,
+            currentUserRole: null,
             chartInstance: null,
 
             init() {
                 this.loadData();
-                try {
-                    document.getElementById('hsDate').value = new Date().toISOString().split('T')[0];
-                } catch(e) {}
+                try { document.getElementById('hsDate').value = new Date().toISOString().split('T')[0]; } catch(e) {}
                 
-                if (sessionStorage.getItem('edt_logged_in')) {
-                    this.currentUser = sessionStorage.getItem('edt_user_email');
-                    this.showMainApp();
+                if (sessionStorage.getItem('edt_logged_in') === 'true') {
+                    this.currentUserEmail = sessionStorage.getItem('edt_user_email');
+                    const user = this.data.users.find(u => u.email === this.currentUserEmail);
+                    if (user) {
+                        this.currentUserRole = user.role;
+                        this.showMainApp();
+                    } else {
+                        this.logout(); // Session invalid
+                    }
                 } else {
                     document.getElementById('loginScreen').classList.remove('hidden');
                 }
             },
 
-            checkEmail() {
-                const email = document.getElementById('loginEmail').value.trim().toLowerCase();
-                const errorEl = document.getElementById('loginError');
-                if (this.data.admins.includes(email)) {
-                    this.currentUser = email;
-                    errorEl.classList.add('hidden');
-                    document.getElementById('loginStep1').classList.add('hidden');
-                    document.getElementById('loginStep2').classList.remove('hidden');
-                    document.getElementById('loginCode').focus();
-                } else {
-                    errorEl.textContent = "Accès refusé : E-mail non autorisé.";
-                    errorEl.classList.remove('hidden');
-                }
-            },
-            
-            backToEmail() {
-                this.currentUser = null;
-                document.getElementById('loginError').classList.add('hidden');
-                document.getElementById('loginStep2').classList.add('hidden');
-                document.getElementById('loginStep1').classList.remove('hidden');
-                document.getElementById('loginCode').value = '';
-            },
-            
-            verifyCode() {
-                const code = document.getElementById('loginCode').value.trim();
-                const errorEl = document.getElementById('loginError');
-                if (code === '123456') {
-                    sessionStorage.setItem('edt_logged_in', 'true');
-                    sessionStorage.setItem('edt_user_email', this.currentUser);
-                    errorEl.classList.add('hidden');
-                    this.showMainApp();
-                } else {
-                    errorEl.textContent = "Code de sécurité incorrect.";
-                    errorEl.classList.remove('hidden');
-                }
-            },
-            
-            showMainApp() {
-                document.getElementById('loginScreen').classList.add('hidden');
-                document.getElementById('mainApp').classList.remove('hidden');
-                document.getElementById('currentUserDisplay').textContent = this.currentUser;
-                this.renderAll();
-                this.switchTab('pointage');
-            },
-            
-            logout() {
-                sessionStorage.removeItem('edt_logged_in');
-                sessionStorage.removeItem('edt_user_email');
-                this.currentUser = null;
-                document.getElementById('mainApp').classList.add('hidden');
-                document.getElementById('loginScreen').classList.remove('hidden');
-                document.getElementById('loginStep2').classList.add('hidden');
-                document.getElementById('loginStep1').classList.remove('hidden');
-                document.getElementById('loginEmail').value = '';
-                document.getElementById('loginCode').value = '';
-            },
-
             loadData() {
-                const saved = localStorage.getItem('edt_data_v11'); 
+                const saved = localStorage.getItem('edt_data_v12'); 
                 if (saved) {
                     this.data = JSON.parse(saved);
                 } else {
-                    const savedV10 = localStorage.getItem('edt_data_v10');
-                    if (savedV10) {
-                        this.data = JSON.parse(savedV10);
-                    } else {
-                        this.data.employees = [
-                            { id: '1', name: 'Agent 01', matricule: 'ERT-1001', equipe: 'Jour', site: 'Pierre Mendès France', lieu: '', heureArrivee: '08:00', heureDepart: '20:00', repos1: 'Sam', repos2: 'Dim', status: 'absent', photo: null }
-                        ];
+                    // Migration depuis l'ancienne version pour garder les employés
+                    const oldData = localStorage.getItem('edt_data_v11') || localStorage.getItem('edt_data_v10');
+                    if (oldData) {
+                        const parsedOld = JSON.parse(oldData);
+                        this.data.employees = parsedOld.employees || [];
+                        this.data.logs = parsedOld.logs || [];
+                        this.data.hs = parsedOld.hs || [];
                     }
-                    this.saveData();
                 }
+                
+                // Securité: Toujours injecter les superadmins par défaut s'ils n'existent pas
+                if (!this.data.users) this.data.users = [];
+                const checkAndAddSuperAdmin = (email) => {
+                    if (!this.data.users.find(u => u.email === email)) {
+                        this.data.users.push({ email: email, password: '123456', role: 'superadmin' });
+                    }
+                };
+                checkAndAddSuperAdmin('elahssen.malek@gmail.com');
+                checkAndAddSuperAdmin('seyma.elahsen@ert.tn');
+                this.saveData();
             },
-            saveData() { localStorage.setItem('edt_data_v11', JSON.stringify(this.data)); },
+
+            saveData() { localStorage.setItem('edt_data_v12', JSON.stringify(this.data)); },
+            
             resetData() {
-                if(confirm("Êtes-vous sûr de vouloir tout effacer ?")) {
+                if(confirm("Êtes-vous sûr de vouloir tout effacer ? Cette action supprimera tous les employés.")) {
+                    localStorage.removeItem('edt_data_v12');
                     localStorage.removeItem('edt_data_v11');
-                    localStorage.removeItem('edt_data_v10');
                     location.reload();
                 }
+            },
+
+            // --- AUTHENTIFICATION ---
+            login() {
+                const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+                const pass = document.getElementById('loginPassword').value;
+                const errorEl = document.getElementById('loginError');
+
+                if (!email || !pass) {
+                    errorEl.textContent = "Veuillez remplir tous les champs.";
+                    errorEl.classList.remove('hidden');
+                    return;
+                }
+
+                const user = this.data.users.find(u => u.email === email && u.password === pass);
+                
+                if (user) {
+                    sessionStorage.setItem('edt_logged_in', 'true');
+                    sessionStorage.setItem('edt_user_email', user.email);
+                    errorEl.classList.add('hidden');
+                    this.currentUserEmail = user.email;
+                    this.currentUserRole = user.role;
+                    this.showMainApp();
+                } else {
+                    errorEl.textContent = "Identifiants ou mot de passe incorrects.";
+                    errorEl.classList.remove('hidden');
+                }
+            },
+
+            logout() {
+                sessionStorage.removeItem('edt_logged_in');
+                sessionStorage.removeItem('edt_user_email');
+                this.currentUserEmail = null;
+                this.currentUserRole = null;
+                document.getElementById('mainApp').classList.add('hidden');
+                document.getElementById('loginScreen').classList.remove('hidden');
+                document.getElementById('loginEmail').value = '';
+                document.getElementById('loginPassword').value = '';
+            },
+
+            changePassword() {
+                const oldPw = document.getElementById('oldPassword').value;
+                const newPw = document.getElementById('newPassword').value;
+                const msg = document.getElementById('pwdMsg');
+                
+                msg.classList.remove('hidden', 'text-green-600', 'text-ert-red');
+                
+                if(!oldPw || !newPw) {
+                    msg.textContent = "Remplissez les deux champs.";
+                    msg.classList.add('text-ert-red');
+                    return;
+                }
+
+                const userIndex = this.data.users.findIndex(u => u.email === this.currentUserEmail);
+                if (this.data.users[userIndex].password !== oldPw) {
+                    msg.textContent = "L'ancien mot de passe est incorrect.";
+                    msg.classList.add('text-ert-red');
+                    return;
+                }
+
+                this.data.users[userIndex].password = newPw;
+                this.saveData();
+                msg.textContent = "Mot de passe mis à jour avec succès.";
+                msg.classList.add('text-green-600');
+                document.getElementById('oldPassword').value = '';
+                document.getElementById('newPassword').value = '';
+            },
+
+            // --- GESTION DES UTILISATEURS (SUPER ADMIN) ---
+            addUserAccount() {
+                const email = document.getElementById('newAccountEmail').value.trim().toLowerCase();
+                const pwd = document.getElementById('newAccountPwd').value;
+                const role = document.getElementById('newAccountRole').value;
+
+                if (!email || !pwd) return alert("Remplissez l'email et le mot de passe.");
+                if (this.data.users.find(u => u.email === email)) return alert("Cet email existe déjà.");
+
+                this.data.users.push({ email, password: pwd, role });
+                this.saveData();
+                this.renderUsersList();
+                document.getElementById('newAccountEmail').value = '';
+                document.getElementById('newAccountPwd').value = '';
+            },
+
+            removeUserAccount(email) {
+                if (email === this.currentUserEmail) return alert("Vous ne pouvez pas supprimer votre propre compte actif.");
+                if (confirm(`Supprimer l'accès pour ${email} ?`)) {
+                    this.data.users = this.data.users.filter(u => u.email !== email);
+                    this.saveData();
+                    this.renderUsersList();
+                }
+            },
+
+            renderUsersList() {
+                const list = document.getElementById('usersList');
+                list.innerHTML = this.data.users.map(u => `
+                    <li class="px-4 py-3 flex justify-between items-center text-sm">
+                        <div>
+                            <span class="text-gray-800 font-medium">${u.email}</span>
+                            <span class="ml-2 text-xs px-2 py-0.5 rounded ${u.role === 'superadmin' ? 'bg-ert-red text-white' : 'bg-gray-200 text-gray-700'}">${u.role === 'superadmin' ? 'Super Admin' : 'Utilisateur'}</span>
+                        </div>
+                        ${u.email !== this.currentUserEmail ? `<button onclick="app.removeUserAccount('${u.email}')" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>` : `<span class="text-xs text-green-600 font-bold">Moi</span>`}
+                    </li>
+                `).join('');
+            },
+
+            // --- NAVIGATION ---
+            showMainApp() {
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                document.getElementById('currentUserDisplay').textContent = this.currentUserEmail.split('@')[0];
+                document.getElementById('currentUserRoleDisplay').textContent = this.currentUserRole === 'superadmin' ? 'Super Administrateur' : 'Utilisateur autorisé';
+                this.renderAll();
+                this.switchTab('pointage');
             },
 
             switchTab(tabId) {
@@ -515,12 +627,20 @@
                 activeNav.classList.add('tab-active');
 
                 if (tabId === 'rapports') this.renderChart();
-                if (tabId === 'parametres') this.renderAdmins();
+                if (tabId === 'parametres') {
+                    if (this.currentUserRole === 'superadmin') {
+                        document.getElementById('superAdminPanel').classList.remove('hidden');
+                        this.renderUsersList();
+                    } else {
+                        document.getElementById('superAdminPanel').classList.add('hidden');
+                    }
+                }
             },
             closeModals() {
                 document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
             },
 
+            // --- EMPLOYEE MGMT ---
             handlePhotoUpload(event) {
                 const file = event.target.files[0];
                 if (!file) return;
@@ -530,12 +650,334 @@
                     const img = new Image();
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        const MAX_WIDTH = 150;
-                        const MAX_HEIGHT = 150;
-                        let width = img.width;
-                        let height = img.height;
+                        const MAX_WIDTH = 150; const MAX_HEIGHT = 150;
+                        let width = img.width; let height = img.height;
+                        if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } } 
+                        else { if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; } }
+                        canvas.width = width; canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7); 
+                        document.getElementById('empPhotoData').value = compressedDataUrl;
+                        document.getElementById('empPhotoPreview').innerHTML = `<img src="${compressedDataUrl}" class="w-full h-full object-cover">`;
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+                event.target.value = '';
+            },
+            
+            getAvatarHtml(emp) {
+                if (emp && emp.photo) return `<img src="${emp.photo}" class="avatar-img shadow-sm" alt="Photo">`;
+                const initial = emp && emp.name ? emp.name.charAt(0).toUpperCase() : '?';
+                return `<div class="avatar-placeholder shadow-sm">${initial}</div>`;
+            },
 
-                        if (width > height) {
-                            if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-                        } else {
-                            if (height > MAX_HEIGHT) { width *=
+            openEmployeeModal(id = null) {
+                document.getElementById('employeeModalTitle').textContent = id ? 'Modifier employé' : 'Ajouter un employé';
+                const emp = id ? this.data.employees.find(e => String(e.id) === String(id)) : null;
+                
+                document.getElementById('empId').value = emp ? emp.id : '';
+                document.getElementById('empName').value = emp ? emp.name : '';
+                document.getElementById('empMatricule').value = emp ? emp.matricule : '';
+                document.getElementById('empEquipe').value = emp ? emp.equipe : 'Jour';
+                document.getElementById('empSite').value = emp ? emp.site : 'Pierre Mendès France';
+                document.getElementById('empLieu').value = emp && emp.lieu ? emp.lieu : '';
+                document.getElementById('empHeureArrivee').value = emp && emp.heureArrivee ? emp.heureArrivee : '08:00';
+                document.getElementById('empHeureDepart').value = emp && emp.heureDepart ? emp.heureDepart : '20:00';
+                document.getElementById('empRepos1').value = emp && emp.repos1 ? emp.repos1 : 'Sam';
+                document.getElementById('empRepos2').value = emp && emp.repos2 ? emp.repos2 : 'Dim';
+                
+                document.getElementById('empPhotoData').value = emp && emp.photo ? emp.photo : '';
+                if (emp && emp.photo) {
+                    document.getElementById('empPhotoPreview').innerHTML = `<img src="${emp.photo}" class="w-full h-full object-cover">`;
+                } else {
+                    document.getElementById('empPhotoPreview').innerHTML = `<i class="fas fa-camera text-gray-400 text-2xl"></i>`;
+                }
+                
+                document.getElementById('employeeModal').classList.add('active');
+            },
+            saveEmployee() {
+                const id = document.getElementById('empId').value || Date.now().toString();
+                const name = document.getElementById('empName').value;
+                const matricule = document.getElementById('empMatricule').value;
+                const equipe = document.getElementById('empEquipe').value;
+                const site = document.getElementById('empSite').value;
+                const lieu = document.getElementById('empLieu').value;
+                const heureArrivee = document.getElementById('empHeureArrivee').value;
+                const heureDepart = document.getElementById('empHeureDepart').value;
+                const repos1 = document.getElementById('empRepos1').value;
+                const repos2 = document.getElementById('empRepos2').value;
+                const photo = document.getElementById('empPhotoData').value;
+
+                if (!name || !matricule) return alert('Nom et Matricule requis');
+
+                const existingIndex = this.data.employees.findIndex(e => String(e.id) === String(id));
+                const empData = { id, name, matricule, equipe, site, lieu, heureArrivee, heureDepart, repos1, repos2, status: existingIndex >= 0 ? this.data.employees[existingIndex].status : 'absent', photo };
+
+                if (existingIndex >= 0) {
+                    this.data.employees[existingIndex] = empData;
+                } else {
+                    this.data.employees.push(empData);
+                    this.addLog(id, name, site, 'creation', 'Création du profil agent');
+                }
+
+                this.saveData();
+                this.renderAll();
+                this.closeModals();
+            },
+            
+            deleteEmployee(id) {
+                if (confirm('Êtes-vous sûr de vouloir supprimer cet employé ?')) {
+                    const emp = this.data.employees.find(e => String(e.id) === String(id));
+                    if(emp) this.addLog(id, emp.name, emp.site, 'suppression', 'Suppression de l\'agent');
+                    this.data.employees = this.data.employees.filter(e => String(e.id) !== String(id));
+                    this.saveData();
+                    this.renderAll();
+                }
+            },
+            
+            updateLieuDirect(id, newLieu) {
+                const emp = this.data.employees.find(e => String(e.id) === String(id));
+                if (emp) { emp.lieu = newLieu; this.saveData(); }
+            },
+
+            addLog(empId, empName, site, action, detail) {
+                this.data.logs.unshift({ id: Date.now(), empId, empName, site, action, detail, timestamp: new Date().toISOString() });
+                if (this.data.logs.length > 200) this.data.logs.pop();
+                this.saveData();
+            },
+
+            logAction(empId, action) {
+                const emp = this.data.employees.find(e => String(e.id) === String(empId));
+                if (!emp) return;
+
+                if (action === 'arrivee') {
+                    emp.status = 'present';
+                    this.addLog(empId, emp.name, emp.site, 'arrivee', `Arrivée à ${emp.heureArrivee}`);
+                } else if (action === 'depart') {
+                    emp.status = 'absent';
+                    this.addLog(empId, emp.name, emp.site, 'depart', `Départ à ${emp.heureDepart}`);
+                }
+                
+                this.saveData();
+                this.renderAll();
+            },
+            
+            openAbsenceModal(empId) {
+                document.getElementById('absenceEmpId').value = empId;
+                document.getElementById('absenceType').value = 'Congé annuel';
+                document.getElementById('absenceDuration').value = '';
+                document.getElementById('absenceModal').classList.add('active');
+            },
+            
+            saveAbsence() {
+                const empId = document.getElementById('absenceEmpId').value;
+                const type = document.getElementById('absenceType').value;
+                const duration = document.getElementById('absenceDuration').value;
+                if(!duration) return alert("Veuillez préciser la durée.");
+                
+                const emp = this.data.employees.find(e => String(e.id) === String(empId));
+                if (!emp) return;
+                
+                emp.status = 'conge';
+                this.addLog(empId, emp.name, emp.site, 'absence', `${type} (${duration})`);
+                this.saveData();
+                this.renderAll();
+                this.closeModals();
+            },
+
+            openHsModal() {
+                const select = document.getElementById('hsEmpId');
+                select.innerHTML = this.data.employees.map(e => `<option value="${e.id}">${e.name} (${e.matricule})</option>`).join('');
+                document.getElementById('hsModal').classList.add('active');
+            },
+            saveHs() {
+                const empId = document.getElementById('hsEmpId').value;
+                const date = document.getElementById('hsDate').value;
+                const hours = document.getElementById('hsHours').value;
+                const motif = document.getElementById('hsMotif').value;
+                if (!empId || !date || !hours || !motif) return alert('Tous les champs sont requis');
+
+                const emp = this.data.employees.find(e => String(e.id) === String(empId));
+                this.data.hs.unshift({ id: Date.now(), empName: emp ? emp.name : 'Inconnu', date, hours: parseFloat(hours), motif });
+                if(emp) this.addLog(empId, emp.name, emp.site, 'hs', `Heures sup: +${hours}h (${motif})`);
+                this.saveData();
+                this.renderHs();
+                this.renderStats();
+                this.closeModals();
+            },
+
+            exportHistoryJSON() {
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.data.logs, null, 2));
+                const downloadAnchor = document.createElement('a');
+                downloadAnchor.setAttribute("href", dataStr);
+                downloadAnchor.setAttribute("download", `EDT-track-journal-${new Date().toISOString().split('T')[0]}.json`);
+                document.body.appendChild(downloadAnchor);
+                downloadAnchor.click();
+                downloadAnchor.remove();
+            },
+
+            renderAll() {
+                this.renderPointageCards();
+                this.renderEmployeeTable();
+                this.renderPlanning();
+                this.renderHs();
+                this.renderStats();
+                this.renderActivityLog();
+            },
+
+            renderPointageCards() {
+                const container = document.getElementById('pointageCardsContainer');
+                const filter = document.getElementById('siteFilter').value;
+                const filtered = filter === 'all' ? this.data.employees : this.data.employees.filter(e => e.site === filter);
+
+                container.innerHTML = filtered.map(emp => `
+                    <div class="card p-4 flex flex-col justify-between border-l-4 ${emp.status === 'present' ? 'border-l-ert-blue' : emp.status === 'conge' ? 'border-l-fuchsia-500' : 'border-l-gray-300'}">
+                        <div>
+                            <div class="flex items-start gap-3 mb-2">
+                                ${this.getAvatarHtml(emp)}
+                                <div>
+                                    <div class="font-bold text-gray-800 leading-tight">${emp.name}</div>
+                                    <div class="text-xs text-gray-500 font-mono mt-1">${emp.matricule}</div>
+                                </div>
+                            </div>
+                            <div class="mt-3 mb-2">
+                                <span class="text-xs font-semibold px-2 py-1 rounded bg-gray-100 text-gray-600 block w-max mb-1">${emp.site}</span>
+                                <input type="text" value="${emp.lieu || ''}" placeholder="Lieu/Poste..." 
+                                    onchange="app.updateLieuDirect('${emp.id}', this.value)"
+                                    class="text-sm text-gray-600 border-b border-dashed border-gray-300 hover:border-ert-blue focus:outline-none focus:border-ert-blue w-full bg-transparent p-1 transition-colors">
+                            </div>
+                            <div class="text-xs text-gray-600 mb-2 bg-gray-50 p-1.5 rounded font-medium">
+                                <i class="fas fa-clock mr-1 text-ert-blue"></i> ${emp.heureArrivee || '08:00'} ➔ ${emp.heureDepart || '20:00'}
+                            </div>
+                            <div class="mt-2 mb-4">
+                                <span class="text-xs font-semibold px-2 py-1 rounded ${
+                                    emp.status === 'present' ? 'bg-blue-100 text-ert-blue' : 
+                                    emp.status === 'conge' ? 'bg-fuchsia-100 text-fuchsia-700' : 'bg-gray-100 text-gray-600'
+                                }">${emp.status === 'present' ? 'Présent' : emp.status === 'conge' ? 'En Absence' : 'Non pointé'}</span>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2 mt-auto">
+                            <button onclick="app.logAction('${emp.id}', 'arrivee')" class="btn-blue text-xs py-2 rounded flex flex-col items-center justify-center transition" ${emp.status === 'present' ? 'opacity-50 cursor-not-allowed' : ''}><i class="fas fa-sign-in-alt mb-1"></i> Arrivée</button>
+                            <button onclick="app.logAction('${emp.id}', 'depart')" class="btn-red text-xs py-2 rounded flex flex-col items-center justify-center transition" ${emp.status === 'absent' ? 'opacity-50 cursor-not-allowed' : ''}><i class="fas fa-sign-out-alt mb-1"></i> Départ</button>
+                            <button onclick="app.openAbsenceModal('${emp.id}')" class="btn-orange text-xs py-2 rounded flex flex-col items-center justify-center transition"><i class="fas fa-user-clock mb-1"></i> Absence</button>
+                        </div>
+                    </div>
+                `).join('');
+            },
+
+            renderEmployeeTable() {
+                const tbody = document.getElementById('employeeTableBody');
+                tbody.innerHTML = this.data.employees.map(emp => `
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap"><div class="flex items-center gap-3">${this.getAvatarHtml(emp)}<div class="text-sm font-medium text-gray-900">${emp.name}</div></div></td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">${emp.matricule}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${emp.site} <br><span class="text-xs text-gray-400">${emp.lieu || '-'}</span></td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">${emp.heureArrivee || '08:00'} ➔ ${emp.heureDepart || '20:00'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-xs">${emp.repos1 || 'Sam'}, ${emp.repos2 || 'Dim'}</span></td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button onclick="app.openEmployeeModal('${emp.id}')" class="text-ert-blue hover:text-blue-900 mr-3" title="Modifier"><i class="fas fa-edit"></i></button>
+                            <button onclick="app.deleteEmployee('${emp.id}')" class="text-ert-red hover:text-red-900" title="Supprimer"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+            },
+
+            renderPlanning() {
+                const tbody = document.getElementById('planningTableBody');
+                const filter = document.getElementById('planningTeamFilter').value;
+                const filtered = filter === 'all' ? this.data.employees : this.data.employees.filter(e => e.equipe === filter);
+
+                tbody.innerHTML = filtered.map(emp => {
+                    const isJour = emp.equipe === 'Jour';
+                    const cellColor = isJour ? 'bg-blue-50 text-ert-blue' : 'bg-indigo-50 text-indigo-700';
+                    const days = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map(d => {
+                        if (d === emp.repos1 || d === emp.repos2) return `<td class="border border-gray-200 p-2 text-center text-xs text-gray-400 bg-gray-50 font-semibold">Repos</td>`;
+                        return `<td class="border border-gray-200 p-1"><div class="${cellColor} text-xs p-1 rounded font-medium text-center shadow-sm">${emp.site}<br><span class="text-[10px] text-gray-600 font-bold">${emp.heureArrivee || '08:00'} - ${emp.heureDepart || '20:00'}</span></div></td>`;
+                    }).join('');
+                    
+                    return `<tr><td class="border border-gray-200 p-2"><div class="flex items-center gap-2">${this.getAvatarHtml(emp).replace('40px', '24px').replace('40px', '24px')}<div><span class="text-sm font-medium">${emp.name}</span><span class="text-[10px] text-gray-400 block">${emp.equipe}</span></div></div></td>${days}</tr>`;
+                }).join('');
+            },
+
+            renderHs() {
+                const container = document.getElementById('hsLogContainer');
+                if (this.data.hs.length === 0) { container.innerHTML = '<p class="text-sm text-gray-500 italic">Aucune heure supp.</p>'; return; }
+                container.innerHTML = this.data.hs.map(h => `
+                    <div class="mb-3 pb-3 border-b border-gray-100 last:border-0 text-sm">
+                        <div class="flex justify-between items-start"><span class="font-medium text-gray-800">${h.empName || 'Ancien'}</span><span class="font-bold text-ert-red">+${h.hours}h</span></div>
+                        <div class="text-xs text-gray-500 mt-1 flex justify-between"><span>${new Date(h.date).toLocaleDateString('fr-FR')}</span><span class="italic">${h.motif}</span></div>
+                    </div>
+                `).join('');
+            },
+
+            renderActivityLog() {
+                const container = document.getElementById('activityLogContainer');
+                if (this.data.logs.length === 0) { container.innerHTML = '<p class="text-sm text-gray-500 italic">Aucune activité.</p>'; return; }
+                container.innerHTML = this.data.logs.map(log => {
+                    const timeDate = new Date(log.timestamp);
+                    const time = timeDate.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
+                    const dateStr = timeDate.toLocaleDateString('fr-FR');
+                    
+                    let color = 'text-gray-500'; let icon = 'fa-circle';
+                    if (log.action === 'arrivee') { color = 'text-ert-blue'; icon = 'fa-arrow-right'; }
+                    else if (log.action === 'depart') { color = 'text-ert-red'; icon = 'fa-arrow-left'; }
+                    else if (log.action === 'absence') { color = 'text-orange-500'; icon = 'fa-user-clock'; }
+                    else if (log.action === 'creation') { color = 'text-green-600'; icon = 'fa-user-plus'; }
+                    else if (log.action === 'suppression') { color = 'text-red-600'; icon = 'fa-user-minus'; }
+                    else if (log.action === 'hs') { color = 'text-purple-600'; icon = 'fa-clock'; }
+
+                    const emp = this.data.employees.find(e => String(e.id) === String(log.empId));
+                    const displayName = emp ? emp.name : (log.empName || "Agent");
+                    const initial = displayName ? displayName.charAt(0).toUpperCase() : "?";
+                    const avatarHtml = emp && emp.photo ? `<img src="${emp.photo}" class="w-8 h-8 rounded-full object-cover">` : `<div class="w-8 h-8 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center text-xs font-bold">${initial}</div>`;
+
+                    return `<div class="flex items-start gap-3 mb-3 pb-3 border-b border-gray-100 last:border-0"><div class="mt-1">${avatarHtml}</div><div class="flex-1"><div class="text-sm font-medium text-gray-800">${displayName} <span class="text-xs font-normal text-gray-500 ml-1">(${log.site || '-'})</span></div><div class="text-xs text-gray-600 mt-0.5"><i class="fas ${icon} ${color} text-[10px] mr-1"></i> ${log.detail}</div></div><div class="text-right"><div class="text-xs font-semibold text-gray-700">${time}</div><div class="text-[10px] text-gray-400">${dateStr}</div></div></div>`;
+                }).join('');
+            },
+
+            renderStats() {
+                document.getElementById('stat-total').textContent = this.data.employees.length;
+                document.getElementById('stat-present').textContent = this.data.employees.filter(e => e.status === 'present').length;
+                document.getElementById('stat-absent').textContent = this.data.employees.filter(e => e.status === 'conge').length;
+                document.getElementById('stat-hs').textContent = this.data.hs.reduce((s, h) => s + h.hours, 0) + 'h';
+            },
+
+            renderChart() {
+                const ctx = document.getElementById('siteChart');
+                if (!ctx) return;
+                if (this.chartInstance) this.chartInstance.destroy();
+                const sites = ['Pierre Mendès France', 'Robert Desnos', 'Georges Brassens'];
+                const counts = sites.map(site => this.data.employees.filter(e => e.site === site).length);
+
+                this.chartInstance = new Chart(ctx, { type: 'doughnut', data: { labels: sites, datasets: [{ data: counts, backgroundColor: ['#002654', '#ED2939', '#e2e8f0'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, cutout: '70%' } });
+            },
+
+            generatePDF() {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                const today = new Date().toLocaleDateString('fr-FR');
+                const blue = [0, 38, 84]; const red = [237, 41, 57];
+
+                doc.setFontSize(20); doc.setTextColor(blue[0], blue[1], blue[2]); doc.text("EDT-track - Rapport d'Effectifs", 14, 20);
+                doc.setFontSize(10); doc.setTextColor(100); doc.text(`Établissement Régional de Tunis - ${today}`, 14, 28);
+                doc.setDrawColor(red[0], red[1], red[2]); doc.setLineWidth(0.5); doc.line(14, 32, 196, 32);
+
+                const tableData = this.data.employees.map(emp => [ emp.matricule, emp.name, emp.site, `${emp.heureArrivee || '08:00'} - ${emp.heureDepart || '20:00'}`, `${emp.repos1}, ${emp.repos2}`, emp.status === 'present' ? 'Présent' : emp.status === 'conge' ? 'Absence' : 'Non pointé' ]);
+
+                doc.autoTable({
+                    startY: 40,
+                    head: [['Matricule', 'Nom', 'Site', 'Horaires', 'Repos', 'Statut']],
+                    body: tableData,
+                    headStyles: { fillColor: blue, textColor: 255 }, alternateRowStyles: { fillColor: [248, 250, 252] }, styles: { font: 'helvetica', fontSize: 9 }
+                });
+
+                doc.save(`EDT-Rapport-${today.replace(/\//g, '-')}.pdf`);
+            }
+        };
+
+        window.onload = () => app.init();
+    </script>
+</body>
+</html>
