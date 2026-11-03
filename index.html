@@ -284,6 +284,12 @@
                             <ul id="usersList" class="divide-y divide-gray-200 border border-gray-200 rounded-md max-h-40 overflow-y-auto"></ul>
                         </div>
 
+                        <!-- Reset Data -->
+                        <div class="card p-6 md:col-span-2">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Données de l'Application</h3>
+                            <button onclick="app.resetData()" class="btn-red px-4 py-2 rounded-md text-sm font-medium w-full md:w-auto flex justify-center items-center"><i class="fas fa-trash-alt mr-2"></i> Effacer toutes les données</button>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -379,8 +385,13 @@
             appId: "1:806362987169:web:1f9680fcc28a2ef6300ee0"
         };
         
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+        let database = null;
+        try {
+            firebase.initializeApp(firebaseConfig);
+            database = firebase.database();
+        } catch (error) {
+            console.warn("Firebase n'a pas pu s'initialiser. L'application fonctionnera en mode local (hors-ligne).", error);
+        }
 
         const app = {
             data: { employees: [], logs: [], hs: [], users: [] },
@@ -389,98 +400,121 @@
             chartInstance: null,
 
             init() {
-                this.loadData();
                 try { document.getElementById('hsDate').value = new Date().toISOString().split('T')[0]; } catch(e) {}
+                this.loadData();
             },
 
             loadData() {
-                database.ref('edt_data').on('value', (snapshot) => {
-                    const val = snapshot.val();
-                    if (val) {
-                        this.data = val;
-                        this.data.employees = this.data.employees || [];
-                        this.data.logs = this.data.logs || [];
-                        this.data.hs = this.data.hs || [];
-                        this.data.users = this.data.users || [];
-                    } 
-                    
-                    // Sécurisation de l'accès si la base est vide (Firebase ou Rules rejetées)
-                    if (!this.data.users || this.data.users.length === 0) {
-                        this.data.users = [];
-                    }
+                // Tentative de connexion à Firebase
+                if (database) {
+                    database.ref('edt_data').on('value', (snapshot) => {
+                        this.syncData(snapshot.val());
+                    }, (error) => {
+                        console.error("Firebase bloqué par la sécurité réseau ou les règles de la base. Passage en mode local.", error);
+                        this.syncData(JSON.parse(localStorage.getItem('edt_data_v14')));
+                    });
+                } else {
+                    // Si Firebase a totalement planté à l'initialisation
+                    this.syncData(JSON.parse(localStorage.getItem('edt_data_v14')));
+                }
+            },
 
-                    // Session active en arrière-plan
-                    if (sessionStorage.getItem('edt_logged_in') === 'true' && !this.currentUserEmail) {
-                        const savedEmail = sessionStorage.getItem('edt_user_email');
-                        const user = this.data.users.find(u => u.email === savedEmail);
-                        if (user) {
-                            this.currentUserEmail = user.email;
-                            this.currentUserRole = user.role;
-                            this.showMainApp();
-                        }
-                    }
+            syncData(val) {
+                if (val) this.data = val;
+                
+                // Blindage des tableaux pour éviter tout plantage "undefined"
+                if (!this.data) this.data = {};
+                if (!this.data.employees) this.data.employees = [];
+                if (!this.data.logs) this.data.logs = [];
+                if (!this.data.hs) this.data.hs = [];
+                if (!this.data.users) this.data.users = [];
 
-                    if (this.currentUserEmail) {
-                        this.renderAll();
-                        if (this.currentUserRole === 'superadmin') this.renderUsersList();
+                // Si la base est vierge, créer les superadmins par défaut
+                if (this.data.users.length === 0) {
+                    this.data.users = [
+                        { email: 'elahssen.malek@gmail.com', password: '123456', role: 'superadmin' },
+                        { email: 'seyma.elahsen@ert.tn', password: '123456', role: 'superadmin' }
+                    ];
+                }
+
+                // Vérification de session
+                if (sessionStorage.getItem('edt_logged_in') === 'true' && !this.currentUserEmail) {
+                    const savedEmail = sessionStorage.getItem('edt_user_email');
+                    const user = this.data.users.find(u => u.email === savedEmail);
+                    if (user) {
+                        this.currentUserEmail = user.email;
+                        this.currentUserRole = user.role;
+                        this.showMainApp();
+                    } else {
+                        this.logout();
                     }
-                }, (error) => {
-                    console.error("Erreur Firebase: ", error);
-                    document.getElementById('loginError').textContent = "Erreur de connexion à la base. Vérifiez les règles Firebase.";
-                    document.getElementById('loginError').classList.remove('hidden');
-                });
+                } else if (!this.currentUserEmail) {
+                    document.getElementById('loginScreen').classList.remove('hidden');
+                }
+
+                if (this.currentUserEmail) {
+                    this.renderAll();
+                    if (this.currentUserRole === 'superadmin') this.renderUsersList();
+                }
             },
 
             saveData() {
-                try { database.ref('edt_data').set(this.data); } catch (e) { console.error("Erreur de sauvegarde", e); }
+                // Sauvegarde locale de sécurité
+                localStorage.setItem('edt_data_v14', JSON.stringify(this.data));
+                
+                // Sauvegarde Firebase
+                if (database) {
+                    try { database.ref('edt_data').set(this.data); } catch (e) { console.error("Erreur d'écriture Firebase", e); }
+                }
             },
             
             resetData() {
                 if(confirm("Êtes-vous sûr de vouloir tout effacer ? (Les comptes utilisateurs seront conservés)")) {
-                    this.data.employees = [];
-                    this.data.logs = [];
-                    this.data.hs = [];
+                    this.data.employees = []; this.data.logs = []; this.data.hs = [];
                     this.saveData();
                 }
             },
 
             login() {
-                const email = document.getElementById('loginEmail').value.trim().toLowerCase();
-                const pass = document.getElementById('loginPassword').value;
-                const errorEl = document.getElementById('loginError');
-                
-                if (!email || !pass) { 
-                    errorEl.textContent = "Veuillez remplir tous les champs."; 
-                    errorEl.classList.remove('hidden'); 
-                    return; 
-                }
-
-                let user = this.data.users.find(u => u.email === email && u.password === pass);
-
-                // --- FAILSAFE GARDE-FOU ---
-                // Force la connexion et la création du compte admin si la base est vide ou bloquée
-                if (!user && (email === 'elahssen.malek@gmail.com' || email === 'seyma.elahsen@ert.tn') && pass === '123456') {
-                    user = { email: email, password: pass, role: 'superadmin' };
+                try {
+                    const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+                    const pass = document.getElementById('loginPassword').value;
+                    const errorEl = document.getElementById('loginError');
                     
-                    const existingUser = this.data.users.find(u => u.email === email);
-                    if (!existingUser) {
+                    if (!email || !pass) { 
+                        errorEl.textContent = "Veuillez remplir tous les champs."; 
+                        errorEl.classList.remove('hidden'); 
+                        return; 
+                    }
+
+                    // Failsafe d'urgence si la base de données ne s'est pas chargée du tout
+                    if (!this.data) this.data = { users: [] };
+                    if (!this.data.users) this.data.users = [];
+
+                    let user = this.data.users.find(u => u.email === email && u.password === pass);
+
+                    // --- PASSAGE EN FORCE ADMIN ---
+                    // Si l'utilisateur n'existe pas dans la base de données (bloquée/vide), mais que c'est un email admin correct : on force l'entrée.
+                    if (!user && (email === 'elahssen.malek@gmail.com' || email === 'seyma.elahsen@ert.tn') && pass === '123456') {
+                        user = { email: email, password: pass, role: 'superadmin' };
                         this.data.users.push(user);
                         this.saveData(); 
-                    } else if (existingUser.password !== pass) {
-                        user = null; // C'est un vrai mauvais mot de passe
                     }
-                }
 
-                if (user) {
-                    sessionStorage.setItem('edt_logged_in', 'true');
-                    sessionStorage.setItem('edt_user_email', user.email);
-                    errorEl.classList.add('hidden');
-                    this.currentUserEmail = user.email;
-                    this.currentUserRole = user.role;
-                    this.showMainApp();
-                } else {
-                    errorEl.textContent = "Identifiants ou mot de passe incorrects.";
-                    errorEl.classList.remove('hidden');
+                    if (user) {
+                        sessionStorage.setItem('edt_logged_in', 'true');
+                        sessionStorage.setItem('edt_user_email', user.email);
+                        errorEl.classList.add('hidden');
+                        this.currentUserEmail = user.email;
+                        this.currentUserRole = user.role;
+                        this.showMainApp();
+                    } else {
+                        errorEl.textContent = "Identifiants ou mot de passe incorrects.";
+                        errorEl.classList.remove('hidden');
+                    }
+                } catch (error) {
+                    document.getElementById('loginError').textContent = "Erreur système, passez par le rafraichissement forcé (Ctrl+F5).";
+                    document.getElementById('loginError').classList.remove('hidden');
                 }
             },
 
@@ -525,7 +559,7 @@
             },
 
             removeUserAccount(email) {
-                if (email === this.currentUserEmail) return alert("Vous ne pouvez pas supprimer votre propre compte actif.");
+                if (email === this.currentUserEmail) return alert("Impossible de supprimer votre propre compte actif.");
                 if (confirm(`Supprimer l'accès pour ${email} ?`)) {
                     this.data.users = this.data.users.filter(u => u.email !== email);
                     this.saveData();
