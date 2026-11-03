@@ -543,4 +543,361 @@
 
                 this.data.users[userIndex].password = newPw;
                 this.saveData();
-                msg.textContent = "Mot de passe mis à jour."; msg.classList.add('text-green-6
+                msg.textContent = "Mot de passe mis à jour."; msg.classList.add('text-green-600');
+                document.getElementById('oldPassword').value = ''; document.getElementById('newPassword').value = '';
+            },
+
+            addUserAccount() {
+                const email = document.getElementById('newAccountEmail').value.trim().toLowerCase();
+                const pwd = document.getElementById('newAccountPwd').value;
+                const role = document.getElementById('newAccountRole').value;
+
+                if (!email || !pwd) return alert("Remplissez l'email et le mot de passe.");
+                if (this.data.users.find(u => u.email === email)) return alert("Cet email existe déjà.");
+
+                this.data.users.push({ email, password: pwd, role });
+                this.saveData();
+                document.getElementById('newAccountEmail').value = ''; document.getElementById('newAccountPwd').value = '';
+            },
+
+            removeUserAccount(email) {
+                if (email === this.currentUserEmail) return alert("Impossible de supprimer votre propre compte actif.");
+                if (confirm(`Supprimer l'accès pour ${email} ?`)) {
+                    this.data.users = this.data.users.filter(u => u.email !== email);
+                    this.saveData();
+                }
+            },
+
+            renderUsersList() {
+                const list = document.getElementById('usersList');
+                if (!list) return;
+                list.innerHTML = this.data.users.map(u => `
+                    <li class="px-4 py-3 flex justify-between items-center text-sm">
+                        <div>
+                            <span class="text-gray-800 font-medium">${u.email}</span>
+                            <span class="ml-2 text-xs px-2 py-0.5 rounded ${u.role === 'superadmin' ? 'bg-ert-red text-white' : 'bg-gray-200 text-gray-700'}">${u.role === 'superadmin' ? 'Super Admin' : 'Utilisateur'}</span>
+                        </div>
+                        ${u.email !== this.currentUserEmail ? `<button onclick="app.removeUserAccount('${u.email}')" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>` : `<span class="text-xs text-green-600 font-bold">Moi</span>`}
+                    </li>
+                `).join('');
+            },
+
+            showMainApp() {
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                document.getElementById('currentUserDisplay').textContent = this.currentUserEmail.split('@')[0];
+                document.getElementById('currentUserRoleDisplay').textContent = this.currentUserRole === 'superadmin' ? 'Super Administrateur' : 'Utilisateur autorisé';
+                this.renderAll();
+                this.switchTab('pointage');
+            },
+
+            switchTab(tabId) {
+                ['pointage', 'personnel', 'planning', 'rapports', 'parametres'].forEach(id => {
+                    document.getElementById(`tab-${id}`).classList.add('hidden');
+                    const nav = document.getElementById(`nav-${id}`);
+                    nav.classList.remove('tab-active'); nav.classList.add('tab-inactive');
+                });
+                document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+                const activeNav = document.getElementById(`nav-${tabId}`);
+                activeNav.classList.remove('tab-inactive'); activeNav.classList.add('tab-active');
+
+                if (tabId === 'rapports') this.renderChart();
+                if (tabId === 'parametres') {
+                    if (this.currentUserRole === 'superadmin') {
+                        document.getElementById('superAdminPanel').classList.remove('hidden');
+                        this.renderUsersList();
+                    } else {
+                        document.getElementById('superAdminPanel').classList.add('hidden');
+                    }
+                }
+            },
+            closeModals() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('active')); },
+
+            handlePhotoUpload(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let w = img.width; let h = img.height;
+                        if (w > h) { if (w > 150) { h *= 150/w; w = 150; } } else { if (h > 150) { w *= 150/h; h = 150; } }
+                        canvas.width = w; canvas.height = h;
+                        const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, w, h);
+                        const compressed = canvas.toDataURL('image/jpeg', 0.7); 
+                        document.getElementById('empPhotoData').value = compressed;
+                        document.getElementById('empPhotoPreview').innerHTML = `<img src="${compressed}" class="w-full h-full object-cover">`;
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+                event.target.value = '';
+            },
+            
+            getAvatarHtml(emp) {
+                if (emp && emp.photo) return `<img src="${emp.photo}" class="avatar-img shadow-sm">`;
+                return `<div class="avatar-placeholder shadow-sm">${emp && emp.name ? emp.name.charAt(0).toUpperCase() : '?'}</div>`;
+            },
+
+            openEmployeeModal(id = null) {
+                document.getElementById('employeeModalTitle').textContent = id ? 'Modifier employé' : 'Ajouter un employé';
+                const emp = id ? this.data.employees.find(e => String(e.id) === String(id)) : null;
+                
+                document.getElementById('empId').value = emp ? emp.id : '';
+                document.getElementById('empName').value = emp ? emp.name : '';
+                document.getElementById('empMatricule').value = emp ? emp.matricule : '';
+                document.getElementById('empEquipe').value = emp ? emp.equipe : 'Jour';
+                document.getElementById('empSite').value = emp ? emp.site : 'Pierre Mendès France';
+                document.getElementById('empLieu').value = emp && emp.lieu ? emp.lieu : '';
+                document.getElementById('empHeureArrivee').value = emp && emp.heureArrivee ? emp.heureArrivee : '08:00';
+                document.getElementById('empHeureDepart').value = emp && emp.heureDepart ? emp.heureDepart : '20:00';
+                document.getElementById('empRepos1').value = emp && emp.repos1 ? emp.repos1 : 'Sam';
+                document.getElementById('empRepos2').value = emp && emp.repos2 ? emp.repos2 : 'Dim';
+                document.getElementById('empPhotoData').value = emp && emp.photo ? emp.photo : '';
+                document.getElementById('empPhotoPreview').innerHTML = (emp && emp.photo) ? `<img src="${emp.photo}" class="w-full h-full object-cover">` : `<i class="fas fa-camera text-gray-400 text-2xl"></i>`;
+                document.getElementById('employeeModal').classList.add('active');
+            },
+            saveEmployee() {
+                const id = document.getElementById('empId').value || Date.now().toString();
+                const name = document.getElementById('empName').value;
+                const matricule = document.getElementById('empMatricule').value;
+                if (!name || !matricule) return alert('Nom et Matricule requis');
+
+                const empData = { 
+                    id, name, matricule, 
+                    equipe: document.getElementById('empEquipe').value, 
+                    site: document.getElementById('empSite').value, 
+                    lieu: document.getElementById('empLieu').value, 
+                    heureArrivee: document.getElementById('empHeureArrivee').value, 
+                    heureDepart: document.getElementById('empHeureDepart').value, 
+                    repos1: document.getElementById('empRepos1').value, 
+                    repos2: document.getElementById('empRepos2').value, 
+                    photo: document.getElementById('empPhotoData').value 
+                };
+
+                const existingIndex = this.data.employees.findIndex(e => String(e.id) === String(id));
+                if (existingIndex >= 0) {
+                    empData.status = this.data.employees[existingIndex].status;
+                    this.data.employees[existingIndex] = empData;
+                } else {
+                    empData.status = 'absent';
+                    this.data.employees.push(empData);
+                    this.addLog(id, name, empData.site, 'creation', 'Création du profil');
+                }
+                this.saveData(); this.closeModals();
+            },
+            
+            deleteEmployee(id) {
+                if (confirm('Supprimer cet employé ?')) {
+                    const emp = this.data.employees.find(e => String(e.id) === String(id));
+                    if(emp) this.addLog(id, emp.name, emp.site, 'suppression', 'Agent supprimé');
+                    this.data.employees = this.data.employees.filter(e => String(e.id) !== String(id));
+                    this.saveData();
+                }
+            },
+            
+            updateLieuDirect(id, newLieu) {
+                const emp = this.data.employees.find(e => String(e.id) === String(id));
+                if (emp) { emp.lieu = newLieu; this.saveData(); }
+            },
+
+            addLog(empId, empName, site, action, detail) {
+                this.data.logs.unshift({ id: Date.now(), empId, empName, site, action, detail, timestamp: new Date().toISOString() });
+                if (this.data.logs.length > 200) this.data.logs.pop();
+                this.saveData();
+            },
+
+            logAction(empId, action) {
+                const emp = this.data.employees.find(e => String(e.id) === String(empId));
+                if (!emp) return;
+                if (action === 'arrivee') { emp.status = 'present'; this.addLog(empId, emp.name, emp.site, 'arrivee', `Arrivée à ${emp.heureArrivee}`); } 
+                else if (action === 'depart') { emp.status = 'absent'; this.addLog(empId, emp.name, emp.site, 'depart', `Départ à ${emp.heureDepart}`); }
+                this.saveData();
+            },
+            
+            openAbsenceModal(empId) {
+                document.getElementById('absenceEmpId').value = empId;
+                document.getElementById('absenceModal').classList.add('active');
+            },
+            saveAbsence() {
+                const empId = document.getElementById('absenceEmpId').value;
+                const type = document.getElementById('absenceType').value;
+                const duration = document.getElementById('absenceDuration').value;
+                if(!duration) return alert("Préciser la durée.");
+                const emp = this.data.employees.find(e => String(e.id) === String(empId));
+                if (!emp) return;
+                emp.status = 'conge';
+                this.addLog(empId, emp.name, emp.site, 'absence', `${type} (${duration})`);
+                this.saveData(); this.closeModals();
+            },
+
+            openHsModal() {
+                document.getElementById('hsEmpId').innerHTML = this.data.employees.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
+                document.getElementById('hsModal').classList.add('active');
+            },
+            saveHs() {
+                const empId = document.getElementById('hsEmpId').value;
+                const date = document.getElementById('hsDate').value;
+                const hours = document.getElementById('hsHours').value;
+                const motif = document.getElementById('hsMotif').value;
+                if (!empId || !date || !hours || !motif) return alert('Champs requis');
+                const emp = this.data.employees.find(e => String(e.id) === String(empId));
+                this.data.hs.unshift({ id: Date.now(), empName: emp ? emp.name : 'Inconnu', date, hours: parseFloat(hours), motif });
+                if(emp) this.addLog(empId, emp.name, emp.site, 'hs', `Sup: +${hours}h (${motif})`);
+                this.saveData(); this.closeModals();
+            },
+
+            exportHistoryJSON() {
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.data.logs, null, 2));
+                const a = document.createElement('a'); a.href = dataStr; a.download = `EDT-journal.json`;
+                document.body.appendChild(a); a.click(); a.remove();
+            },
+
+            // --- NOUVELLES FONCTIONS PDF PLANNING ---
+            toggleAllPlanning(checked) {
+                document.querySelectorAll('.planning-cb').forEach(cb => cb.checked = checked);
+            },
+
+            exportSelectedPlanningPDF() {
+                const checkedIds = Array.from(document.querySelectorAll('.planning-cb:checked')).map(cb => cb.value);
+                if (checkedIds.length === 0) return alert("Veuillez sélectionner au moins un employé (case à cocher).");
+                this.exportPlanningPDF(checkedIds);
+            },
+
+            exportPlanningPDF(empIds) {
+                const { jsPDF } = window.jspdf; 
+                const doc = new jsPDF('landscape'); // Format paysage pour le planning
+                const d = new Date().toLocaleDateString('fr-FR');
+                
+                doc.setFontSize(16); doc.setTextColor(0, 38, 84); doc.text("EDT-track - Planning Hebdomadaire", 14, 15);
+                doc.setFontSize(10); doc.setTextColor(100); doc.text(`ERT - Généré le ${d}`, 14, 22);
+                
+                const empsToExport = this.data.employees.filter(e => empIds.includes(e.id));
+                const tableData = empsToExport.map(emp => {
+                    const days = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map(d => {
+                        return (d === emp.repos1 || d === emp.repos2) ? 'Repos' : `${emp.site}\n${emp.heureArrivee} - ${emp.heureDepart}`;
+                    });
+                    return [emp.name, emp.equipe, ...days];
+                });
+
+                doc.autoTable({
+                    startY: 28,
+                    head: [['Employé', 'Équipe', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']],
+                    body: tableData,
+                    headStyles: { fillColor: [0, 38, 84], halign: 'center' },
+                    styles: { fontSize: 8, cellPadding: 2, valign: 'middle', halign: 'center' },
+                    columnStyles: { 0: { halign: 'left', fontStyle: 'bold' } }
+                });
+
+                doc.save(`Planning_${d.replace(/\//g, '-')}.pdf`);
+            },
+
+            renderAll() {
+                this.renderPointageCards(); this.renderEmployeeTable(); this.renderPlanning(); 
+                this.renderHs(); this.renderStats(); this.renderActivityLog();
+            },
+
+            renderPointageCards() {
+                const filter = document.getElementById('siteFilter').value;
+                const filtered = filter === 'all' ? this.data.employees : this.data.employees.filter(e => e.site === filter);
+                
+                document.getElementById('pointageCardsContainer').innerHTML = filtered.map(emp => {
+                    
+                    // Récupération du dernier log pour l'affichage visuel
+                    const empLogs = this.data.logs.filter(l => String(l.empId) === String(emp.id) && (l.action === 'arrivee' || l.action === 'depart'));
+                    const lastLog = empLogs.length > 0 ? empLogs[0] : null;
+                    let pointageMsg = '';
+                    
+                    if (lastLog) {
+                        const timeStr = new Date(lastLog.timestamp).toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
+                        const actionLabel = lastLog.action === 'arrivee' ? 'Arrivée' : 'Départ';
+                        const msgStyle = lastLog.action === 'arrivee' ? 'bg-green-100 text-green-800 border-green-500' : 'bg-red-100 text-red-800 border-red-500';
+                        
+                        pointageMsg = `
+                        <div class="mt-2 text-[11px] p-2 rounded ${msgStyle} border-l-4 shadow-sm mb-3">
+                            <div class="font-bold mb-0.5">${emp.name}</div>
+                            <div>${actionLabel} : <strong>${timeStr}</strong></div>
+                            <div class="text-[10px] mt-0.5"><i class="fas fa-map-marker-alt"></i> ${emp.lieu || emp.site}</div>
+                        </div>`;
+                    }
+
+                    return `
+                    <div class="card p-4 flex flex-col justify-between border-l-4 ${emp.status === 'present' ? 'border-l-ert-blue' : emp.status === 'conge' ? 'border-l-fuchsia-500' : 'border-l-gray-300'}">
+                        <div>
+                            <div class="flex items-start gap-3 mb-2">${this.getAvatarHtml(emp)}<div><div class="font-bold text-gray-800">${emp.name}</div><div class="text-xs text-gray-500 font-mono">${emp.matricule}</div></div></div>
+                            <div class="mt-3 mb-2"><span class="text-xs font-semibold px-2 py-1 rounded bg-gray-100 block w-max mb-1">${emp.site}</span><input type="text" value="${emp.lieu || ''}" placeholder="Lieu..." onchange="app.updateLieuDirect('${emp.id}', this.value)" class="text-sm border-b border-dashed border-gray-300 w-full bg-transparent p-1"></div>
+                            <div class="text-xs text-gray-600 mb-2 bg-gray-50 p-1.5 rounded"><i class="fas fa-clock text-ert-blue"></i> ${emp.heureArrivee || '08:00'} ➔ ${emp.heureDepart || '20:00'}</div>
+                            
+                            ${pointageMsg}
+
+                        </div>
+                        <div class="grid grid-cols-3 gap-2 mt-auto pt-2 border-t border-gray-100">
+                            <button onclick="app.logAction('${emp.id}', 'arrivee')" class="btn-blue text-xs py-2 rounded" ${emp.status === 'present' ? 'opacity-50' : ''}><i class="fas fa-sign-in-alt mb-1"></i><br>Arrivée</button>
+                            <button onclick="app.logAction('${emp.id}', 'depart')" class="btn-red text-xs py-2 rounded" ${emp.status === 'absent' ? 'opacity-50' : ''}><i class="fas fa-sign-out-alt mb-1"></i><br>Départ</button>
+                            <button onclick="app.openAbsenceModal('${emp.id}')" class="btn-orange text-xs py-2 rounded"><i class="fas fa-user-clock mb-1"></i><br>Absence</button>
+                        </div>
+                    </div>`;
+                }).join('');
+            },
+
+            renderEmployeeTable() {
+                document.getElementById('employeeTableBody').innerHTML = this.data.employees.map(emp => `
+                    <tr><td class="px-6 py-4"><div class="flex items-center gap-3">${this.getAvatarHtml(emp)}<span class="text-sm font-medium">${emp.name}</span></div></td><td class="px-6 py-4 text-sm text-gray-500">${emp.matricule}</td><td class="px-6 py-4 text-sm">${emp.site}<br><span class="text-xs">${emp.lieu || '-'}</span></td><td class="px-6 py-4 text-sm font-semibold">${emp.heureArrivee || '08:00'} ➔ ${emp.heureDepart || '20:00'}</td><td class="px-6 py-4 text-sm text-gray-500"><span class="bg-gray-100 px-2 py-0.5 rounded text-xs">${emp.repos1 || 'Sam'}, ${emp.repos2 || 'Dim'}</span></td><td class="px-6 py-4 text-right"><button onclick="app.openEmployeeModal('${emp.id}')" class="text-ert-blue mr-3"><i class="fas fa-edit"></i></button><button onclick="app.deleteEmployee('${emp.id}')" class="text-ert-red"><i class="fas fa-trash"></i></button></td></tr>`).join('');
+            },
+
+            renderPlanning() {
+                const filter = document.getElementById('planningTeamFilter').value;
+                const filtered = filter === 'all' ? this.data.employees : this.data.employees.filter(e => e.equipe === filter);
+                document.getElementById('planningTableBody').innerHTML = filtered.map(emp => {
+                    const days = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map(d => (d === emp.repos1 || d === emp.repos2) ? `<td class="border p-2 text-center text-xs text-gray-400 bg-gray-50">Repos</td>` : `<td class="border p-1"><div class="${emp.equipe === 'Jour' ? 'bg-blue-50 text-ert-blue' : 'bg-indigo-50 text-indigo-700'} text-xs p-1 rounded text-center">${emp.site}<br><span class="text-[10px] text-gray-600 font-bold">${emp.heureArrivee || '08:00'} - ${emp.heureDepart || '20:00'}</span></div></td>`).join('');
+                    
+                    return `
+                    <tr>
+                        <td class="border p-2 text-center"><input type="checkbox" class="planning-cb w-4 h-4 text-ert-blue" value="${emp.id}"></td>
+                        <td class="border p-2"><div class="flex items-center gap-2">${this.getAvatarHtml(emp).replace('40px', '24px').replace('40px', '24px')}<div><span class="text-sm font-medium">${emp.name}</span><span class="text-[10px] text-gray-400 block">${emp.equipe}</span></div></div></td>
+                        ${days}
+                        <td class="border p-2 text-center"><button onclick="app.exportPlanningPDF(['${emp.id}'])" class="text-red-500 hover:text-red-700 p-1" title="Télécharger PDF de l'agent"><i class="fas fa-file-pdf"></i></button></td>
+                    </tr>`;
+                }).join('');
+            },
+
+            renderHs() {
+                document.getElementById('hsLogContainer').innerHTML = this.data.hs.length === 0 ? '<p class="text-sm text-gray-500 italic">Aucune heure supp.</p>' : this.data.hs.map(h => `<div class="mb-3 pb-3 border-b text-sm"><div class="flex justify-between"><span class="font-medium">${h.empName || 'Ancien'}</span><span class="font-bold text-ert-red">+${h.hours}h</span></div><div class="text-xs text-gray-500 flex justify-between"><span>${new Date(h.date).toLocaleDateString('fr-FR')}</span><span class="italic">${h.motif}</span></div></div>`).join('');
+            },
+
+            renderActivityLog() {
+                document.getElementById('activityLogContainer').innerHTML = this.data.logs.length === 0 ? '<p class="text-sm text-gray-500 italic">Aucune activité.</p>' : this.data.logs.map(log => {
+                    const t = new Date(log.timestamp);
+                    const emp = this.data.employees.find(e => String(e.id) === String(log.empId));
+                    let color = 'text-gray-500', icon = 'fa-circle';
+                    if (log.action === 'arrivee') { color = 'text-ert-blue'; icon = 'fa-arrow-right'; } else if (log.action === 'depart') { color = 'text-ert-red'; icon = 'fa-arrow-left'; } else if (log.action === 'absence') { color = 'text-orange-500'; icon = 'fa-user-clock'; } else if (log.action === 'creation') { color = 'text-green-600'; icon = 'fa-user-plus'; }
+                    return `<div class="flex items-start gap-3 mb-3 pb-3 border-b"><div class="mt-1">${emp && emp.photo ? `<img src="${emp.photo}" class="w-8 h-8 rounded-full object-cover">` : `<div class="w-8 h-8 rounded-full bg-gray-200 text-xs flex items-center justify-center font-bold">${emp ? emp.name.charAt(0) : '?'}</div>`}</div><div class="flex-1"><div class="text-sm font-medium">${emp ? emp.name : log.empName} <span class="text-xs text-gray-500">(${log.site})</span></div><div class="text-xs text-gray-600"><i class="fas ${icon} ${color} mr-1"></i> ${log.detail}</div></div><div class="text-right text-xs"><div class="font-semibold">${t.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'})}</div><div class="text-[10px] text-gray-400">${t.toLocaleDateString('fr-FR')}</div></div></div>`;
+                }).join('');
+            },
+
+            renderStats() {
+                document.getElementById('stat-total').textContent = this.data.employees.length; document.getElementById('stat-present').textContent = this.data.employees.filter(e => e.status === 'present').length; document.getElementById('stat-absent').textContent = this.data.employees.filter(e => e.status === 'conge').length; document.getElementById('stat-hs').textContent = this.data.hs.reduce((s, h) => s + h.hours, 0) + 'h';
+            },
+
+            renderChart() {
+                const ctx = document.getElementById('siteChart');
+                if (!ctx) return;
+                if (this.chartInstance) this.chartInstance.destroy();
+                const sites = ['Pierre Mendès France', 'Robert Desnos', 'Georges Brassens'];
+                this.chartInstance = new Chart(ctx, { type: 'doughnut', data: { labels: sites, datasets: [{ data: sites.map(s => this.data.employees.filter(e => e.site === s).length), backgroundColor: ['#002654', '#ED2939', '#e2e8f0'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, cutout: '70%' } });
+            },
+
+            generatePDF() {
+                const { jsPDF } = window.jspdf; const doc = new jsPDF(); const d = new Date().toLocaleDateString('fr-FR');
+                doc.setFontSize(20); doc.setTextColor(0, 38, 84); doc.text("Rapport d'Effectifs", 14, 20);
+                doc.setFontSize(10); doc.setTextColor(100); doc.text(`ERT - ${d}`, 14, 28);
+                doc.autoTable({ startY: 40, head: [['Matricule', 'Nom', 'Site', 'Horaires', 'Repos', 'Statut']], body: this.data.employees.map(e => [ e.matricule, e.name, e.site, `${e.heureArrivee} - ${e.heureDepart}`, `${e.repos1}, ${e.repos2}`, e.status ]), headStyles: { fillColor: [0, 38, 84] } });
+                doc.save(`EDT-Rapport-${d.replace(/\//g, '-')}.pdf`);
+            }
+        };
+
+        window.onload = () => app.init();
+    </script>
+</body>
+</html>
