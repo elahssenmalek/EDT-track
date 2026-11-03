@@ -283,7 +283,7 @@
                             <div class="flex-1 relative w-full h-full min-h-[250px]"><canvas id="siteChart"></canvas></div>
                         </div>
                         <div class="card p-4 flex flex-col">
-                            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Journal d'Activité (Temps Réel)</h3>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Journal d'Activité</h3>
                             <div class="flex-1 overflow-y-auto pr-2 custom-scrollbar" id="activityLogContainer"></div>
                         </div>
                     </div>
@@ -390,7 +390,7 @@
         </div>
     </div>
 
-    <!-- Absence Modal -->
+    <!-- Absence Modal (NOUVEAU DESIGN INTELLIGENT) -->
     <div id="absenceModal" class="modal">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
@@ -400,7 +400,15 @@
             <div class="p-6">
                 <input type="hidden" id="absenceEmpId">
                 <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Type d'absence</label><select id="absenceType" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue"><option value="Congé annuel">Congé annuel</option><option value="Maladie">Maladie</option><option value="Accident de travail">Accident de travail</option><option value="Formation">Formation</option><option value="Événement familial">Événement familial</option></select></div>
-                <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Durée (Jours/Heures)</label><input type="text" id="absenceDuration" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue"></div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Date de l'absence (ou 1er jour)</label>
+                    <input type="date" id="absenceDate" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Durée (ex: "3 jours" ou "4 heures")</label>
+                    <input type="text" id="absenceDuration" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue" placeholder="ex: 2 jours">
+                    <p class="text-xs text-gray-500 mt-1">L'application calculera les jours/heures exacts dans les rapports.</p>
+                </div>
             </div>
             <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3"><button onclick="app.closeModals()" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700">Annuler</button><button onclick="app.saveAbsence()" class="btn-orange px-4 py-2 rounded-md text-sm font-medium">Valider</button></div>
         </div>
@@ -433,7 +441,11 @@
             currentPlanningWeekDates: [],
 
             init() {
-                try { document.getElementById('hsDate').value = new Date().toISOString().split('T')[0]; } catch(e) {}
+                try { 
+                    const todayStr = new Date().toISOString().split('T')[0];
+                    document.getElementById('hsDate').value = todayStr; 
+                    document.getElementById('absenceDate').value = todayStr;
+                } catch(e) {}
                 this.initWeekPicker();
                 this.loadData();
             },
@@ -466,9 +478,9 @@
 
             loadData() {
                 if (database) {
-                    database.ref('edt_data').on('value', (snapshot) => { this.syncData(snapshot.val()); }, (e) => { this.syncData(JSON.parse(localStorage.getItem('edt_data_v17'))); });
+                    database.ref('edt_data').on('value', (snapshot) => { this.syncData(snapshot.val()); }, (e) => { this.syncData(JSON.parse(localStorage.getItem('edt_data_v18'))); });
                 } else {
-                    this.syncData(JSON.parse(localStorage.getItem('edt_data_v17')));
+                    this.syncData(JSON.parse(localStorage.getItem('edt_data_v18')));
                 }
             },
 
@@ -480,20 +492,12 @@
                 if (!this.data.hs) this.data.hs = [];
                 if (!this.data.users) this.data.users = [];
 
-                // --- AUTO-RECOVERY ---
-                // Si l'application détecte que la base a été écrasée ou est vide, elle va chercher dans TOUTES les anciennes mémoires du navigateur pour récupérer les employés.
                 if (this.data.employees.length === 0) {
-                    const oldVersions = ['edt_data_v16', 'edt_data_v15', 'edt_data_v14', 'edt_data_v12', 'edt_data_v11', 'edt_data_v10', 'edt_data_v9'];
+                    const oldVersions = ['edt_data_v17', 'edt_data_v16', 'edt_data_v15', 'edt_data_v14', 'edt_data_v12'];
                     for (let v of oldVersions) {
                         const oldData = JSON.parse(localStorage.getItem(v));
                         if (oldData && oldData.employees && oldData.employees.length > 0) {
-                            this.data.employees = oldData.employees;
-                            if(oldData.logs) this.data.logs = oldData.logs;
-                            if(oldData.hs) this.data.hs = oldData.hs;
-                            if(oldData.users && oldData.users.length > 0) this.data.users = oldData.users;
-                            this.saveData(); 
-                            console.log("Employés récupérés depuis l'ancienne version :", v);
-                            break;
+                            this.data = oldData; this.saveData(); break;
                         }
                     }
                 }
@@ -517,7 +521,7 @@
             },
 
             saveData() {
-                localStorage.setItem('edt_data_v17', JSON.stringify(this.data));
+                localStorage.setItem('edt_data_v18', JSON.stringify(this.data));
                 if (database) { try { database.ref('edt_data').set(this.data); } catch (e) {} }
             },
             
@@ -659,28 +663,73 @@
             },
             updateLieuDirect(id, newLieu) { const emp = this.data.employees.find(e => String(e.id) === String(id)); if (emp) { emp.lieu = newLieu; this.saveData(); } },
 
-            addLog(empId, empName, site, action, detail) {
-                this.data.logs.unshift({ id: Date.now(), empId, empName, site, action, detail, timestamp: new Date().toISOString() });
-                if (this.data.logs.length > 500) this.data.logs.pop();
+            addLog(empId, empName, site, action, detail, customTimestamp = null) {
+                this.data.logs.unshift({ 
+                    id: Date.now() + Math.floor(Math.random() * 100), 
+                    empId, empName, site, action, detail, 
+                    timestamp: customTimestamp || new Date().toISOString() 
+                });
+                // Trie par date decroissante pour garder l'historique cohérent
+                this.data.logs.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+                if (this.data.logs.length > 500) this.data.logs = this.data.logs.slice(0, 500);
                 this.saveData();
             },
 
             logAction(empId, action) {
                 const emp = this.data.employees.find(e => String(e.id) === String(empId));
                 if (!emp) return;
-                const timeNow = new Date().toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
+                
                 if (action === 'arrivee') { emp.status = 'present'; this.addLog(empId, emp.name, emp.site, 'arrivee', `Pointage Arrivée`); } 
                 else if (action === 'depart') { emp.status = 'absent'; this.addLog(empId, emp.name, emp.site, 'depart', `Pointage Départ`); }
                 this.saveData();
             },
             
-            openAbsenceModal(empId) { document.getElementById('absenceEmpId').value = empId; document.getElementById('absenceModal').classList.add('active'); },
+            openAbsenceModal(empId) { 
+                document.getElementById('absenceEmpId').value = empId; 
+                document.getElementById('absenceModal').classList.add('active'); 
+            },
+
+            // --- NOUVEAU : SAUVEGARDE ABSENCE INTELLIGENTE ---
             saveAbsence() {
-                const empId = document.getElementById('absenceEmpId').value; const type = document.getElementById('absenceType').value; const duration = document.getElementById('absenceDuration').value;
-                if(!duration) return alert("Préciser la durée.");
-                const emp = this.data.employees.find(e => String(e.id) === String(empId)); if (!emp) return;
-                emp.status = 'conge'; this.addLog(empId, emp.name, emp.site, 'absence', `${type} (${duration})`);
-                this.saveData(); this.closeModals();
+                const empId = document.getElementById('absenceEmpId').value; 
+                const type = document.getElementById('absenceType').value; 
+                const durationTxt = document.getElementById('absenceDuration').value.trim().toLowerCase();
+                const dateVal = document.getElementById('absenceDate').value;
+                
+                if(!durationTxt || !dateVal) return alert("Veuillez préciser la date et la durée (ex: '2 jours' ou '4 heures').");
+                
+                const emp = this.data.employees.find(e => String(e.id) === String(empId)); 
+                if (!emp) return;
+                
+                // Analyse du texte de la durée
+                let val = parseFloat(durationTxt.replace(',', '.')) || 1;
+                let isHours = durationTxt.includes('heure') || durationTxt.includes('h');
+                let days = isHours ? 1 : Math.ceil(val);
+
+                const startDate = new Date(dateVal);
+                
+                for(let i=0; i<days; i++) {
+                    let d = new Date(startDate);
+                    d.setDate(d.getDate() + i);
+                    let dateStr = d.toISOString().split('T')[0];
+                    
+                    // On force un timestamp à midi le jour de l'absence pour l'intégration automatique dans les rapports
+                    let targetTimestamp = dateStr + 'T12:00:00.000Z';
+                    
+                    // On enregistre les heures déductibles directement dans le log
+                    let detailMsg = `${type} (${isHours ? val + ' heures' : (days > 1 ? 'Jour '+(i+1)+'/'+days : '1 jour')})`;
+                    
+                    this.data.logs.unshift({ 
+                        id: Date.now() + i, 
+                        empId, empName: emp.name, site: emp.site, 
+                        action: 'absence', detail: detailMsg, 
+                        timestamp: targetTimestamp,
+                        absenceHours: isHours ? val : 0 
+                    });
+                }
+
+                emp.status = 'conge'; 
+                this.saveData(); this.renderAll(); this.closeModals();
             },
 
             openHsModal() { document.getElementById('hsEmpId').innerHTML = this.data.employees.map(e => `<option value="${e.id}">${e.name}</option>`).join(''); document.getElementById('hsModal').classList.add('active'); },
@@ -689,7 +738,10 @@
                 if (!empId || !date || !hours || !motif) return alert('Champs requis');
                 const emp = this.data.employees.find(e => String(e.id) === String(empId));
                 this.data.hs.unshift({ id: Date.now(), empId: empId, empName: emp ? emp.name : 'Inconnu', date, hours: parseFloat(hours), motif });
-                if(emp) this.addLog(empId, emp.name, emp.site, 'hs', `Sup: +${hours}h (${motif})`);
+                if(emp) {
+                    let targetTimestamp = date + 'T12:00:00.000Z';
+                    this.addLog(empId, emp.name, emp.site, 'hs', `Heures sup: +${hours}h (${motif})`, targetTimestamp);
+                }
                 this.saveData(); this.closeModals();
             },
 
@@ -730,6 +782,7 @@
                 container.innerHTML = this.data.employees.map(emp => `<label class="flex items-center gap-2 cursor-pointer p-1 hover:bg-gray-100 rounded"><input type="checkbox" class="report-emp-cb text-ert-blue rounded" value="${emp.id}" checked onchange="app.renderHoursChart()"><span class="truncate" title="${emp.name}">${emp.name}</span></label>`).join('');
             },
             
+            // --- NOUVEAU : CALCUL DES HEURES AVEC ABSENCES INTELLIGENTES ---
             renderHoursChart() {
                 const ctx = document.getElementById('hoursAnalysisChart'); if (!ctx) return;
                 if (this.hoursAnalysisChart) this.hoursAnalysisChart.destroy();
@@ -744,10 +797,17 @@
                 if (period === 'month') daysToAnalyze = 30; else if (period === 'year') daysToAnalyze = 365;
 
                 const startDate = new Date(now); startDate.setDate(startDate.getDate() - daysToAnalyze + 1); startDate.setHours(0,0,0,0);
-                const getScheduledHours = (arr, dep) => { if (!arr || !dep) return 0; const a = new Date('1970/01/01 ' + arr); const d = new Date('1970/01/01 ' + dep); let diff = (d - a) / 3600000; if (diff < 0) diff += 24; return diff; };
+                
+                // Fonction utilitaire de calcul des heures prévues par jour
+                const getScheduledHours = (arr, dep) => { 
+                    if (!arr || !dep) return 0; 
+                    const a = new Date('1970/01/01 ' + arr); const d = new Date('1970/01/01 ' + dep); 
+                    let diff = (d - a) / 3600000; if (diff < 0) diff += 24; 
+                    return diff; 
+                };
 
                 let labels = [];
-                let datasetData = emps.map(emp => { return { label: emp.name, data: [], scheduledH: getScheduledHours(emp.heureArrivee, emp.heureDepart) }; });
+                let datasetData = emps.map(emp => { return { empId: emp.id, label: emp.name, data: [], scheduledH: getScheduledHours(emp.heureArrivee, emp.heureDepart) }; });
 
                 if (period === 'week' || period === 'month') {
                     for (let i = 0; i < daysToAnalyze; i++) {
@@ -756,10 +816,29 @@
 
                         datasetData.forEach(ds => {
                             let totalHours = 0;
-                            const wasAbsent = this.data.logs.some(l => String(l.empId) === ds.empId && l.action === 'absence' && l.timestamp.startsWith(dateString));
-                            if (!wasAbsent) totalHours += ds.scheduledH;
+                            
+                            // Récupération des absences de CE JOUR
+                            const absenceLogs = this.data.logs.filter(l => String(l.empId) === ds.empId && l.action === 'absence' && l.timestamp.startsWith(dateString));
+                            
+                            if (absenceLogs.length > 0) {
+                                let hoursToDeduct = 0;
+                                let isFullDayAbsence = false;
+                                
+                                absenceLogs.forEach(ab => {
+                                    if (ab.absenceHours && ab.absenceHours > 0) { hoursToDeduct += ab.absenceHours; } 
+                                    else { isFullDayAbsence = true; } // Cas du "1 jour" ou plus
+                                });
+                                
+                                if (!isFullDayAbsence) { totalHours += Math.max(0, ds.scheduledH - hoursToDeduct); } 
+                                else { totalHours += 0; } // Journée d'absence complète
+                            } else {
+                                totalHours += ds.scheduledH; // Présent (pas d'absence enregistrée)
+                            }
+
+                            // Ajout des Heures Sup
                             const hsDay = this.data.hs.filter(h => String(h.empId) === ds.empId && h.date === dateString);
                             hsDay.forEach(h => totalHours += h.hours);
+
                             ds.data.push(totalHours);
                         });
                     }
@@ -767,11 +846,21 @@
                     for (let i = 11; i >= 0; i--) {
                         let currentM = new Date(now.getFullYear(), now.getMonth() - i, 1); let monthStr = currentM.toISOString().substring(0, 7); 
                         labels.push(currentM.toLocaleDateString('fr-FR', { month:'short', year:'2-digit' }));
+                        
                         datasetData.forEach(ds => {
                             let totalHoursMonth = ds.scheduledH * 22; 
+                            
+                            // Soustraction grossière des absences du mois (pour la vue année)
+                            const absenceMonth = this.data.logs.filter(l => String(l.empId) === ds.empId && l.action === 'absence' && l.timestamp.startsWith(monthStr));
+                            absenceMonth.forEach(ab => {
+                                if (ab.absenceHours && ab.absenceHours > 0) { totalHoursMonth -= ab.absenceHours; } 
+                                else { totalHoursMonth -= ds.scheduledH; }
+                            });
+
                             const hsMonth = this.data.hs.filter(h => String(h.empId) === ds.empId && h.date.startsWith(monthStr));
                             hsMonth.forEach(h => totalHoursMonth += h.hours);
-                            ds.data.push(totalHoursMonth);
+                            
+                            ds.data.push(Math.max(0, totalHoursMonth));
                         });
                     }
                 }
@@ -782,14 +871,11 @@
             },
 
             renderAll() {
-                this.renderPointageCards(); 
-                this.renderEmployeeTable(); 
-                this.renderPlanning(); 
-                this.renderHs(); 
-                this.renderStats(); 
-                this.renderActivityLog();
+                this.renderPointageCards(); this.renderEmployeeTable(); this.renderPlanning(); 
+                this.renderHs(); this.renderStats(); this.renderActivityLog();
             },
 
+            // --- POINTAGE : AFFICHAGE HEURE EN 24H ---
             renderPointageCards() {
                 const filter = document.getElementById('siteFilter').value;
                 const filtered = filter === 'all' ? this.data.employees : this.data.employees.filter(e => e.site === filter);
@@ -800,7 +886,8 @@
                     let pointageMsg = '';
                     
                     if (lastLog) {
-                        const timeStr = new Date(lastLog.timestamp).toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
+                        // FORCE 24H : hour12: false
+                        const timeStr = new Date(lastLog.timestamp).toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit', hour12: false});
                         const actionLabel = lastLog.action === 'arrivee' ? 'Pointé Présent' : 'Pointé Parti';
                         const msgStyle = lastLog.action === 'arrivee' ? 'bg-green-100 text-green-800 border-green-500' : 'bg-red-100 text-red-800 border-red-500';
                         
@@ -817,9 +904,8 @@
                         <div>
                             <div class="flex items-start gap-3 mb-2">${this.getAvatarHtml(emp)}<div><div class="font-bold text-gray-800">${emp.name}</div><div class="text-xs text-gray-500 font-mono">${emp.matricule}</div></div></div>
                             <div class="mt-3 mb-2"><span class="text-xs font-semibold px-2 py-1 rounded bg-gray-100 block w-max mb-1">${emp.site}</span><input type="text" value="${emp.lieu || ''}" placeholder="Lieu/Poste..." onchange="app.updateLieuDirect('${emp.id}', this.value)" class="text-sm border-b border-dashed border-gray-300 w-full bg-transparent p-1 focus:border-ert-blue focus:outline-none"></div>
-                            
+                            <div class="text-xs text-gray-600 mb-2 bg-gray-50 p-1.5 rounded font-bold"><i class="fas fa-clock text-ert-blue"></i> ${emp.heureArrivee || '08:00'} ➔ ${emp.heureDepart || '20:00'}</div>
                             ${pointageMsg}
-
                         </div>
                         <div class="grid grid-cols-3 gap-2 mt-auto pt-2 border-t border-gray-100">
                             <button onclick="app.logAction('${emp.id}', 'arrivee')" class="btn-blue text-xs py-2 rounded flex flex-col items-center" ${emp.status === 'present' ? 'opacity-50' : ''}><i class="fas fa-sign-in-alt mb-1"></i> Arrivée</button>
@@ -886,13 +972,18 @@
                 document.getElementById('hsLogContainer').innerHTML = this.data.hs.length === 0 ? '<p class="text-sm text-gray-500 italic">Aucune heure supp.</p>' : this.data.hs.map(h => `<div class="mb-3 pb-3 border-b text-sm"><div class="flex justify-between"><span class="font-medium">${h.empName || 'Ancien'}</span><span class="font-bold text-ert-red">+${h.hours}h</span></div><div class="text-xs text-gray-500 flex justify-between"><span>${new Date(h.date).toLocaleDateString('fr-FR')}</span><span class="italic">${h.motif}</span></div></div>`).join('');
             },
 
+            // --- HISTORIQUE : AFFICHAGE HEURE EN 24H ---
             renderActivityLog() {
                 document.getElementById('activityLogContainer').innerHTML = this.data.logs.length === 0 ? '<p class="text-sm text-gray-500 italic">Aucune activité.</p>' : this.data.logs.map(log => {
                     const t = new Date(log.timestamp);
                     const emp = this.data.employees.find(e => String(e.id) === String(log.empId));
                     let color = 'text-gray-500', icon = 'fa-circle';
-                    if (log.action === 'arrivee') { color = 'text-green-600'; icon = 'fa-arrow-right'; } else if (log.action === 'depart') { color = 'text-red-600'; icon = 'fa-arrow-left'; } else if (log.action === 'absence') { color = 'text-orange-500'; icon = 'fa-user-clock'; } else if (log.action === 'creation') { color = 'text-ert-blue'; icon = 'fa-user-plus'; }
-                    return `<div class="flex items-start gap-3 mb-3 pb-3 border-b"><div class="mt-1">${emp && emp.photo ? `<img src="${emp.photo}" class="w-8 h-8 rounded-full object-cover">` : `<div class="w-8 h-8 rounded-full bg-gray-200 text-xs flex items-center justify-center font-bold">${emp ? emp.name.charAt(0) : '?'}</div>`}</div><div class="flex-1"><div class="text-sm font-medium">${emp ? emp.name : log.empName} <span class="text-xs text-gray-500">(${log.site})</span></div><div class="text-xs text-gray-600 font-medium"><i class="fas ${icon} ${color} mr-1"></i> ${log.detail}</div></div><div class="text-right text-xs"><div class="font-semibold">${t.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'})}</div><div class="text-[10px] text-gray-400">${t.toLocaleDateString('fr-FR')}</div></div></div>`;
+                    if (log.action === 'arrivee') { color = 'text-green-600'; icon = 'fa-arrow-right'; } else if (log.action === 'depart') { color = 'text-red-600'; icon = 'fa-arrow-left'; } else if (log.action === 'absence') { color = 'text-orange-500'; icon = 'fa-user-clock'; } else if (log.action === 'creation') { color = 'text-ert-blue'; icon = 'fa-user-plus'; } else if (log.action === 'hs') { color = 'text-purple-600'; icon = 'fa-clock'; }
+                    
+                    // FORCE 24H
+                    const time24h = t.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit', hour12: false});
+                    
+                    return `<div class="flex items-start gap-3 mb-3 pb-3 border-b"><div class="mt-1">${emp && emp.photo ? `<img src="${emp.photo}" class="w-8 h-8 rounded-full object-cover">` : `<div class="w-8 h-8 rounded-full bg-gray-200 text-xs flex items-center justify-center font-bold">${emp ? emp.name.charAt(0) : '?'}</div>`}</div><div class="flex-1"><div class="text-sm font-medium">${emp ? emp.name : log.empName} <span class="text-xs text-gray-500">(${log.site})</span></div><div class="text-xs text-gray-600 font-medium"><i class="fas ${icon} ${color} mr-1"></i> ${log.detail}</div></div><div class="text-right text-xs"><div class="font-semibold">${time24h}</div><div class="text-[10px] text-gray-400">${t.toLocaleDateString('fr-FR')}</div></div></div>`;
                 }).join('');
             },
 
