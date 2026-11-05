@@ -86,7 +86,22 @@
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between h-16">
                     <div class="flex items-center gap-3">
-                        <img src="logo.png" alt="Logo ERT" class="logo-ert" onerror="this.style.display='none'">
+                        <svg class="logo-ert" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="150" cy="150" r="130" fill="none" stroke="#002654" stroke-width="6"/>
+                            <circle cx="150" cy="150" r="115" fill="none" stroke="#002654" stroke-width="2"/>
+                            <path id="curveHeader" fill="transparent" d="M 40,150 A 110,110 0 1,1 260,150" />
+                            <text font-family="Arial" font-size="13" font-weight="bold" fill="#002654" letter-spacing="2">
+                                <textPath href="#curveHeader" startOffset="50%" text-anchor="middle">ETABLISSEMENT REGIONAL DE TUNIS</textPath>
+                            </text>
+                            <text x="35" y="155" font-family="Arial" font-size="11" font-weight="bold" fill="#002654">G. BRASSENS</text>
+                            <text x="185" y="155" font-family="Arial" font-size="11" font-weight="bold" fill="#002654">R. DESNOS</text>
+                            <text x="85" y="250" font-family="Arial" font-size="11" font-weight="bold" fill="#002654">P. MENDES FRANCE</text>
+                            <g transform="translate(92, 115)">
+                                <text x="0" y="35" font-family="Arial" font-size="52" font-weight="bold" fill="#002654">E</text>
+                                <text x="32" y="35" font-family="Arial" font-size="52" font-weight="bold" fill="#ED2939">R</text>
+                                <text x="68" y="35" font-family="Arial" font-size="52" font-weight="bold" fill="#002654">T</text>
+                            </g>
+                        </svg>
                         <div>
                             <span class="text-xl font-bold text-ert-blue tracking-tight">EDT-track</span>
                             <span class="text-xs block text-gray-500 -mt-1">Établissement Régional de Tunis</span>
@@ -96,7 +111,7 @@
                         <nav class="hidden md:flex space-x-8 mr-8">
                             <button onclick="app.switchTab('pointage')" id="nav-pointage" class="tab-active inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium h-16"><i class="fas fa-clock mr-2"></i> Pointage</button>
                             <button onclick="app.switchTab('personnel')" id="nav-personnel" class="tab-inactive border-transparent inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium h-16"><i class="fas fa-users mr-2"></i> Personnel</button>
-                            <button onclick="app.switchTab('planning')" id="nav-planning" class="tab-inactive border-transparent inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium h-16"><i class="fas fa-calendar-alt mr-2"></i> Planning</button>
+                            <button onclick="app.switchTab('planning')" id="nav-planning" class="tab-inactive border-transparent inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium h-16"><i class="fas fa-calendar-alt mr-2"></i> Planning & HS</button>
                             <button onclick="app.switchTab('rapports')" id="nav-rapports" class="tab-inactive border-transparent inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium h-16"><i class="fas fa-chart-bar mr-2"></i> Rapports</button>
                             <button onclick="app.switchTab('parametres')" id="nav-parametres" class="tab-inactive border-transparent inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium h-16"><i class="fas fa-cog mr-2"></i> Paramètres</button>
                         </nav>
@@ -157,13 +172,11 @@
                 <!-- TAB: PLANNING & HS -->
                 <div id="tab-planning" class="hidden h-full flex flex-col">
                     <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-2xl font-bold text-ert-blue">Planning Interactif & HS</h2>
+                        <h2 class="text-2xl font-bold text-ert-blue">Planning & HS</h2>
                         <button onclick="app.openHsModal()" class="btn-blue px-4 py-2 rounded-md text-sm font-medium shadow-sm"><i class="fas fa-clock mr-2"></i> Saisir Heures Sup.</button>
                     </div>
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
                         <div class="lg:col-span-2 card p-4 flex flex-col">
-                            
-                            <!-- CONTROLES DU PLANNING -->
                             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-4 border-b pb-3 gap-4">
                                 <div class="w-full sm:w-auto">
                                     <h3 class="text-lg font-semibold text-gray-800 mb-2">Affectations & Repos</h3>
@@ -186,11 +199,9 @@
                                     </button>
                                 </div>
                             </div>
-
                             <div class="flex-1 overflow-auto custom-scrollbar">
                                 <table class="min-w-full border-collapse border border-gray-200 text-sm">
-                                    <thead class="bg-gray-50" id="planningTableHeader">
-                                    </thead>
+                                    <thead class="bg-gray-50" id="planningTableHeader"></thead>
                                     <tbody id="planningTableBody"></tbody>
                                 </table>
                             </div>
@@ -281,7 +292,6 @@
                         <h2 class="text-2xl font-bold text-ert-blue">Paramètres du Système</h2>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Profil -->
                         <div class="card p-6">
                             <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Mon Profil</h3>
                             <p class="text-sm text-gray-600 mb-4">Modifier votre mot de passe d'accès.</p>
@@ -290,12 +300,9 @@
                             <button onclick="app.changePassword()" class="btn-blue px-4 py-2 rounded-md text-sm font-medium">Mettre à jour le mot de passe</button>
                             <p id="pwdMsg" class="text-sm mt-3 hidden"></p>
                         </div>
-
-                        <!-- Gestion Accès -->
                         <div class="card p-6 hidden" id="superAdminPanel">
                             <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2 flex items-center"><i class="fas fa-shield-alt text-ert-red mr-2"></i> Gestion des Accès (Admin)</h3>
                             <p class="text-sm text-gray-600 mb-4">Gérer les accès à la plateforme.</p>
-                            
                             <div class="grid grid-cols-1 gap-2 mb-3">
                                 <input type="email" id="newAccountEmail" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-ert-blue" placeholder="E-mail du nouvel utilisateur">
                                 <div class="flex gap-2">
@@ -309,8 +316,6 @@
                             </div>
                             <ul id="usersList" class="divide-y divide-gray-200 border border-gray-200 rounded-md max-h-32 overflow-y-auto custom-scrollbar mt-3"></ul>
                         </div>
-
-                        <!-- Reset -->
                         <div class="card p-6 md:col-span-2">
                             <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Données de l'Application</h3>
                             <button onclick="app.resetData()" class="btn-red px-4 py-2 rounded-md text-sm font-medium w-full md:w-auto flex justify-center items-center"><i class="fas fa-trash-alt mr-2"></i> Effacer toutes les données (Employés & Historiques)</button>
@@ -376,7 +381,7 @@
         </div>
     </div>
 
-    <!-- Absence Modal (INTELLIGENT) -->
+    <!-- Absence Modal -->
     <div id="absenceModal" class="modal">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
@@ -393,7 +398,6 @@
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Durée (ex: "3 jours" ou "4 heures")</label>
                     <input type="text" id="absenceDuration" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue" placeholder="ex: 2 jours">
-                    <p class="text-xs text-gray-500 mt-1">L'application calculera les jours/heures exacts dans les rapports.</p>
                 </div>
             </div>
             <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3"><button onclick="app.closeModals()" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700">Annuler</button><button onclick="app.saveAbsence()" class="btn-orange px-4 py-2 rounded-md text-sm font-medium">Valider</button></div>
@@ -464,9 +468,9 @@
 
             loadData() {
                 if (database) {
-                    database.ref('edt_data').on('value', (snapshot) => { this.syncData(snapshot.val()); }, (e) => { this.syncData(JSON.parse(localStorage.getItem('edt_data_v20'))); });
+                    database.ref('edt_data').on('value', (snapshot) => { this.syncData(snapshot.val()); }, (e) => { this.syncData(JSON.parse(localStorage.getItem('edt_data_v21'))); });
                 } else {
-                    this.syncData(JSON.parse(localStorage.getItem('edt_data_v20')));
+                    this.syncData(JSON.parse(localStorage.getItem('edt_data_v21')));
                 }
             },
 
@@ -479,7 +483,7 @@
                 if (!this.data.users) this.data.users = [];
 
                 if (this.data.employees.length === 0) {
-                    const oldVersions = ['edt_data_v19', 'edt_data_v18', 'edt_data_v17', 'edt_data_v16', 'edt_data_v15', 'edt_data_v14', 'edt_data_v12'];
+                    const oldVersions = ['edt_data_v20', 'edt_data_v19', 'edt_data_v18', 'edt_data_v17', 'edt_data_v16'];
                     for (let v of oldVersions) {
                         const oldData = JSON.parse(localStorage.getItem(v));
                         if (oldData && oldData.employees && oldData.employees.length > 0) {
@@ -507,7 +511,7 @@
             },
 
             saveData() {
-                localStorage.setItem('edt_data_v20', JSON.stringify(this.data));
+                localStorage.setItem('edt_data_v21', JSON.stringify(this.data));
                 if (database) { try { database.ref('edt_data').set(this.data); } catch (e) {} }
             },
             
@@ -600,7 +604,12 @@
                 const activeNav = document.getElementById(`nav-${tabId}`); activeNav.classList.remove('tab-inactive'); activeNav.classList.add('tab-active');
 
                 if (tabId === 'rapports') {
-                    this.renderChart(); this.renderReportCheckboxes(); this.renderHoursChart();
+                    this.renderChart();
+                    // Assure que les checkbox ne disparaissent pas si l'utilisateur est déjà sur l'onglet
+                    if(document.getElementById('reportEmpCheckboxes').innerHTML.trim() === "") {
+                        this.renderReportCheckboxes(); 
+                    }
+                    this.renderHoursChart();
                 }
                 if (tabId === 'parametres') {
                     if (this.currentUserRole === 'superadmin') { document.getElementById('superAdminPanel').classList.remove('hidden'); this.renderUsersList(); } 
@@ -642,7 +651,7 @@
                 const existingIndex = this.data.employees.findIndex(e => String(e.id) === String(id));
                 if (existingIndex >= 0) { empData.status = this.data.employees[existingIndex].status; this.data.employees[existingIndex] = empData; } 
                 else { empData.status = 'absent'; this.data.employees.push(empData); this.addLog(id, name, empData.site, 'creation', 'Création profil'); }
-                this.saveData(); this.closeModals();
+                this.saveData(); this.renderAll(); this.closeModals();
             },
             deleteEmployee(id) {
                 if (confirm('Supprimer cet employé ?')) { const emp = this.data.employees.find(e => String(e.id) === String(id)); if(emp) this.addLog(id, emp.name, emp.site, 'suppression', 'Agent supprimé'); this.data.employees = this.data.employees.filter(e => String(e.id) !== String(id)); this.saveData(); }
@@ -663,7 +672,6 @@
             logAction(empId, action) {
                 const emp = this.data.employees.find(e => String(e.id) === String(empId));
                 if (!emp) return;
-                
                 if (action === 'arrivee') { emp.status = 'present'; this.addLog(empId, emp.name, emp.site, 'arrivee', `Pointage Arrivée`); } 
                 else if (action === 'depart') { emp.status = 'absent'; this.addLog(empId, emp.name, emp.site, 'depart', `Pointage Départ`); }
                 this.saveData();
@@ -737,7 +745,6 @@
                 this.exportPlanningPDF(checkedIds);
             },
             
-            // --- GESTION DU PDF AVEC LOGO ET SIGNATURE ---
             exportPlanningPDF(empIds) {
                 const { jsPDF } = window.jspdf; 
                 const doc = new jsPDF('landscape');
@@ -800,10 +807,28 @@
                 img.onerror = () => drawPDF(null);
             },
 
+            // --- CORRECTION BUG CHECKBOX RAPPORTS ---
             toggleAllReportCb(checked) { document.querySelectorAll('.report-emp-cb').forEach(cb => cb.checked = checked); this.renderHoursChart(); },
+            
             renderReportCheckboxes() {
-                const container = document.getElementById('reportEmpCheckboxes'); if(!container) return;
-                container.innerHTML = this.data.employees.map(emp => `<label class="flex items-center gap-2 cursor-pointer p-1 hover:bg-gray-100 rounded"><input type="checkbox" class="report-emp-cb text-ert-blue rounded" value="${emp.id}" checked onchange="app.renderHoursChart()"><span class="truncate" title="${emp.name}">${emp.name}</span></label>`).join('');
+                const container = document.getElementById('reportEmpCheckboxes'); 
+                if(!container) return;
+                
+                // Mémoriser les choix actuels pour ne pas les effacer à chaque synchronisation
+                const existingBoxes = Array.from(document.querySelectorAll('.report-emp-cb'));
+                let selectedIds = [];
+                
+                if (existingBoxes.length > 0) {
+                    selectedIds = existingBoxes.filter(cb => cb.checked).map(cb => cb.value);
+                } else {
+                    // Par défaut au démarrage, on coche tous les employés
+                    selectedIds = this.data.employees.map(e => e.id);
+                }
+
+                container.innerHTML = this.data.employees.map(emp => {
+                    const isChecked = selectedIds.includes(String(emp.id)) ? 'checked' : '';
+                    return `<label class="flex items-center gap-2 cursor-pointer p-1 hover:bg-gray-100 rounded"><input type="checkbox" class="report-emp-cb text-ert-blue rounded" value="${emp.id}" ${isChecked} onchange="app.renderHoursChart()"><span class="truncate" title="${emp.name}">${emp.name}</span></label>`;
+                }).join('');
             },
             
             renderHoursChart() {
@@ -897,6 +922,12 @@
                 this.renderHs(); 
                 this.renderStats(); 
                 this.renderActivityLog();
+                // Assurer la mise à jour dynamique des rapports si on est sur cet onglet
+                if(!document.getElementById('tab-rapports').classList.contains('hidden')) {
+                    this.renderReportCheckboxes();
+                    this.renderHoursChart();
+                    this.renderChart();
+                }
             },
 
             renderPointageCards() {
@@ -956,7 +987,6 @@
                 `).join('');
             },
 
-            // --- PLANNING INTERACTIF AVEC COULEURS ---
             renderPlanning() {
                 const weekInput = document.getElementById('planningWeekFilter').value;
                 this.calculateWeekDates(weekInput);
@@ -990,15 +1020,13 @@
                         
                         if (absenceLogs.length > 0) {
                             isFullAbsent = absenceLogs.some(ab => !ab.absenceHours || ab.absenceHours === 0);
-                            absenceName = absenceLogs[0].detail.split(' ')[0]; // Ex: Congé
+                            absenceName = absenceLogs[0].detail.split(' ')[0]; 
                         }
 
-                        // Si c'est un congé complet ce jour là, la case devient Rouge
                         if (isFullAbsent) {
                             return `<td class="border p-1"><div class="bg-red-50 text-red-700 text-xs p-1 rounded text-center shadow-sm font-bold border border-red-200">${absenceName}</div></td>`;
                         }
 
-                        // Sinon, c'est un jour travaillé normal
                         const cellColor = emp.equipe === 'Jour' ? 'bg-blue-50 text-ert-blue border-blue-200' : 'bg-indigo-50 text-indigo-700 border-indigo-200';
                         return `<td class="border p-1"><div class="${cellColor} text-xs p-1 rounded text-center shadow-sm border">${emp.site}<br><span class="text-[10px] text-gray-600 font-bold">${emp.heureArrivee || '08:00'} - ${emp.heureDepart || '20:00'}</span></div></td>`;
                     }).join('');
@@ -1032,14 +1060,6 @@
 
             renderStats() {
                 document.getElementById('stat-total').textContent = this.data.employees.length; document.getElementById('stat-present').textContent = this.data.employees.filter(e => e.status === 'present').length; document.getElementById('stat-absent').textContent = this.data.employees.filter(e => e.status === 'conge').length; document.getElementById('stat-hs').textContent = this.data.hs.reduce((s, h) => s + h.hours, 0) + 'h';
-            },
-
-            generatePDF() {
-                const { jsPDF } = window.jspdf; const doc = new jsPDF(); const d = new Date().toLocaleDateString('fr-FR');
-                doc.setFontSize(20); doc.setTextColor(0, 38, 84); doc.text("Rapport Global d'Effectifs", 14, 20);
-                doc.setFontSize(10); doc.setTextColor(100); doc.text(`ERT - ${d}`, 14, 28);
-                doc.autoTable({ startY: 40, head: [['Matricule', 'Nom', 'Site', 'Horaires', 'Repos', 'Statut']], body: this.data.employees.map(e => [ e.matricule, e.name, e.site, `${e.heureArrivee} - ${e.heureDepart}`, `${e.repos1}, ${e.repos2}`, e.status ]), headStyles: { fillColor: [0, 38, 84] } });
-                doc.save(`EDT-Rapport-Effectifs-${d.replace(/\//g, '-')}.pdf`);
             }
         };
 
