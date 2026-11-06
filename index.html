@@ -164,7 +164,6 @@
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
                         <div class="lg:col-span-2 card p-4 flex flex-col">
                             
-                            <!-- CONTROLES DU PLANNING -->
                             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-4 border-b pb-3 gap-4">
                                 <div class="w-full sm:w-auto">
                                     <h3 class="text-lg font-semibold text-gray-800 mb-2">Affectations & Repos</h3>
@@ -232,7 +231,6 @@
                         </div>
                     </div>
 
-                    <!-- ANALYSE DES HEURES ET PANCARTES INDIVIDUELLES -->
                     <div class="card p-4 flex flex-col mb-6">
                         <div class="flex justify-between items-center border-b pb-2 mb-4">
                             <h3 class="text-lg font-semibold text-gray-800"><i class="fas fa-chart-line text-ert-blue mr-2"></i> Analyse des Heures Effectuées</h3>
@@ -263,9 +261,7 @@
                             </div>
                         </div>
                         
-                        <!-- PANCARTES DÉTAILLÉES INDIVIDUELLES -->
                         <div id="employeeDetailedStats" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mt-6 pt-4 border-t border-gray-200">
-                            <!-- Rempli par JavaScript -->
                         </div>
                     </div>
 
@@ -324,7 +320,6 @@
     </div>
 
     <!-- MODALS -->
-    <!-- Employee Modal (Simplifié : Site et Lieu retirés) -->
     <div id="employeeModal" class="modal">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 overflow-hidden flex flex-col max-h-[90vh]">
             <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
@@ -354,7 +349,7 @@
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Repos 2</label><select id="empRepos2" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue"><option value="Sam" selected>Samedi</option><option value="Dim">Dimanche</option><option value="Ven">Vendredi</option><option value="Lun">Lundi</option><option value="Mar">Mardi</option><option value="Mer">Mercredi</option><option value="Jeu">Jeudi</option></select></div>
                 </div>
                 <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Équipe</label><select id="empEquipe" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue"><option value="Jour">Équipe de Jour (12h)</option><option value="Nuit">Équipe de Nuit (12h)</option></select></div>
-                <p class="text-xs text-gray-500 italic mt-2"><i class="fas fa-info-circle mr-1"></i> Le site et le lieu d'affectation se modifient désormais directement depuis l'onglet Pointage.</p>
+                <p class="text-xs text-gray-500 italic mt-2"><i class="fas fa-info-circle mr-1"></i> Le site et le lieu d'affectation se modifient désormais directement depuis l'onglet Pointage ou Planning.</p>
             </div>
             <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3"><button onclick="app.closeModals()" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700">Annuler</button><button onclick="app.saveEmployee()" class="btn-blue px-4 py-2 rounded-md text-sm font-medium">Enregistrer</button></div>
         </div>
@@ -464,9 +459,9 @@
 
             loadData() {
                 if (database) {
-                    database.ref('edt_data').on('value', (snapshot) => { this.syncData(snapshot.val()); }, (e) => { this.syncData(JSON.parse(localStorage.getItem('edt_data_v23'))); });
+                    database.ref('edt_data').on('value', (snapshot) => { this.syncData(snapshot.val()); }, (e) => { this.syncData(JSON.parse(localStorage.getItem('edt_data_v24'))); });
                 } else {
-                    this.syncData(JSON.parse(localStorage.getItem('edt_data_v23')));
+                    this.syncData(JSON.parse(localStorage.getItem('edt_data_v24')));
                 }
             },
 
@@ -479,7 +474,7 @@
                 if (!this.data.users) this.data.users = [];
 
                 if (this.data.employees.length === 0) {
-                    const oldVersions = ['edt_data_v22', 'edt_data_v21', 'edt_data_v20', 'edt_data_v19', 'edt_data_v18', 'edt_data_v17', 'edt_data_v16'];
+                    const oldVersions = ['edt_data_v23', 'edt_data_v22', 'edt_data_v21', 'edt_data_v20', 'edt_data_v19'];
                     for (let v of oldVersions) {
                         const oldData = JSON.parse(localStorage.getItem(v));
                         if (oldData && oldData.employees && oldData.employees.length > 0) {
@@ -507,7 +502,7 @@
             },
 
             saveData() {
-                localStorage.setItem('edt_data_v23', JSON.stringify(this.data));
+                localStorage.setItem('edt_data_v24', JSON.stringify(this.data));
                 if (database) { try { database.ref('edt_data').set(this.data); } catch (e) {} }
             },
             
@@ -601,6 +596,10 @@
 
                 if (tabId === 'rapports') {
                     this.renderChart();
+                    const container = document.getElementById('reportEmpCheckboxes');
+                    if (container && container.innerHTML.trim() === '') {
+                        this.renderReportCheckboxes(true);
+                    }
                     this.updateReportView();
                 }
                 if (tabId === 'parametres') {
@@ -654,7 +653,6 @@
                 const existingIndex = this.data.employees.findIndex(e => String(e.id) === String(id));
                 const existingEmp = existingIndex >= 0 ? this.data.employees[existingIndex] : null;
 
-                // Le site et le lieu sont gérés par le pointage, on les préserve s'ils existent, sinon "Non défini"
                 const empData = { 
                     id, name, matricule, 
                     equipe: document.getElementById('empEquipe').value, 
@@ -683,14 +681,13 @@
                 if (confirm('Supprimer cet employé ?')) { const emp = this.data.employees.find(e => String(e.id) === String(id)); if(emp) this.addLog(id, emp.name, emp.site, 'suppression', 'Agent supprimé'); this.data.employees = this.data.employees.filter(e => String(e.id) !== String(id)); this.saveData(); this.renderAll(); }
             },
             
-            // --- MISE A JOUR DIRECTE (SITE ET LIEU) ---
             updateLieuDirect(id, newLieu) { 
                 const emp = this.data.employees.find(e => String(e.id) === String(id)); 
-                if (emp) { emp.lieu = newLieu; this.saveData(); this.renderPlanning(); } 
+                if (emp) { emp.lieu = newLieu; this.saveData(); this.renderAll(); } 
             },
             updateSiteDirect(id, newSite) {
                 const emp = this.data.employees.find(e => String(e.id) === String(id)); 
-                if (emp) { emp.site = newSite; this.saveData(); this.renderPlanning(); this.renderEmployeeTable(); }
+                if (emp) { emp.site = newSite; this.saveData(); this.renderAll(); }
             },
 
             addLog(empId, empName, site, action, detail, customTimestamp = null) {
@@ -814,7 +811,7 @@
                             if (absenceLogs.length > 0 && (!absenceLogs[0].absenceHours || absenceLogs[0].absenceHours === 0)) {
                                 return `ABSENCE\n(${absenceLogs[0].detail.split(' ')[0]})`;
                             }
-                            return `${emp.site}\n${emp.lieu || '-'}\n${emp.heureArrivee}-${emp.heureDepart}`;
+                            return `${emp.site || 'Non défini'}\n${emp.lieu || '-'}\n${emp.heureArrivee}-${emp.heureDepart}`;
                         });
                         return [emp.name, emp.equipe, ...daily];
                     });
@@ -843,7 +840,6 @@
                 img.onerror = () => drawPDF(null);
             },
 
-            // --- CORRECTION ET NOUVEAU MOTEUR RAPPORTS ---
             toggleAllReportCb(checked) { 
                 document.querySelectorAll('.report-emp-cb').forEach(cb => cb.checked = checked); 
                 this.updateReportView(); 
@@ -911,11 +907,7 @@
                     label: emp.name, 
                     data: [], 
                     scheduledH: getScheduledHours(emp.heureArrivee, emp.heureDepart),
-                    // Accus pour les pancartes
-                    statWorked: 0,
-                    statDaysPresent: 0,
-                    statHs: 0,
-                    statAbsence: 0
+                    statWorked: 0, statDaysPresent: 0, statHs: 0, statAbsence: 0
                 }));
 
                 if (period === 'day' || period === 'week' || period === 'month') {
@@ -926,7 +918,6 @@
                         datasetData.forEach(ds => {
                             let totalHours = 0;
                             
-                            // Check Presence 
                             const isPresentDay = this.data.logs.some(l => String(l.empId) === String(ds.empId) && l.action === 'arrivee' && l.timestamp.startsWith(dateString));
                             if(isPresentDay) ds.statDaysPresent++;
 
@@ -969,7 +960,6 @@
                         datasetData.forEach(ds => {
                             let totalHoursMonth = ds.scheduledH * 22; 
                             
-                            // Set unique days present
                             const arrivesMonth = this.data.logs.filter(l => String(l.empId) === String(ds.empId) && l.action === 'arrivee' && l.timestamp.startsWith(monthStr));
                             const uniqueDays = new Set(arrivesMonth.map(l => l.timestamp.split('T')[0]));
                             ds.statDaysPresent += uniqueDays.size;
@@ -998,7 +988,6 @@
                     }
                 }
 
-                // Générer les PANCARTES INDIVIDUELLES
                 document.getElementById('employeeDetailedStats').innerHTML = datasetData.map(ds => `
                     <div class="card p-3 border-t-4 border-t-ert-blue bg-white shadow-sm flex flex-col">
                         <div class="font-bold text-gray-800 text-sm mb-2 border-b pb-1 truncate" title="${ds.label}">${ds.label}</div>
@@ -1146,13 +1135,28 @@
                         }
 
                         const cellColor = emp.equipe === 'Jour' ? 'bg-blue-50 text-ert-blue border-blue-200' : 'bg-indigo-50 text-indigo-700 border-indigo-200';
-                        return `<td class="border p-1"><div class="${cellColor} text-xs p-1 rounded text-center shadow-sm border"><div class="font-bold truncate" title="${emp.site}">${emp.site || '-'}</div><div class="text-[9px] text-gray-600 truncate mb-0.5" title="${emp.lieu || 'Non défini'}">${emp.lieu || '-'}</div><span class="text-[10px] text-gray-600 font-bold">${emp.heureArrivee || '08:00'} - ${emp.heureDepart || '20:00'}</span></div></td>`;
+                        return `<td class="border p-1"><div class="${cellColor} text-xs p-1 rounded text-center shadow-sm border"><div class="font-bold truncate" title="${emp.site || 'Non défini'}">${emp.site || '-'}</div><div class="text-[9px] text-gray-600 truncate mb-0.5" title="${emp.lieu || 'Non défini'}">${emp.lieu || '-'}</div><span class="text-[10px] text-gray-600 font-bold">${emp.heureArrivee || '08:00'} - ${emp.heureDepart || '20:00'}</span></div></td>`;
                     }).join('');
                     
                     return `
                     <tr>
                         <td class="border p-2 text-center"><input type="checkbox" class="planning-cb w-4 h-4 text-ert-blue rounded" value="${emp.id}"></td>
-                        <td class="border p-2"><div class="flex items-center gap-2">${this.getAvatarHtml(emp).replace('40px', '24px').replace('40px', '24px')}<div><span class="text-sm font-medium">${emp.name}</span><span class="text-[10px] text-gray-400 block">${emp.equipe}</span></div></div></td>
+                        <td class="border p-2 align-top">
+                            <div class="flex items-start gap-2">
+                                ${this.getAvatarHtml(emp).replace('40px', '24px').replace('40px', '24px')}
+                                <div class="w-full min-w-[120px]">
+                                    <span class="text-sm font-medium">${emp.name}</span>
+                                    <span class="text-[10px] text-gray-400 block mb-1.5">${emp.equipe}</span>
+                                    <select onchange="app.updateSiteDirect('${emp.id}', this.value)" class="text-[10px] font-semibold px-1 py-1 rounded bg-gray-50 border border-gray-300 w-full mb-1 focus:border-ert-blue focus:outline-none">
+                                        <option value="Non défini" ${!emp.site || emp.site === 'Non défini' ? 'selected' : ''}>-- Site --</option>
+                                        <option value="Pierre Mendès France" ${emp.site === 'Pierre Mendès France' ? 'selected' : ''}>Pierre Mendès France</option>
+                                        <option value="Robert Desnos" ${emp.site === 'Robert Desnos' ? 'selected' : ''}>Robert Desnos</option>
+                                        <option value="Georges Brassens" ${emp.site === 'Georges Brassens' ? 'selected' : ''}>Georges Brassens</option>
+                                    </select>
+                                    <input type="text" value="${emp.lieu || ''}" placeholder="Poste exact..." onchange="app.updateLieuDirect('${emp.id}', this.value)" class="text-[11px] border-b border-dashed border-gray-300 w-full bg-transparent p-0.5 focus:border-ert-blue focus:outline-none">
+                                </div>
+                            </div>
+                        </td>
                         ${daysHtml}
                         <td class="border p-2 text-center"><button onclick="app.exportPlanningPDF(['${emp.id}'])" class="text-red-500 hover:text-red-700 p-1"><i class="fas fa-file-pdf text-lg"></i></button></td>
                     </tr>`;
