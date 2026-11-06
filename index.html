@@ -42,6 +42,8 @@
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .cell-input { font-size: 10px; padding: 2px; height: 22px; }
+        @keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .animate-pulse-fast { animation: pulse-fast 1s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
     </style>
 </head>
 <body class="text-gray-800 h-screen flex flex-col overflow-hidden">
@@ -144,7 +146,7 @@
                                     <tr>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employé</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matricule</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Site / Lieu (Affectation globale)</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Site / Lieu Actuel</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Horaires</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jours de Repos</th>
                                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -162,7 +164,18 @@
                         <h2 class="text-2xl font-bold text-ert-blue">Planning Interactif & HS</h2>
                         <button onclick="app.openHsModal()" class="btn-blue px-4 py-2 rounded-md text-sm font-medium shadow-sm"><i class="fas fa-clock mr-2"></i> Saisir Heures Sup.</button>
                     </div>
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
+
+                    <!-- NOUVEAU : CHATBOT IA PLANNING -->
+                    <div class="bg-indigo-50 p-3 rounded-md mb-6 border border-indigo-200 shadow-sm flex gap-3 items-center">
+                        <i class="fas fa-robot text-indigo-600 text-2xl ml-2"></i>
+                        <div class="flex-1">
+                            <div class="text-xs font-bold text-indigo-800 mb-1">Assistant Planning IA (Gemini)</div>
+                            <input type="text" id="chatbotInput" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Ex: Mets Malek à Desnos jeudi et vendredi au poste d'accueil..." onkeypress="if(event.key === 'Enter') app.sendChatbotCommand()">
+                        </div>
+                        <button id="chatbotBtn" onclick="app.sendChatbotCommand()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm font-medium transition self-end">Générer le planning</button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full pb-10">
                         <div class="lg:col-span-2 card p-4 flex flex-col">
                             
                             <!-- CONTROLES DU PLANNING -->
@@ -233,7 +246,6 @@
                         </div>
                     </div>
 
-                    <!-- ANALYSE DES HEURES -->
                     <div class="card p-4 flex flex-col mb-6">
                         <div class="flex justify-between items-center border-b pb-2 mb-4">
                             <h3 class="text-lg font-semibold text-gray-800"><i class="fas fa-chart-line text-ert-blue mr-2"></i> Analyse des Heures Effectuées</h3>
@@ -263,7 +275,6 @@
                                 <canvas id="hoursAnalysisChart"></canvas>
                             </div>
                         </div>
-                        
                         <div id="employeeDetailedStats" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mt-6 pt-4 border-t border-gray-200">
                         </div>
                     </div>
@@ -286,7 +297,6 @@
                         <h2 class="text-2xl font-bold text-ert-blue">Paramètres du Système</h2>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Profil -->
                         <div class="card p-6">
                             <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Mon Profil</h3>
                             <p class="text-sm text-gray-600 mb-4">Modifier votre mot de passe d'accès.</p>
@@ -296,11 +306,9 @@
                             <p id="pwdMsg" class="text-sm mt-3 hidden"></p>
                         </div>
 
-                        <!-- Gestion Accès -->
                         <div class="card p-6 hidden" id="superAdminPanel">
                             <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2 flex items-center"><i class="fas fa-shield-alt text-ert-red mr-2"></i> Gestion des Accès (Admin)</h3>
                             <p class="text-sm text-gray-600 mb-4">Gérer les accès à la plateforme.</p>
-                            
                             <div class="grid grid-cols-1 gap-2 mb-3">
                                 <input type="email" id="newAccountEmail" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-ert-blue" placeholder="E-mail du nouvel utilisateur">
                                 <div class="flex gap-2">
@@ -314,12 +322,6 @@
                             </div>
                             <ul id="usersList" class="divide-y divide-gray-200 border border-gray-200 rounded-md max-h-32 overflow-y-auto custom-scrollbar mt-3"></ul>
                         </div>
-
-                        <!-- Reset -->
-                        <div class="card p-6 md:col-span-2">
-                            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Données de l'Application</h3>
-                            <button onclick="app.resetData()" class="btn-red px-4 py-2 rounded-md text-sm font-medium w-full md:w-auto flex justify-center items-center"><i class="fas fa-trash-alt mr-2"></i> Effacer toutes les données (Employés, Plannings, Historiques)</button>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -327,6 +329,38 @@
     </div>
 
     <!-- MODALS -->
+    
+    <!-- Edit Log Modal (NOUVEAU - Rétroactif) -->
+    <div id="editLogModal" class="modal">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-sm mx-4 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+                <h3 class="text-lg font-semibold text-gray-800">Correction Pointage</h3>
+                <button onclick="app.closeModals()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-6">
+                <input type="hidden" id="editLogId">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Action</label>
+                    <select id="editLogAction" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue">
+                        <option value="arrivee">Arrivée</option>
+                        <option value="depart">Départ</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Date et Heure exactes</label>
+                    <input type="datetime-local" id="editLogTimestamp" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue">
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-between gap-3">
+                <button onclick="app.deleteSelectedLog()" class="px-4 py-2 bg-red-100 text-red-700 hover:bg-red-200 rounded-md text-sm font-medium"><i class="fas fa-trash"></i> Supprimer</button>
+                <div class="flex gap-2">
+                    <button onclick="app.closeModals()" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700">Annuler</button>
+                    <button onclick="app.saveEditedLog()" class="btn-blue px-4 py-2 rounded-md text-sm font-medium">Modifier</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Employee Modal -->
     <div id="employeeModal" class="modal">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 overflow-hidden flex flex-col max-h-[90vh]">
@@ -357,23 +391,7 @@
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Repos 2</label><select id="empRepos2" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue"><option value="Sam" selected>Samedi</option><option value="Dim">Dimanche</option><option value="Ven">Vendredi</option><option value="Lun">Lundi</option><option value="Mar">Mardi</option><option value="Mer">Mercredi</option><option value="Jeu">Jeudi</option></select></div>
                 </div>
                 <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Équipe</label><select id="empEquipe" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue"><option value="Jour">Équipe de Jour (12h)</option><option value="Nuit">Équipe de Nuit (12h)</option></select></div>
-                
-                <!-- Definition des Affectations Globales (Défaut) -->
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Site d'affectation globale (Défaut)</label>
-                    <select id="empSite" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue">
-                        <option value="Non défini">Non défini</option>
-                        <option value="Pierre Mendès France">Pierre Mendès France</option>
-                        <option value="Robert Desnos">Robert Desnos</option>
-                        <option value="Georges Brassens">Georges Brassens</option>
-                    </select>
-                </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Lieu de travail global (Défaut)</label>
-                    <input type="text" id="empLieu" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue" placeholder="Ex: Accueil, Entrepôt...">
-                </div>
-                
-                <p class="text-xs text-gray-500 italic mt-2"><i class="fas fa-info-circle mr-1"></i> Ces lieux sont l'affectation de base. Ils peuvent être modifiés jour par jour directement dans le tableau Planning ou le Pointage.</p>
+                <p class="text-xs text-gray-500 italic mt-2"><i class="fas fa-info-circle mr-1"></i> Le site et le lieu d'affectation se modifient désormais directement depuis l'onglet Pointage ou Planning.</p>
             </div>
             <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3"><button onclick="app.closeModals()" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700">Annuler</button><button onclick="app.saveEmployee()" class="btn-blue px-4 py-2 rounded-md text-sm font-medium">Enregistrer</button></div>
         </div>
@@ -420,7 +438,7 @@
     </div>
 
     <script>
-        // CONFIGURATION FIREBASE
+        // CONFIGURATION FIREBASE & GEMINI
         const firebaseConfig = {
             apiKey: "AIzaSyBklpcJ2DDBuPELgAojs6Wc6WG3U5CqCCU",
             authDomain: "edt-track.firebaseapp.com",
@@ -430,6 +448,7 @@
             messagingSenderId: "806362987169",
             appId: "1:806362987169:web:1f9680fcc28a2ef6300ee0"
         };
+        const GEMINI_API_KEY = "AQ.Ab8RN6LeCWNjv8lKZEpaHsJZiqF3iOgf-Lz20NiH5rgl5XY59g";
         
         let database = null;
         try {
@@ -438,7 +457,7 @@
         } catch (error) { console.warn("Firebase hors ligne."); }
 
         const app = {
-            data: { employees: [], logs: [], hs: [], users: [], planning: {} }, // NOUVEAU: planning stocke les assignations journalieres
+            data: { employees: [], logs: [], hs: [], users: [], planning: {} },
             currentUserEmail: null,
             currentUserRole: null,
             chartInstance: null,
@@ -453,6 +472,70 @@
                 } catch(e) {}
                 this.initWeekPicker();
                 this.loadData();
+            },
+
+            // --- NOUVEAU : CHATBOT IA GEMINI ---
+            async sendChatbotCommand() {
+                const input = document.getElementById('chatbotInput');
+                const text = input.value.trim();
+                if(!text) return;
+                
+                const btn = document.getElementById('chatbotBtn');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Traitement...';
+                
+                try {
+                    const empList = this.data.employees.map(e => `{id: "${e.id}", name: "${e.name}"}`).join(', ');
+                    const dates = this.currentPlanningWeekDates.map(d => d.toISOString().split('T')[0]).join(', ');
+                    
+                    const prompt = `
+                    Tu es un robot assistant de l'application EDT-track.
+                    Voici la base des employés existants : ${empList}
+                    La semaine actuellement affichée correspond aux dates (Lundi au Dimanche) : ${dates}
+                    L'utilisateur te donne cet ordre en langage naturel : "${text}"
+                    
+                    Ta mission est d'identifier les employés mentionnés, les dates visées, et le site/lieu. 
+                    Renvoie UNIQUEMENT un tableau JSON structuré exactement comme ceci, sans aucun autre texte ou markdown :
+                    [
+                      {
+                         "empId": "id_de_l_employe",
+                         "date": "YYYY-MM-DD",
+                         "site": "Pierre Mendès France ou Robert Desnos ou Georges Brassens",
+                         "lieu": "poste déduit ou chaine vide"
+                      }
+                    ]
+                    Déduis la date exacte à partir de la semaine affichée. Si le nom du site est abrégé (PMF, Brassens, Desnos), convertis-le vers le nom officiel exact.
+                    `;
+                    
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                    });
+                    
+                    if(!response.ok) throw new Error("Clé API invalide ou quota dépassé.");
+                    
+                    const result = await response.json();
+                    let jsonText = result.candidates[0].content.parts[0].text;
+                    jsonText = jsonText.replace(/```json/g, '').replace(/```/g, '').trim();
+                    
+                    const updates = JSON.parse(jsonText);
+                    
+                    if(updates && updates.length > 0) {
+                        updates.forEach(u => {
+                            if(u.empId && u.date) {
+                                this.updateDailyPlan(u.empId, u.date, 'site', u.site || 'Non défini');
+                                this.updateDailyPlan(u.empId, u.date, 'lieu', u.lieu || '');
+                            }
+                        });
+                        this.renderPlanning();
+                        input.value = '';
+                    }
+                } catch (err) {
+                    alert("Erreur de l'assistant IA. Le format de la clé API n'est peut-être pas reconnu ou la requête a échoué.");
+                    console.error(err);
+                }
+                btn.innerHTML = originalText;
             },
 
             initWeekPicker() {
@@ -483,9 +566,9 @@
 
             loadData() {
                 if (database) {
-                    database.ref('edt_data').on('value', (snapshot) => { this.syncData(snapshot.val()); }, (e) => { this.syncData(JSON.parse(localStorage.getItem('edt_data_v25'))); });
+                    database.ref('edt_data').on('value', (snapshot) => { this.syncData(snapshot.val()); }, (e) => { this.syncData(JSON.parse(localStorage.getItem('edt_data_v26'))); });
                 } else {
-                    this.syncData(JSON.parse(localStorage.getItem('edt_data_v25')));
+                    this.syncData(JSON.parse(localStorage.getItem('edt_data_v26')));
                 }
             },
 
@@ -496,19 +579,14 @@
                 if (!this.data.logs) this.data.logs = [];
                 if (!this.data.hs) this.data.hs = [];
                 if (!this.data.users) this.data.users = [];
-                if (!this.data.planning) this.data.planning = {}; // Gestion planning journalier
+                if (!this.data.planning) this.data.planning = {}; 
 
                 if (this.data.employees.length === 0) {
-                    const oldVersions = ['edt_data_v24', 'edt_data_v23', 'edt_data_v22', 'edt_data_v21', 'edt_data_v20', 'edt_data_v19'];
+                    const oldVersions = ['edt_data_v25', 'edt_data_v24', 'edt_data_v23', 'edt_data_v22', 'edt_data_v21'];
                     for (let v of oldVersions) {
                         const oldData = JSON.parse(localStorage.getItem(v));
                         if (oldData && oldData.employees && oldData.employees.length > 0) {
-                            this.data.employees = oldData.employees;
-                            if(oldData.logs) this.data.logs = oldData.logs;
-                            if(oldData.hs) this.data.hs = oldData.hs;
-                            if(oldData.users) this.data.users = oldData.users;
-                            if(oldData.planning) this.data.planning = oldData.planning;
-                            this.saveData(); break;
+                            this.data = oldData; this.saveData(); break;
                         }
                     }
                 }
@@ -532,7 +610,7 @@
             },
 
             saveData() {
-                localStorage.setItem('edt_data_v25', JSON.stringify(this.data));
+                localStorage.setItem('edt_data_v26', JSON.stringify(this.data));
                 if (database) { try { database.ref('edt_data').set(this.data); } catch (e) {} }
             },
             
@@ -666,8 +744,6 @@
                 document.getElementById('empName').value = emp ? emp.name : ''; 
                 document.getElementById('empMatricule').value = emp ? emp.matricule : ''; 
                 document.getElementById('empEquipe').value = emp ? emp.equipe : 'Jour'; 
-                document.getElementById('empSite').value = emp ? (emp.site || 'Non défini') : 'Non défini';
-                document.getElementById('empLieu').value = emp ? (emp.lieu || '') : '';
                 document.getElementById('empHeureArrivee').value = emp && emp.heureArrivee ? emp.heureArrivee : '08:00'; 
                 document.getElementById('empHeureDepart').value = emp && emp.heureDepart ? emp.heureDepart : '20:00'; 
                 document.getElementById('empRepos1').value = emp && emp.repos1 ? emp.repos1 : 'Sam'; 
@@ -687,8 +763,7 @@
                 const empData = { 
                     id, name, matricule, 
                     equipe: document.getElementById('empEquipe').value, 
-                    site: document.getElementById('empSite').value, 
-                    lieu: document.getElementById('empLieu').value, 
+                    site: 'Non défini', lieu: '', 
                     heureArrivee: document.getElementById('empHeureArrivee').value, 
                     heureDepart: document.getElementById('empHeureDepart').value, 
                     repos1: document.getElementById('empRepos1').value, 
@@ -702,7 +777,7 @@
                 } else { 
                     empData.status = 'absent'; 
                     this.data.employees.push(empData); 
-                    this.addLog(id, name, empData.site, 'creation', 'Création profil'); 
+                    this.addLog(id, name, 'Non défini', 'creation', 'Création profil'); 
                 }
                 
                 this.saveData(); this.renderAll(); this.closeModals();
@@ -711,29 +786,71 @@
                 if (confirm('Supprimer cet employé ?')) { const emp = this.data.employees.find(e => String(e.id) === String(id)); if(emp) this.addLog(id, emp.name, emp.site, 'suppression', 'Agent supprimé'); this.data.employees = this.data.employees.filter(e => String(e.id) !== String(id)); this.saveData(); this.renderAll(); }
             },
 
-            // --- GESTION DES AFFECTATIONS JOURNALIERES (PLANNING/POINTAGE) ---
+            // --- AFFECTATIONS JOURNALIERES ---
             getDailyPlan(empId, dateStr) {
-                const emp = this.data.employees.find(e => String(e.id) === String(empId));
-                if (!emp) return { site: 'Non défini', lieu: '' };
                 const key = empId + '_' + dateStr;
-                if (this.data.planning && this.data.planning[key]) {
-                    return this.data.planning[key];
-                }
-                // Fallback sur affectation globale
-                return { site: emp.site || 'Non défini', lieu: emp.lieu || '' };
+                if (this.data.planning && this.data.planning[key]) return this.data.planning[key];
+                return { site: 'Non défini', lieu: '' };
             },
 
             updateDailyPlan(empId, dateStr, field, value) {
                 if (!this.data.planning) this.data.planning = {};
                 const key = empId + '_' + dateStr;
                 if (!this.data.planning[key]) {
-                    const emp = this.data.employees.find(e => String(e.id) === String(empId));
-                    this.data.planning[key] = { site: emp.site || 'Non défini', lieu: emp.lieu || '' };
+                    this.data.planning[key] = { site: 'Non défini', lieu: '' };
                 }
                 this.data.planning[key][field] = value;
                 this.saveData();
-                // On met à jour l'affichage uniquement si ce n'est pas un input texte en cours de frappe
-                // (Le onchange gère le blur naturellement)
+                // Si on modifie aujourd'hui depuis le planning, on actualise le pointage
+                const todayStr = new Date().toISOString().split('T')[0];
+                if (dateStr === todayStr && !document.getElementById('tab-pointage').classList.contains('hidden')) {
+                    this.renderPointageCards();
+                }
+            },
+
+            // --- NOUVEAU : EDITION RETROACTIVE LOG ---
+            openEditLogModal(logId) {
+                const log = this.data.logs.find(l => String(l.id) === String(logId));
+                if(!log) return;
+                document.getElementById('editLogId').value = log.id;
+                document.getElementById('editLogAction').value = (log.action === 'arrivee' || log.action === 'depart') ? log.action : 'arrivee'; // Simplification pour entrées/sorties
+                // Convert to datetime-local format YYYY-MM-DDTHH:mm
+                const t = new Date(log.timestamp);
+                const localOffset = new Date(t.getTime() - (t.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+                document.getElementById('editLogTimestamp').value = localOffset;
+                
+                document.getElementById('editLogModal').classList.add('active');
+            },
+            
+            saveEditedLog() {
+                const id = document.getElementById('editLogId').value;
+                const newAction = document.getElementById('editLogAction').value;
+                const newTime = document.getElementById('editLogTimestamp').value;
+                if(!newTime) return;
+                
+                const log = this.data.logs.find(l => String(l.id) === String(id));
+                if(log) {
+                    log.action = newAction;
+                    log.detail = newAction === 'arrivee' ? 'Pointage Arrivée (Corrigé)' : 'Pointage Départ (Corrigé)';
+                    // Convert back to UTC ISO
+                    log.timestamp = new Date(newTime).toISOString();
+                    
+                    // Ré-trier et sauver
+                    this.data.logs.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+                    this.saveData();
+                    this.renderAll();
+                    this.closeModals();
+                }
+            },
+            
+            deleteSelectedLog() {
+                const id = document.getElementById('editLogId').value;
+                if(confirm('Supprimer définitivement ce pointage ?')) {
+                    this.data.logs = this.data.logs.filter(l => String(l.id) !== String(id));
+                    this.saveData();
+                    this.renderAll();
+                    this.closeModals();
+                }
             },
 
             addLog(empId, empName, site, action, detail, customTimestamp = null) {
@@ -757,6 +874,7 @@
                 if (action === 'arrivee') { emp.status = 'present'; this.addLog(empId, emp.name, dailyPlan.site, 'arrivee', `Pointage Arrivée`); } 
                 else if (action === 'depart') { emp.status = 'absent'; this.addLog(empId, emp.name, dailyPlan.site, 'depart', `Pointage Départ`); }
                 this.saveData();
+                this.renderPointageCards();
             },
             
             openAbsenceModal(empId) { 
@@ -894,6 +1012,15 @@
                 img.onload = () => drawPDF(img); img.onerror = () => drawPDF(null);
             },
 
+            // --- BUG RAPPORTS "TOUS/AUCUN" CORRIGE ---
+            toggleAllReportCb(checked) { 
+                document.querySelectorAll('.report-emp-cb').forEach(cb => {
+                    cb.checked = checked;
+                }); 
+                // On met a jour manuellement l'affichage
+                this.updateReportView(); 
+            },
+            
             initializeReportSelection() {
                 const container = document.getElementById('reportEmpCheckboxes');
                 if (container && container.innerHTML.trim() === '') {
@@ -925,16 +1052,22 @@
                 
                 const ctx = document.getElementById('hoursAnalysisChart'); 
                 if (!ctx) return;
-                if (this.hoursAnalysisChart) this.hoursAnalysisChart.destroy();
 
                 const period = document.getElementById('reportPeriodFilter').value; 
+                // On récupère directement depuis le DOM pour éviter tout décalage
                 const selectedIds = Array.from(document.querySelectorAll('.report-emp-cb:checked')).map(cb => cb.value);
                 const emps = this.data.employees.filter(e => selectedIds.includes(String(e.id)));
 
                 if (emps.length === 0) {
                     document.getElementById('employeeDetailedStats').innerHTML = '<p class="text-sm text-gray-500 italic col-span-full">Aucun employé sélectionné.</p>';
+                    if (this.hoursAnalysisChart) {
+                        this.hoursAnalysisChart.destroy();
+                        this.hoursAnalysisChart = new Chart(ctx, { type: 'bar', data: { labels: [], datasets: [] } });
+                    }
                     return;
                 }
+
+                if (this.hoursAnalysisChart) this.hoursAnalysisChart.destroy();
 
                 const now = new Date(); let daysToAnalyze = 7;
                 if (period === 'day') daysToAnalyze = 1; 
@@ -953,9 +1086,7 @@
 
                 let labels = [];
                 let datasetData = emps.map(emp => ({ 
-                    empId: emp.id, 
-                    label: emp.name, 
-                    data: [], 
+                    empId: emp.id, label: emp.name, data: [], 
                     scheduledH: getScheduledHours(emp.heureArrivee, emp.heureDepart),
                     statWorked: 0, statDaysPresent: 0, statHs: 0, statAbsence: 0
                 }));
@@ -978,11 +1109,9 @@
                                 
                                 absenceLogs.forEach(ab => {
                                     if (ab.absenceHours && ab.absenceHours > 0) { 
-                                        hoursToDeduct += ab.absenceHours; 
-                                        ds.statAbsence += ab.absenceHours;
+                                        hoursToDeduct += ab.absenceHours; ds.statAbsence += ab.absenceHours;
                                     } else { 
-                                        isFullDayAbsence = true; 
-                                        ds.statAbsence += ds.scheduledH;
+                                        isFullDayAbsence = true; ds.statAbsence += ds.scheduledH;
                                     }
                                 });
                                 
@@ -993,10 +1122,7 @@
                             }
 
                             const hsDay = this.data.hs.filter(h => String(h.empId) === String(ds.empId) && h.date === dateString);
-                            hsDay.forEach(h => {
-                                totalHours += h.hours;
-                                ds.statHs += h.hours;
-                            });
+                            hsDay.forEach(h => { totalHours += h.hours; ds.statHs += h.hours; });
 
                             ds.data.push(totalHours);
                             ds.statWorked += totalHours;
@@ -1016,24 +1142,15 @@
 
                             const absenceMonth = this.data.logs.filter(l => String(l.empId) === String(ds.empId) && l.action === 'absence' && l.timestamp.startsWith(monthStr));
                             absenceMonth.forEach(ab => {
-                                if (ab.absenceHours && ab.absenceHours > 0) { 
-                                    totalHoursMonth -= ab.absenceHours; 
-                                    ds.statAbsence += ab.absenceHours;
-                                } else { 
-                                    totalHoursMonth -= ds.scheduledH; 
-                                    ds.statAbsence += ds.scheduledH;
-                                }
+                                if (ab.absenceHours && ab.absenceHours > 0) { totalHoursMonth -= ab.absenceHours; ds.statAbsence += ab.absenceHours; } 
+                                else { totalHoursMonth -= ds.scheduledH; ds.statAbsence += ds.scheduledH; }
                             });
 
                             const hsMonth = this.data.hs.filter(h => String(h.empId) === String(ds.empId) && h.date.startsWith(monthStr));
-                            hsMonth.forEach(h => {
-                                totalHoursMonth += h.hours;
-                                ds.statHs += h.hours;
-                            });
+                            hsMonth.forEach(h => { totalHoursMonth += h.hours; ds.statHs += h.hours; });
                             
                             const finalMonth = Math.max(0, totalHoursMonth);
-                            ds.data.push(finalMonth);
-                            ds.statWorked += finalMonth;
+                            ds.data.push(finalMonth); ds.statWorked += finalMonth;
                         });
                     }
                 }
@@ -1054,14 +1171,8 @@
                 const datasets = datasetData.map((ds, index) => ({ label: ds.label, data: ds.data, backgroundColor: colors[index % colors.length], borderRadius: 3 }));
                 
                 this.hoursAnalysisChart = new Chart(ctx, { 
-                    type: 'bar', 
-                    data: { labels: labels, datasets: datasets }, 
-                    options: { 
-                        responsive: true, 
-                        maintainAspectRatio: false, 
-                        plugins: { legend: { position: 'top', labels: { boxWidth: 12 } } }, 
-                        scales: { y: { beginAtZero: true, title: { display: true, text: 'Heures' } } } 
-                    } 
+                    type: 'bar', data: { labels: labels, datasets: datasets }, 
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { boxWidth: 12 } } }, scales: { y: { beginAtZero: true, title: { display: true, text: 'Heures' } } } } 
                 });
             },
 
@@ -1079,7 +1190,7 @@
                 }
             },
 
-            // --- POINTAGE (BASE SUR L'AFFECTATION DU JOUR) ---
+            // --- NOUVEAU : ALERTE > 12H ---
             renderPointageCards() {
                 const todayStr = new Date().toISOString().split('T')[0];
                 const filter = document.getElementById('siteFilter').value;
@@ -1087,13 +1198,17 @@
                     ? this.data.employees 
                     : this.data.employees.filter(e => this.getDailyPlan(e.id, todayStr).site === filter);
                 
+                const nowMs = Date.now();
+
                 document.getElementById('pointageCardsContainer').innerHTML = filtered.map(emp => {
                     const empLogs = this.data.logs.filter(l => String(l.empId) === String(emp.id) && (l.action === 'arrivee' || l.action === 'depart'));
                     const lastLog = empLogs.length > 0 ? empLogs[0] : null;
                     let pointageMsg = '';
+                    let warningMsg = '';
                     
                     if (lastLog) {
-                        const timeStr = new Date(lastLog.timestamp).toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit', hour12: false});
+                        const t = new Date(lastLog.timestamp);
+                        const timeStr = t.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit', hour12: false});
                         const actionLabel = lastLog.action === 'arrivee' ? 'Pointé Présent' : 'Pointé Parti';
                         const msgStyle = lastLog.action === 'arrivee' ? 'bg-green-100 text-green-800 border-green-500' : 'bg-red-100 text-red-800 border-red-500';
                         
@@ -1103,6 +1218,14 @@
                             <div>${actionLabel} à <strong>${timeStr}</strong></div>
                             <div class="text-[10px] mt-0.5"><i class="fas fa-map-marker-alt"></i> ${lastLog.site || 'Non défini'}</div>
                         </div>`;
+
+                        // Vérification Alerte 12h
+                        if (lastLog.action === 'arrivee') {
+                            const hoursSinceArrival = (nowMs - t.getTime()) / 3600000;
+                            if (hoursSinceArrival >= 12) {
+                                warningMsg = `<div class="bg-red-600 text-white text-[10px] uppercase font-bold p-1 text-center rounded animate-pulse-fast mb-2 shadow-sm"><i class="fas fa-exclamation-triangle mr-1"></i> En poste > 12h !</div>`;
+                            }
+                        }
                     }
 
                     const dailyPlan = this.getDailyPlan(emp.id, todayStr);
@@ -1110,6 +1233,7 @@
                     return `
                     <div class="card p-4 flex flex-col justify-between border-l-4 ${emp.status === 'present' ? 'border-l-ert-blue' : emp.status === 'conge' ? 'border-l-fuchsia-500' : 'border-l-gray-300'}">
                         <div>
+                            ${warningMsg}
                             <div class="flex items-start gap-3 mb-2">${this.getAvatarHtml(emp)}<div><div class="font-bold text-gray-800">${emp.name}</div><div class="text-xs text-gray-500 font-mono">${emp.matricule}</div></div></div>
                             <div class="mt-3 mb-2">
                                 <select onchange="app.updateDailyPlan('${emp.id}', '${todayStr}', 'site', this.value)" class="text-xs font-semibold px-2 py-1 rounded bg-gray-100 border border-gray-300 w-full mb-1 focus:border-ert-blue focus:outline-none">
@@ -1139,7 +1263,7 @@
                     <tr>
                         <td class="px-6 py-4 whitespace-nowrap"><div class="flex items-center gap-3">${this.getAvatarHtml(emp)}<span class="text-sm font-medium">${emp.name}</span></div></td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${emp.matricule}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm">${emp.site || 'Non défini'}<br><span class="text-xs text-gray-400">${emp.lieu || '-'}</span></td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400 italic">Affectation gérée<br>au quotidien</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold">${emp.heureArrivee || '08:00'} ➔ ${emp.heureDepart || '20:00'}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="bg-gray-100 px-2 py-0.5 rounded text-xs">${emp.repos1 || 'Sam'}, ${emp.repos2 || 'Dim'}</span></td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -1150,7 +1274,6 @@
                 `).join('');
             },
 
-            // --- PLANNING (AFFECTATION JOURNALIERE DIRECTE) ---
             renderPlanning() {
                 const weekInput = document.getElementById('planningWeekFilter').value;
                 this.calculateWeekDates(weekInput);
@@ -1224,17 +1347,46 @@
                 }).join('');
             },
 
+            renderHs() {
+                document.getElementById('hsLogContainer').innerHTML = this.data.hs.length === 0 ? '<p class="text-sm text-gray-500 italic">Aucune heure supp.</p>' : this.data.hs.map(h => `<div class="mb-3 pb-3 border-b text-sm"><div class="flex justify-between"><span class="font-medium">${h.empName || 'Ancien'}</span><span class="font-bold text-ert-red">+${h.hours}h</span></div><div class="text-xs text-gray-500 flex justify-between"><span>${new Date(h.date).toLocaleDateString('fr-FR')}</span><span class="italic">${h.motif}</span></div></div>`).join('');
+            },
+
+            // --- CRAYON RETROACTIF POUR LES ADMINS ---
             renderActivityLog() {
                 document.getElementById('activityLogContainer').innerHTML = this.data.logs.length === 0 ? '<p class="text-sm text-gray-500 italic">Aucune activité.</p>' : this.data.logs.map(log => {
                     const t = new Date(log.timestamp);
                     const emp = this.data.employees.find(e => String(e.id) === String(log.empId));
                     let color = 'text-gray-500', icon = 'fa-circle';
-                    if (log.action === 'arrivee') { color = 'text-green-600'; icon = 'fa-arrow-right'; } else if (log.action === 'depart') { color = 'text-red-600'; icon = 'fa-arrow-left'; } else if (log.action === 'absence') { color = 'text-orange-500'; icon = 'fa-user-clock'; } else if (log.action === 'creation') { color = 'text-ert-blue'; icon = 'fa-user-plus'; } else if (log.action === 'hs') { color = 'text-purple-600'; icon = 'fa-clock'; }
+                    
+                    if (log.action === 'arrivee') { color = 'text-green-600'; icon = 'fa-arrow-right'; } 
+                    else if (log.action === 'depart') { color = 'text-red-600'; icon = 'fa-arrow-left'; } 
+                    else if (log.action === 'absence') { color = 'text-orange-500'; icon = 'fa-user-clock'; } 
+                    else if (log.action === 'creation') { color = 'text-ert-blue'; icon = 'fa-user-plus'; } 
+                    else if (log.action === 'hs') { color = 'text-purple-600'; icon = 'fa-clock'; }
                     
                     const time24h = t.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit', hour12: false});
                     
-                    return `<div class="flex items-start gap-3 mb-3 pb-3 border-b"><div class="mt-1">${emp && emp.photo ? `<img src="${emp.photo}" class="w-8 h-8 rounded-full object-cover">` : `<div class="w-8 h-8 rounded-full bg-gray-200 text-xs flex items-center justify-center font-bold">${emp ? emp.name.charAt(0) : '?'}</div>`}</div><div class="flex-1"><div class="text-sm font-medium">${emp ? emp.name : log.empName} <span class="text-xs text-gray-500">(${log.site || 'Non défini'})</span></div><div class="text-xs text-gray-600 font-medium"><i class="fas ${icon} ${color} mr-1"></i> ${log.detail}</div></div><div class="text-right text-xs"><div class="font-semibold">${time24h}</div><div class="text-[10px] text-gray-400">${t.toLocaleDateString('fr-FR')}</div></div></div>`;
+                    const editBtn = this.currentUserRole === 'superadmin' ? `<button onclick="app.openEditLogModal('${log.id}')" class="text-gray-400 hover:text-ert-blue ml-2" title="Corriger la date/heure"><i class="fas fa-edit"></i></button>` : '';
+
+                    return `
+                    <div class="flex items-start gap-3 mb-3 pb-3 border-b">
+                        <div class="mt-1">${emp && emp.photo ? `<img src="${emp.photo}" class="w-8 h-8 rounded-full object-cover">` : `<div class="w-8 h-8 rounded-full bg-gray-200 text-xs flex items-center justify-center font-bold">${emp ? emp.name.charAt(0) : '?'}</div>`}</div>
+                        <div class="flex-1">
+                            <div class="text-sm font-medium">${emp ? emp.name : log.empName} <span class="text-xs text-gray-500">(${log.site || 'Non défini'})</span></div>
+                            <div class="text-xs text-gray-600 font-medium"><i class="fas ${icon} ${color} mr-1"></i> ${log.detail}</div>
+                        </div>
+                        <div class="text-right text-xs flex flex-col items-end">
+                            <div class="flex items-center">
+                                <span class="font-semibold">${time24h}</span> ${editBtn}
+                            </div>
+                            <div class="text-[10px] text-gray-400">${t.toLocaleDateString('fr-FR')}</div>
+                        </div>
+                    </div>`;
                 }).join('');
+            },
+
+            renderStats() {
+                document.getElementById('stat-total').textContent = this.data.employees.length; document.getElementById('stat-present').textContent = this.data.employees.filter(e => e.status === 'present').length; document.getElementById('stat-absent').textContent = this.data.employees.filter(e => e.status === 'conge').length; document.getElementById('stat-hs').textContent = this.data.hs.reduce((s, h) => s + h.hours, 0) + 'h';
             },
 
             renderChart() {
@@ -1243,13 +1395,14 @@
                 if (this.chartInstance) this.chartInstance.destroy();
                 const sites = ['Pierre Mendès France', 'Robert Desnos', 'Georges Brassens'];
                 
-                // Pour le chart global, on utilise l'affectation par defaut ou la derniere connue
+                const todayStr = new Date().toISOString().split('T')[0];
+
                 this.chartInstance = new Chart(ctx, { 
                     type: 'doughnut', 
                     data: { 
                         labels: sites, 
                         datasets: [{ 
-                            data: sites.map(s => this.data.employees.filter(e => (e.site || '') === s).length), 
+                            data: sites.map(s => this.data.employees.filter(e => this.getDailyPlan(e.id, todayStr).site === s).length), 
                             backgroundColor: ['#002654', '#ED2939', '#e2e8f0'], borderWidth: 0 
                         }] 
                     }, 
@@ -1261,7 +1414,7 @@
                 const { jsPDF } = window.jspdf; const doc = new jsPDF(); const d = new Date().toLocaleDateString('fr-FR');
                 doc.setFontSize(20); doc.setTextColor(0, 38, 84); doc.text("Rapport Global d'Effectifs", 14, 20);
                 doc.setFontSize(10); doc.setTextColor(100); doc.text(`ERT - ${d}`, 14, 28);
-                doc.autoTable({ startY: 40, head: [['Matricule', 'Nom', 'Affectation Base', 'Horaires', 'Repos', 'Statut']], body: this.data.employees.map(e => [ e.matricule, e.name, `${e.site || '-'}\n${e.lieu || '-'}`, `${e.heureArrivee} - ${e.heureDepart}`, `${e.repos1}, ${e.repos2}`, e.status ]), headStyles: { fillColor: [0, 38, 84] } });
+                doc.autoTable({ startY: 40, head: [['Matricule', 'Nom', 'Horaires', 'Repos', 'Statut']], body: this.data.employees.map(e => [ e.matricule, e.name, `${e.heureArrivee} - ${e.heureDepart}`, `${e.repos1}, ${e.repos2}`, e.status ]), headStyles: { fillColor: [0, 38, 84] } });
                 doc.save(`EDT-Rapport-Effectifs-${d.replace(/\//g, '-')}.pdf`);
             }
         };
