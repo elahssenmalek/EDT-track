@@ -133,3 +133,1398 @@
                     </div>
                     <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 overflow-y-auto pb-20 custom-scrollbar" id="pointageCardsContainer"></div>
                 </div>
+
+                <!-- TAB: PERSONNEL -->
+                <div id="tab-personnel" class="hidden h-full flex flex-col">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-ert-blue">Gestion du Personnel</h2>
+                        <button onclick="app.openEmployeeModal()" class="btn-blue px-4 py-2 rounded-md text-sm font-medium shadow-sm"><i class="fas fa-plus mr-2"></i> Ajouter un employé</button>
+                    </div>
+                    <div class="card flex-1 overflow-hidden flex flex-col">
+                        <div class="overflow-x-auto custom-scrollbar">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employé</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matricule</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Affectation par défaut</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Horaires</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jours de Repos</th>
+                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200" id="employeeTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: PLANNING & HS -->
+                <div id="tab-planning" class="hidden h-full flex flex-col">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-ert-blue">Planning Interactif & HS</h2>
+                        <button onclick="app.openHsModal()" class="btn-blue px-4 py-2 rounded-md text-sm font-medium shadow-sm"><i class="fas fa-clock mr-2"></i> Saisir Heures Sup.</button>
+                    </div>
+
+                    <!-- CHATBOT IA PLANNING -->
+                    <div class="bg-indigo-50 p-3 rounded-md mb-6 border border-indigo-200 shadow-sm flex gap-3 items-center">
+                        <i class="fas fa-robot text-indigo-600 text-2xl ml-2"></i>
+                        <div class="flex-1">
+                            <div class="text-xs font-bold text-indigo-800 mb-1">Assistant Planning IA (Gemini)</div>
+                            <input type="text" id="chatbotInput" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Ex: Mets Malek à Desnos jeudi et vendredi au poste d'accueil..." onkeypress="if(event.key === 'Enter') app.sendChatbotCommand()">
+                        </div>
+                        <button id="chatbotBtn" onclick="app.sendChatbotCommand()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm font-medium transition self-end">Générer le planning</button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full pb-10">
+                        <div class="lg:col-span-2 card p-4 flex flex-col">
+                            
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-4 border-b pb-3 gap-4">
+                                <div class="w-full sm:w-auto">
+                                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Affectations Journalières</h3>
+                                    <div class="flex gap-2 w-full">
+                                        <select id="planningTeamFilter" onchange="app.renderPlanning()" class="border border-gray-300 rounded-md px-3 py-1.5 text-sm flex-1 sm:w-32">
+                                            <option value="all">Toutes équipes</option>
+                                            <option value="Jour">Équipe Jour</option>
+                                            <option value="Nuit">Équipe Nuit</option>
+                                        </select>
+                                        <input type="week" id="planningWeekFilter" onchange="app.renderPlanning()" class="border border-gray-300 rounded-md px-3 py-1.5 text-sm flex-1 sm:w-auto" title="Sélectionner la semaine">
+                                    </div>
+                                </div>
+                                <div class="flex flex-col items-end gap-2 w-full sm:w-auto">
+                                    <div class="flex gap-2">
+                                        <button onclick="app.toggleAllPlanning(true)" class="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded hover:bg-gray-200 border border-gray-300">Tout cocher</button>
+                                        <button onclick="app.toggleAllPlanning(false)" class="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded hover:bg-gray-200 border border-gray-300">Tout décocher</button>
+                                    </div>
+                                    <button onclick="app.exportSelectedPlanningPDF()" class="text-sm btn-blue px-3 py-1.5 rounded shadow-sm flex items-center w-full sm:w-auto justify-center">
+                                        <i class="fas fa-file-pdf mr-2"></i> PDF Sélection
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="flex-1 overflow-auto custom-scrollbar">
+                                <table class="min-w-full border-collapse border border-gray-200 text-sm">
+                                    <thead class="bg-gray-50" id="planningTableHeader">
+                                    </thead>
+                                    <tbody id="planningTableBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="card p-4 flex flex-col">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Registre HS</h3>
+                            <div class="flex-1 overflow-y-auto custom-scrollbar" id="hsLogContainer"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: RAPPORTS -->
+                <div id="tab-rapports" class="hidden h-full flex flex-col">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-ert-blue">Rapports & Historique</h2>
+                        <div class="flex gap-2">
+                            <button onclick="app.exportHistoryJSON()" class="bg-gray-800 hover:bg-gray-900 text-white px-3 py-2 rounded-md text-sm font-medium shadow-sm"><i class="fas fa-download mr-2"></i> Journal JSON</button>
+                            <button onclick="app.generatePDF()" class="btn-red px-4 py-2 rounded-md text-sm font-medium shadow-sm"><i class="fas fa-file-pdf mr-2"></i> PDF Global Effectifs</button>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                        <div class="card p-4 text-center border-t-4 border-t-ert-blue">
+                            <div class="text-gray-500 text-sm font-medium">Effectif Total</div>
+                            <div class="text-3xl font-bold text-gray-800 mt-1" id="stat-total">0</div>
+                        </div>
+                        <div class="card p-4 text-center border-t-4 border-t-green-500">
+                            <div class="text-gray-500 text-sm font-medium">Présents Aujourd'hui</div>
+                            <div class="text-3xl font-bold text-green-600 mt-1" id="stat-present">0</div>
+                        </div>
+                        <div class="card p-4 text-center border-t-4 border-t-fuchsia-500">
+                            <div class="text-gray-500 text-sm font-medium">En Congé/Absence</div>
+                            <div class="text-3xl font-bold text-fuchsia-600 mt-1" id="stat-absent">0</div>
+                        </div>
+                        <div class="card p-4 text-center border-t-4 border-t-ert-red">
+                            <div class="text-gray-500 text-sm font-medium">Heures Sup.</div>
+                            <div class="text-3xl font-bold text-ert-red mt-1" id="stat-hs">0h</div>
+                        </div>
+                    </div>
+
+                    <div class="card p-4 flex flex-col mb-6">
+                        <div class="flex justify-between items-center border-b pb-2 mb-4">
+                            <h3 class="text-lg font-semibold text-gray-800"><i class="fas fa-chart-line text-ert-blue mr-2"></i> Analyse des Heures Effectuées</h3>
+                            <div class="flex gap-2 items-center">
+                                <span class="text-sm text-gray-500">Période:</span>
+                                <select id="reportPeriodFilter" onchange="app.updateReportView()" class="border border-gray-300 rounded text-sm px-2 py-1 focus:ring-1 focus:ring-ert-blue">
+                                    <option value="day">Aujourd'hui</option>
+                                    <option value="week">7 derniers jours</option>
+                                    <option value="month" selected>30 derniers jours</option>
+                                    <option value="year">12 derniers mois</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="flex flex-col md:flex-row gap-4 h-72">
+                            <div class="w-full md:w-1/4 border border-gray-200 rounded p-2 overflow-y-auto bg-gray-50 custom-scrollbar">
+                                <div class="flex justify-between items-center mb-2 pb-1 border-b border-gray-300">
+                                    <span class="text-xs font-bold text-gray-500 uppercase">Sélection Agents</span>
+                                    <div class="text-[10px]">
+                                        <button onclick="app.toggleAllReportCb(true)" class="text-ert-blue hover:underline">Tous</button> |
+                                        <button onclick="app.toggleAllReportCb(false)" class="text-ert-red hover:underline">Aucun</button>
+                                    </div>
+                                </div>
+                                <div id="reportEmpCheckboxes" class="flex flex-col gap-1.5 text-sm">
+                                </div>
+                            </div>
+                            <div class="w-full md:w-3/4 relative h-full">
+                                <canvas id="hoursAnalysisChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div id="employeeDetailedStats" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mt-6 pt-4 border-t border-gray-200">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-[300px]">
+                        <div class="card p-4 flex flex-col">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Répartition par Site (Aujourd'hui)</h3>
+                            <div class="flex-1 relative w-full h-full min-h-[250px]"><canvas id="siteChart"></canvas></div>
+                        </div>
+                        <div class="card p-4 flex flex-col">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Journal d'Activité</h3>
+                            <div class="flex-1 overflow-y-auto pr-2 custom-scrollbar" id="activityLogContainer"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: PARAMÈTRES -->
+                <div id="tab-parametres" class="hidden h-full flex flex-col">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-ert-blue">Paramètres Utilisateur</h2>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="card p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Mon Profil</h3>
+                            <p class="text-sm text-gray-600 mb-4">Modifier votre mot de passe d'accès.</p>
+                            <input type="password" id="oldPassword" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm mb-3 focus:ring-1 focus:ring-ert-blue" placeholder="Ancien mot de passe">
+                            <input type="password" id="newPassword" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm mb-3 focus:ring-1 focus:ring-ert-blue" placeholder="Nouveau mot de passe">
+                            <button onclick="app.changePassword()" class="btn-blue px-4 py-2 rounded-md text-sm font-medium">Mettre à jour le mot de passe</button>
+                            <p id="pwdMsg" class="text-sm mt-3 hidden"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: SUPERADMIN -->
+                <div id="tab-superadmin" class="hidden h-full flex flex-col">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-ert-red"><i class="fas fa-shield-alt mr-2"></i> Centre de Contrôle SuperAdmin</h2>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Gestion des Accès -->
+                        <div class="card p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Gestion des Accès</h3>
+                            <p class="text-sm text-gray-600 mb-4">Créer de nouveaux utilisateurs.</p>
+                            <div class="grid grid-cols-1 gap-2 mb-3">
+                                <input type="email" id="newAccountEmail" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-ert-blue" placeholder="E-mail du nouvel utilisateur">
+                                <div class="flex gap-2">
+                                    <input type="password" id="newAccountPwd" class="border border-gray-300 rounded-md px-3 py-2 text-sm flex-1 focus:ring-1 focus:ring-ert-blue" placeholder="Mot de passe provisoire">
+                                    <select id="newAccountRole" class="border border-gray-300 rounded-md px-3 py-2 text-sm w-1/3">
+                                        <option value="user">Standard</option>
+                                        <option value="superadmin">Admin</option>
+                                    </select>
+                                </div>
+                                <button onclick="app.addUserAccount()" class="btn-blue px-4 py-2 rounded-md text-sm font-medium mt-1">Créer le compte</button>
+                            </div>
+                            <ul id="usersList" class="divide-y divide-gray-200 border border-gray-200 rounded-md max-h-32 overflow-y-auto custom-scrollbar mt-3"></ul>
+                        </div>
+
+                        <!-- Correction Rétroactive -->
+                        <div class="card p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Correction Rétroactive Pointage</h3>
+                            <p class="text-sm text-gray-600 mb-4">Ajouter un pointage oublié ou corriger une absence dans le passé.</p>
+                            <div class="mb-3">
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Employé :</label>
+                                <select id="retroEmpId" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-ert-blue"></select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Type d'action :</label>
+                                <select id="retroAction" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-ert-blue">
+                                    <option value="arrivee">Arrivée</option>
+                                    <option value="depart">Départ</option>
+                                    <option value="absence">Absence</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Date et Heure exacte :</label>
+                                <input type="datetime-local" id="retroDate" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-ert-blue">
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Motif / Note (Optionnel) :</label>
+                                <input type="text" id="retroNote" placeholder="Ex: Oubli de pointage validé par RH" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-ert-blue">
+                            </div>
+                            <button onclick="app.saveRetroLog()" class="btn-blue px-4 py-2 rounded-md text-sm font-medium w-full">Ajouter à l'historique</button>
+                        </div>
+
+                        <!-- Reset Individuel -->
+                        <div class="card p-6 border-l-4 border-orange-500">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Réinitialisation Individuelle</h3>
+                            <p class="text-sm text-gray-600 mb-4">Effacer tous les historiques, pointages et heures supplémentaires d'un employé spécifique.</p>
+                            <div class="flex gap-2">
+                                <select id="resetEmpId" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-ert-blue"></select>
+                                <button onclick="app.resetIndividualData()" class="btn-orange px-4 py-2 rounded-md text-sm font-medium whitespace-nowrap">Effacer l'historique</button>
+                            </div>
+                        </div>
+
+                        <!-- Reset Global -->
+                        <div class="card p-6 border-l-4 border-ert-red">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Réinitialisation Globale (DANGER)</h3>
+                            <p class="text-sm text-gray-600 mb-4">Effacer **tous les employés, plannings, et historiques** de la base de données. Irréversible.</p>
+                            <button onclick="app.resetGlobalData()" class="btn-red px-4 py-2 rounded-md text-sm font-medium w-full flex justify-center items-center"><i class="fas fa-exclamation-triangle mr-2"></i> SUPPRIMER TOUTES LES DONNÉES DE L'APPLICATION</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- MODALS -->
+    
+    <!-- Edit Log Modal -->
+    <div id="editLogModal" class="modal">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-sm mx-4 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+                <h3 class="text-lg font-semibold text-gray-800">Correction Pointage</h3>
+                <button onclick="app.closeModals()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-6">
+                <input type="hidden" id="editLogId">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Action</label>
+                    <select id="editLogAction" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue">
+                        <option value="arrivee">Arrivée</option>
+                        <option value="depart">Départ</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Date et Heure exactes</label>
+                    <input type="datetime-local" id="editLogTimestamp" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue">
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-between gap-3">
+                <button onclick="app.deleteSelectedLog()" class="px-4 py-2 bg-red-100 text-red-700 hover:bg-red-200 rounded-md text-sm font-medium"><i class="fas fa-trash"></i> Supprimer</button>
+                <div class="flex gap-2">
+                    <button onclick="app.closeModals()" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700">Annuler</button>
+                    <button onclick="app.saveEditedLog()" class="btn-blue px-4 py-2 rounded-md text-sm font-medium">Modifier</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Employee Modal -->
+    <div id="employeeModal" class="modal">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+                <h3 class="text-lg font-semibold text-gray-800" id="employeeModalTitle">Profil de l'employé</h3>
+                <button onclick="app.closeModals()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto custom-scrollbar">
+                <input type="hidden" id="empId">
+                <div class="mb-4 flex flex-col items-center">
+                    <div id="empPhotoPreview" class="w-20 h-20 rounded-full bg-gray-200 mb-2 border-2 border-dashed border-gray-400 flex items-center justify-center overflow-hidden">
+                        <i class="fas fa-camera text-gray-400 text-2xl"></i>
+                    </div>
+                    <label class="cursor-pointer text-sm text-ert-blue font-medium hover:underline">
+                        Charger une photo
+                        <input type="file" id="empPhotoInput" accept="image/*" class="hidden" onchange="app.handlePhotoUpload(event)">
+                    </label>
+                    <input type="hidden" id="empPhotoData">
+                </div>
+                <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Nom complet</label><input type="text" id="empName" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue"></div>
+                <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Matricule</label><input type="text" id="empMatricule" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue"></div>
+                <div class="grid grid-cols-2 gap-2 mb-4">
+                    <div><label class="block text-sm font-medium text-gray-700 mb-1">Heure Arrivée</label><input type="time" id="empHeureArrivee" value="08:00" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue"></div>
+                    <div><label class="block text-sm font-medium text-gray-700 mb-1">Heure Départ</label><input type="time" id="empHeureDepart" value="20:00" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue"></div>
+                </div>
+                <div class="grid grid-cols-2 gap-2 mb-4">
+                    <div><label class="block text-sm font-medium text-gray-700 mb-1">Repos 1</label><select id="empRepos1" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue"><option value="Sam">Samedi</option><option value="Dim" selected>Dimanche</option><option value="Ven">Vendredi</option><option value="Lun">Lundi</option><option value="Mar">Mardi</option><option value="Mer">Mercredi</option><option value="Jeu">Jeudi</option></select></div>
+                    <div><label class="block text-sm font-medium text-gray-700 mb-1">Repos 2</label><select id="empRepos2" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue"><option value="Sam" selected>Samedi</option><option value="Dim">Dimanche</option><option value="Ven">Vendredi</option><option value="Lun">Lundi</option><option value="Mar">Mardi</option><option value="Mer">Mercredi</option><option value="Jeu">Jeudi</option></select></div>
+                </div>
+                <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Équipe</label><select id="empEquipe" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue"><option value="Jour">Équipe de Jour (12h)</option><option value="Nuit">Équipe de Nuit (12h)</option></select></div>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Site d'affectation globale (Défaut)</label>
+                    <select id="empSite" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue">
+                        <option value="Non défini">Non défini</option>
+                        <option value="Pierre Mendès France">Pierre Mendès France</option>
+                        <option value="Robert Desnos">Robert Desnos</option>
+                        <option value="Georges Brassens">Georges Brassens</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Lieu de travail global (Défaut)</label>
+                    <input type="text" id="empLieu" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue" placeholder="Ex: Accueil, Entrepôt...">
+                </div>
+                
+                <p class="text-xs text-gray-500 italic mt-2"><i class="fas fa-info-circle mr-1"></i> Ces lieux sont l'affectation de base. Ils peuvent être modifiés jour par jour directement dans le tableau Planning ou le Pointage.</p>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3"><button onclick="app.closeModals()" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700">Annuler</button><button onclick="app.saveEmployee()" class="btn-blue px-4 py-2 rounded-md text-sm font-medium">Enregistrer</button></div>
+        </div>
+    </div>
+
+    <!-- HS Modal -->
+    <div id="hsModal" class="modal">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+                <h3 class="text-lg font-semibold text-gray-800">Heures Supplémentaires</h3>
+                <button onclick="app.closeModals()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-6">
+                <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Employé</label><select id="hsEmpId" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue"></select></div>
+                <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Date</label><input type="date" id="hsDate" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue"></div>
+                <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Nombre d'heures</label><input type="number" id="hsHours" step="0.5" min="0.5" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue"></div>
+                <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Motif</label><input type="text" id="hsMotif" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue"></div>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3"><button onclick="app.closeModals()" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700">Annuler</button><button onclick="app.saveHs()" class="btn-blue px-4 py-2 rounded-md text-sm font-medium">Enregistrer</button></div>
+        </div>
+    </div>
+
+    <!-- Absence Modal -->
+    <div id="absenceModal" class="modal">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+                <h3 class="text-lg font-semibold text-gray-800">Déclarer une absence</h3>
+                <button onclick="app.closeModals()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-6">
+                <input type="hidden" id="absenceEmpId">
+                <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Type d'absence</label><select id="absenceType" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue"><option value="Congé annuel">Congé annuel</option><option value="Maladie">Maladie</option><option value="Accident de travail">Accident de travail</option><option value="Formation">Formation</option><option value="Événement familial">Événement familial</option></select></div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Date de l'absence (ou 1er jour)</label>
+                    <input type="date" id="absenceDate" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Durée (ex: "3 jours" ou "4 heures")</label>
+                    <input type="text" id="absenceDuration" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue" placeholder="ex: 2 jours">
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3"><button onclick="app.closeModals()" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700">Annuler</button><button onclick="app.saveAbsence()" class="btn-orange px-4 py-2 rounded-md text-sm font-medium">Valider</button></div>
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURATION FIREBASE & GEMINI
+        const firebaseConfig = {
+            apiKey: "AIzaSyBklpcJ2DDBuPELgAojs6Wc6WG3U5CqCCU",
+            authDomain: "edt-track.firebaseapp.com",
+            databaseURL: "https://edt-track-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "edt-track",
+            storageBucket: "edt-track.firebasestorage.app",
+            messagingSenderId: "806362987169",
+            appId: "1:806362987169:web:1f9680fcc28a2ef6300ee0"
+        };
+        const GEMINI_API_KEY = "AIzaSy_REMPLACER_PAR_VOTRE_CLE_GEMINI_ICI"; 
+        
+        let database = null;
+        try {
+            firebase.initializeApp(firebaseConfig);
+            database = firebase.database();
+        } catch (error) { console.warn("Firebase hors ligne."); }
+
+        const app = {
+            data: { employees: [], logs: [], hs: [], users: [], planning: {} },
+            currentUserEmail: null,
+            currentUserRole: null,
+            chartInstance: null,
+            hoursAnalysisChart: null,
+            currentPlanningWeekDates: [],
+
+            init() {
+                try { 
+                    const todayStr = new Date().toISOString().split('T')[0];
+                    document.getElementById('hsDate').value = todayStr; 
+                    document.getElementById('absenceDate').value = todayStr;
+                    document.getElementById('retroDate').value = new Date().toISOString().slice(0, 16);
+                } catch(e) {}
+                this.initWeekPicker();
+                this.loadData();
+            },
+
+            async sendChatbotCommand() {
+                const input = document.getElementById('chatbotInput');
+                const text = input.value.trim();
+                if(!text) return;
+                
+                const btn = document.getElementById('chatbotBtn');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Traitement...';
+                
+                try {
+                    const empList = this.data.employees.map(e => `{id: "${e.id}", name: "${e.name}"}`).join(', ');
+                    const dates = this.currentPlanningWeekDates.map(d => d.toISOString().split('T')[0]).join(', ');
+                    
+                    const prompt = `
+                    Tu es un robot assistant de l'application EDT-track.
+                    Voici la base des employés existants : ${empList}
+                    La semaine actuellement affichée correspond aux dates (Lundi au Dimanche) : ${dates}
+                    L'utilisateur te donne cet ordre en langage naturel : "${text}"
+                    
+                    Ta mission est d'identifier les employés mentionnés, les dates visées, et le site/lieu. 
+                    Renvoie UNIQUEMENT un tableau JSON structuré exactement comme ceci, sans aucun autre texte ou markdown :
+                    [
+                      {
+                         "empId": "id_de_l_employe",
+                         "date": "YYYY-MM-DD",
+                         "site": "Pierre Mendès France ou Robert Desnos ou Georges Brassens",
+                         "lieu": "poste déduit ou chaine vide"
+                      }
+                    ]
+                    Déduis la date exacte à partir de la semaine affichée. Si le nom du site est abrégé (PMF, Brassens, Desnos), convertis-le vers le nom officiel exact.
+                    `;
+                    
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                    });
+                    
+                    if(!response.ok) throw new Error("Erreur API Gemini.");
+                    
+                    const result = await response.json();
+                    let jsonText = result.candidates[0].content.parts[0].text;
+                    jsonText = jsonText.replace(/```json/g, '').replace(/```/g, '').trim();
+                    
+                    const updates = JSON.parse(jsonText);
+                    
+                    if(updates && updates.length > 0) {
+                        updates.forEach(u => {
+                            if(u.empId && u.date) {
+                                this.updateDailyPlan(u.empId, u.date, 'site', u.site || 'Non défini');
+                                this.updateDailyPlan(u.empId, u.date, 'lieu', u.lieu || '');
+                            }
+                        });
+                        this.renderPlanning();
+                        input.value = '';
+                    }
+                } catch (err) {
+                    alert("Erreur de l'assistant IA. Assurez-vous que la clé d'API commence bien par AIzaSy.");
+                }
+                btn.innerHTML = originalText;
+            },
+
+            initWeekPicker() {
+                const today = new Date(); const year = today.getFullYear(); const jan1 = new Date(year, 0, 1);
+                const days = Math.floor((today - jan1) / (24 * 60 * 60 * 1000));
+                const weekNum = Math.ceil((today.getDay() + 1 + days) / 7);
+                const weekStr = `${year}-W${weekNum.toString().padStart(2, '0')}`;
+                
+                const weekInput = document.getElementById('planningWeekFilter');
+                if(weekInput) weekInput.value = weekStr;
+                this.calculateWeekDates(weekStr);
+            },
+
+            calculateWeekDates(weekValue) {
+                if(!weekValue) return;
+                let year = parseInt(weekValue.substring(0, 4)); let week = parseInt(weekValue.substring(6, 8));
+                let simple = new Date(year, 0, 1 + (week - 1) * 7); let dow = simple.getDay();
+                let ISOweekStart = simple;
+                if (dow <= 4) ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
+                else ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
+                
+                this.currentPlanningWeekDates = [];
+                for (let i = 0; i < 7; i++) {
+                    let d = new Date(ISOweekStart); d.setDate(d.getDate() + i);
+                    this.currentPlanningWeekDates.push(d);
+                }
+            },
+
+            loadData() {
+                if (database) {
+                    database.ref('edt_data').on('value', (snapshot) => { this.syncData(snapshot.val()); }, (e) => { this.syncData(JSON.parse(localStorage.getItem('edt_data_v29'))); });
+                } else {
+                    this.syncData(JSON.parse(localStorage.getItem('edt_data_v29')));
+                }
+            },
+
+            syncData(val) {
+                if (val) {
+                    this.data = val;
+                } else {
+                    this.data = { employees: [], logs: [], hs: [], users: [], planning: {} };
+                }
+                
+                if (!this.data.employees) this.data.employees = [];
+                if (!this.data.logs) this.data.logs = [];
+                if (!this.data.hs) this.data.hs = [];
+                if (!this.data.users) this.data.users = [];
+                if (!this.data.planning) this.data.planning = {}; 
+
+                // Migration unique
+                if (this.data.employees.length === 0 && !localStorage.getItem('edt_migrated_v29')) {
+                    const oldVersions = ['edt_data_v28', 'edt_data_v27', 'edt_data_v26', 'edt_data_v25', 'edt_data_v24', 'edt_data_v23'];
+                    for (let v of oldVersions) {
+                        const oldData = JSON.parse(localStorage.getItem(v));
+                        if (oldData && oldData.employees && oldData.employees.length > 0) {
+                            this.data = oldData; 
+                            this.saveData(); 
+                            break;
+                        }
+                    }
+                    localStorage.setItem('edt_migrated_v29', 'true');
+                }
+
+                if (this.data.users.length === 0) {
+                    this.data.users = [{ email: 'elahssen.malek@gmail.com', password: '123456', role: 'superadmin' }, { email: 'seyma.elahsen@ert.tn', password: '123456', role: 'superadmin' }];
+                }
+
+                if (sessionStorage.getItem('edt_logged_in') === 'true' && !this.currentUserEmail) {
+                    const savedEmail = sessionStorage.getItem('edt_user_email');
+                    const user = this.data.users.find(u => u.email === savedEmail);
+                    if (user) { this.currentUserEmail = user.email; this.currentUserRole = user.role; this.showMainApp(); } else { this.logout(); }
+                } else if (!this.currentUserEmail) {
+                    document.getElementById('loginScreen').classList.remove('hidden');
+                }
+
+                if (this.currentUserEmail) {
+                    this.renderAll();
+                    if (this.currentUserRole === 'superadmin') this.renderSuperAdminPanel();
+                }
+            },
+
+            saveData() {
+                localStorage.setItem('edt_data_v29', JSON.stringify(this.data));
+                if (database) { try { database.ref('edt_data').set(this.data); } catch (e) {} }
+            },
+            
+            resetGlobalData() {
+                if(confirm("DANGER : Êtes-vous ABSOLUMENT SÛR de vouloir effacer TOUS les employés, TOUS les plannings et TOUT l'historique ? Cette action est irréversible.")) {
+                    this.data.employees = []; 
+                    this.data.logs = []; 
+                    this.data.hs = []; 
+                    this.data.planning = {};
+                    this.saveData();
+                    this.renderAll();
+                    alert("Base de données entièrement effacée (comptes admin conservés).");
+                }
+            },
+            
+            resetIndividualData() {
+                const empId = document.getElementById('resetEmpId').value;
+                if(!empId) return;
+                const emp = this.data.employees.find(e => String(e.id) === String(empId));
+                if(!emp) return;
+                
+                if(confirm(`Voulez-vous effacer tout l'historique, le planning et les pointages de ${emp.name} ?`)) {
+                    this.data.logs = this.data.logs.filter(l => String(l.empId) !== String(empId));
+                    this.data.hs = this.data.hs.filter(h => String(h.empId) !== String(empId));
+                    for (let key in this.data.planning) {
+                        if (key.startsWith(empId + '_')) { delete this.data.planning[key]; }
+                    }
+                    this.saveData();
+                    this.renderAll();
+                    alert(`Historique de ${emp.name} effacé avec succès.`);
+                }
+            },
+            
+            saveRetroLog() {
+                const empId = document.getElementById('retroEmpId').value;
+                const action = document.getElementById('retroAction').value;
+                const datetime = document.getElementById('retroDate').value;
+                const note = document.getElementById('retroNote').value;
+                
+                if(!empId || !action || !datetime) return alert("Remplissez tous les champs obligatoires.");
+                
+                const emp = this.data.employees.find(e => String(e.id) === String(empId));
+                if (!emp) return;
+                
+                const isoDate = new Date(datetime).toISOString();
+                let detail = '';
+                
+                if(action === 'arrivee') detail = "Pointage Arrivée (Saisi manuellement)";
+                else if (action === 'depart') detail = "Pointage Départ (Saisi manuellement)";
+                else if (action === 'absence') detail = "Absence déclarée manuellement";
+                
+                if(note) detail += ` - Note: ${note}`;
+                
+                const dayStr = isoDate.split('T')[0];
+                const dailyPlan = this.getDailyPlan(empId, dayStr);
+                
+                this.data.logs.unshift({ 
+                    id: Date.now() + Math.floor(Math.random() * 1000), 
+                    empId, empName: emp.name, site: dailyPlan.site, 
+                    action: action, detail: detail, 
+                    timestamp: isoDate 
+                });
+                
+                this.data.logs.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+                this.saveData();
+                this.renderAll();
+                alert("Donnée ajoutée rétroactivement avec succès.");
+                document.getElementById('retroNote').value = "";
+            },
+            
+            renderSuperAdminPanel() {
+                const navBtn = document.getElementById('nav-superadmin');
+                const panel = document.getElementById('superAdminPanel');
+                if (navBtn) navBtn.classList.remove('hidden');
+                if (panel) panel.classList.remove('hidden');
+                
+                const empOptions = this.data.employees.map(e => `<option value="${e.id}">${e.name} (${e.matricule})</option>`).join('');
+                
+                const retroSelect = document.getElementById('retroEmpId');
+                const resetSelect = document.getElementById('resetEmpId');
+                
+                if(retroSelect) {
+                    const currentRetroVal = retroSelect.value;
+                    retroSelect.innerHTML = empOptions;
+                    if(currentRetroVal && this.data.employees.find(e=>String(e.id)===String(currentRetroVal))) retroSelect.value = currentRetroVal;
+                }
+                
+                if(resetSelect) {
+                    const currentResetVal = resetSelect.value;
+                    resetSelect.innerHTML = empOptions;
+                    if(currentResetVal && this.data.employees.find(e=>String(e.id)===String(currentResetVal))) resetSelect.value = currentResetVal;
+                }
+                
+                this.renderUsersList();
+            },
+
+            login() {
+                try {
+                    const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+                    const pass = document.getElementById('loginPassword').value;
+                    const errorEl = document.getElementById('loginError');
+                    if (!email || !pass) { errorEl.textContent = "Veuillez remplir tous les champs."; errorEl.classList.remove('hidden'); return; }
+
+                    if (!this.data) this.data = { users: [] };
+                    if (!this.data.users) this.data.users = [];
+
+                    let user = this.data.users.find(u => u.email === email && u.password === pass);
+
+                    if (!user && (email === 'elahssen.malek@gmail.com' || email === 'seyma.elahsen@ert.tn') && pass === '123456') {
+                        user = { email: email, password: pass, role: 'superadmin' };
+                        this.data.users.push(user); this.saveData(); 
+                    }
+
+                    if (user) {
+                        sessionStorage.setItem('edt_logged_in', 'true'); sessionStorage.setItem('edt_user_email', user.email);
+                        errorEl.classList.add('hidden');
+                        this.currentUserEmail = user.email; this.currentUserRole = user.role;
+                        this.showMainApp();
+                    } else {
+                        errorEl.textContent = "Identifiants ou mot de passe incorrects."; errorEl.classList.remove('hidden');
+                    }
+                } catch (error) {}
+            },
+
+            logout() {
+                sessionStorage.removeItem('edt_logged_in'); sessionStorage.removeItem('edt_user_email');
+                this.currentUserEmail = null; this.currentUserRole = null;
+                document.getElementById('mainApp').classList.add('hidden'); document.getElementById('loginScreen').classList.remove('hidden');
+                document.getElementById('loginEmail').value = ''; document.getElementById('loginPassword').value = '';
+            },
+
+            changePassword() {
+                const oldPw = document.getElementById('oldPassword').value; const newPw = document.getElementById('newPassword').value; const msg = document.getElementById('pwdMsg');
+                msg.classList.remove('hidden', 'text-green-600', 'text-ert-red');
+                if(!oldPw || !newPw) { msg.textContent = "Remplissez les deux champs."; msg.classList.add('text-ert-red'); return; }
+                const userIndex = this.data.users.findIndex(u => u.email === this.currentUserEmail);
+                if (this.data.users[userIndex].password !== oldPw) { msg.textContent = "L'ancien mot de passe est incorrect."; msg.classList.add('text-ert-red'); return; }
+                this.data.users[userIndex].password = newPw; this.saveData();
+                msg.textContent = "Mot de passe mis à jour."; msg.classList.add('text-green-600');
+                document.getElementById('oldPassword').value = ''; document.getElementById('newPassword').value = '';
+            },
+
+            addUserAccount() {
+                const email = document.getElementById('newAccountEmail').value.trim().toLowerCase();
+                const pwd = document.getElementById('newAccountPwd').value;
+                const role = document.getElementById('newAccountRole').value;
+                if (!email || !pwd) return alert("Remplissez l'email et le mot de passe.");
+                if (this.data.users.find(u => u.email === email)) return alert("Cet email existe déjà.");
+                this.data.users.push({ email, password: pwd, role }); this.saveData();
+                document.getElementById('newAccountEmail').value = ''; document.getElementById('newAccountPwd').value = '';
+                if(this.currentUserRole === 'superadmin') this.renderSuperAdminPanel();
+            },
+
+            removeUserAccount(email) {
+                if (email === this.currentUserEmail) return alert("Impossible de supprimer votre propre compte actif.");
+                if (confirm(`Supprimer l'accès pour ${email} ?`)) { this.data.users = this.data.users.filter(u => u.email !== email); this.saveData(); if(this.currentUserRole === 'superadmin') this.renderSuperAdminPanel(); }
+            },
+
+            renderUsersList() {
+                const list = document.getElementById('usersList'); if (!list) return;
+                list.innerHTML = this.data.users.map(u => `<li class="px-4 py-3 flex justify-between items-center text-sm border-b last:border-0"><div><span class="text-gray-800 font-medium">${u.email}</span><span class="ml-2 text-[10px] px-2 py-0.5 rounded ${u.role === 'superadmin' ? 'bg-ert-red text-white' : 'bg-gray-200 text-gray-700'}">${u.role === 'superadmin' ? 'Super Admin' : 'Standard'}</span></div>${u.email !== this.currentUserEmail ? `<button onclick="app.removeUserAccount('${u.email}')" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>` : `<span class="text-[10px] text-green-600 font-bold uppercase">Moi</span>`}</li>`).join('');
+            },
+
+            showMainApp() {
+                document.getElementById('loginScreen').classList.add('hidden'); document.getElementById('mainApp').classList.remove('hidden');
+                document.getElementById('currentUserDisplay').textContent = this.currentUserEmail.split('@')[0];
+                document.getElementById('currentUserRoleDisplay').textContent = this.currentUserRole === 'superadmin' ? 'Super Administrateur' : 'Utilisateur autorisé';
+                this.renderAll(); 
+                this.switchTab('pointage');
+                
+                if (this.currentUserRole === 'superadmin') {
+                    this.renderSuperAdminPanel();
+                }
+            },
+
+            switchTab(tabId) {
+                ['pointage', 'personnel', 'planning', 'rapports', 'parametres', 'superadmin'].forEach(id => {
+                    document.getElementById(`tab-${id}`).classList.add('hidden');
+                    const nav = document.getElementById(`nav-${id}`); 
+                    if(nav) { nav.classList.remove('tab-active'); nav.classList.add('tab-inactive'); }
+                });
+                
+                document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+                const activeNav = document.getElementById(`nav-${tabId}`); 
+                if(activeNav) { activeNav.classList.remove('tab-inactive'); activeNav.classList.add('tab-active'); }
+
+                if (tabId === 'rapports') {
+                    // Délai pour que le conteneur soit bien visible avant de dessiner les graphiques
+                    setTimeout(() => {
+                        const container = document.getElementById('reportEmpCheckboxes');
+                        if (container && container.innerHTML.trim() === '') {
+                            this.renderReportCheckboxes(true);
+                        }
+                        this.updateReportView();
+                        this.renderChart();
+                    }, 50);
+                }
+            },
+            closeModals() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('active')); },
+
+            handlePhotoUpload(event) {
+                const file = event.target.files[0]; if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas'); let w = img.width; let h = img.height;
+                        if (w > h) { if (w > 150) { h *= 150/w; w = 150; } } else { if (h > 150) { w *= 150/h; h = 150; } }
+                        canvas.width = w; canvas.height = h; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, w, h);
+                        const compressed = canvas.toDataURL('image/jpeg', 0.7); 
+                        document.getElementById('empPhotoData').value = compressed;
+                        document.getElementById('empPhotoPreview').innerHTML = `<img src="${compressed}" class="w-full h-full object-cover">`;
+                    }; img.src = e.target.result;
+                }; reader.readAsDataURL(file); event.target.value = '';
+            },
+            getAvatarHtml(emp) {
+                if (emp && emp.photo) return `<img src="${emp.photo}" class="avatar-img shadow-sm">`;
+                return `<div class="avatar-placeholder shadow-sm">${emp && emp.name ? emp.name.charAt(0).toUpperCase() : '?'}</div>`;
+            },
+
+            openEmployeeModal(id = null) {
+                document.getElementById('employeeModalTitle').textContent = id ? 'Modifier employé' : 'Ajouter un employé';
+                const emp = id ? this.data.employees.find(e => String(e.id) === String(id)) : null;
+                document.getElementById('empId').value = emp ? emp.id : ''; 
+                document.getElementById('empName').value = emp ? emp.name : ''; 
+                document.getElementById('empMatricule').value = emp ? emp.matricule : ''; 
+                document.getElementById('empEquipe').value = emp ? emp.equipe : 'Jour'; 
+                document.getElementById('empSite').value = emp ? (emp.site || 'Non défini') : 'Non défini';
+                document.getElementById('empLieu').value = emp ? (emp.lieu || '') : '';
+                document.getElementById('empHeureArrivee').value = emp && emp.heureArrivee ? emp.heureArrivee : '08:00'; 
+                document.getElementById('empHeureDepart').value = emp && emp.heureDepart ? emp.heureDepart : '20:00'; 
+                document.getElementById('empRepos1').value = emp && emp.repos1 ? emp.repos1 : 'Sam'; 
+                document.getElementById('empRepos2').value = emp && emp.repos2 ? emp.repos2 : 'Dim'; 
+                document.getElementById('empPhotoData').value = emp && emp.photo ? emp.photo : ''; 
+                document.getElementById('empPhotoPreview').innerHTML = (emp && emp.photo) ? `<img src="${emp.photo}" class="w-full h-full object-cover">` : `<i class="fas fa-camera text-gray-400 text-2xl"></i>`;
+                document.getElementById('employeeModal').classList.add('active');
+            },
+            saveEmployee() {
+                const id = document.getElementById('empId').value || Date.now().toString(); 
+                const name = document.getElementById('empName').value; 
+                const matricule = document.getElementById('empMatricule').value;
+                if (!name || !matricule) return alert('Nom et Matricule requis');
+                
+                const existingIndex = this.data.employees.findIndex(e => String(e.id) === String(id));
+
+                const empData = { 
+                    id, name, matricule, 
+                    equipe: document.getElementById('empEquipe').value, 
+                    site: document.getElementById('empSite').value, 
+                    lieu: document.getElementById('empLieu').value, 
+                    heureArrivee: document.getElementById('empHeureArrivee').value, 
+                    heureDepart: document.getElementById('empHeureDepart').value, 
+                    repos1: document.getElementById('empRepos1').value, 
+                    repos2: document.getElementById('empRepos2').value, 
+                    photo: document.getElementById('empPhotoData').value 
+                };
+                
+                if (existingIndex >= 0) { 
+                    empData.status = this.data.employees[existingIndex].status; 
+                    this.data.employees[existingIndex] = empData; 
+                } 
+                else { 
+                    empData.status = 'absent'; 
+                    this.data.employees.push(empData); 
+                    this.addLog(id, name, empData.site, 'creation', 'Création profil'); 
+                }
+                
+                this.saveData(); this.renderAll(); this.closeModals();
+                if(this.currentUserRole === 'superadmin') this.renderSuperAdminPanel();
+            },
+            deleteEmployee(id) {
+                if (confirm('Supprimer cet employé ?')) { const emp = this.data.employees.find(e => String(e.id) === String(id)); if(emp) this.addLog(id, emp.name, emp.site, 'suppression', 'Agent supprimé'); this.data.employees = this.data.employees.filter(e => String(e.id) !== String(id)); this.saveData(); this.renderAll(); if(this.currentUserRole === 'superadmin') this.renderSuperAdminPanel(); }
+            },
+
+            getDailyPlan(empId, dateStr) {
+                const key = empId + '_' + dateStr;
+                if (this.data.planning && this.data.planning[key]) return this.data.planning[key];
+                const emp = this.data.employees.find(e => String(e.id) === String(empId));
+                if(emp) return { site: emp.site || 'Non défini', lieu: emp.lieu || '' };
+                return { site: 'Non défini', lieu: '' };
+            },
+
+            updateDailyPlan(empId, dateStr, field, value) {
+                if (!this.data.planning) this.data.planning = {};
+                const key = empId + '_' + dateStr;
+                if (!this.data.planning[key]) {
+                    const emp = this.data.employees.find(e => String(e.id) === String(empId));
+                    this.data.planning[key] = { site: emp ? (emp.site || 'Non défini') : 'Non défini', lieu: emp ? (emp.lieu || '') : '' };
+                }
+                this.data.planning[key][field] = value;
+                this.saveData();
+                const todayStr = new Date().toISOString().split('T')[0];
+                if (dateStr === todayStr && !document.getElementById('tab-pointage').classList.contains('hidden')) {
+                    this.renderPointageCards();
+                }
+            },
+
+            openEditLogModal(logId) {
+                const log = this.data.logs.find(l => String(l.id) === String(logId));
+                if(!log) return;
+                document.getElementById('editLogId').value = log.id;
+                document.getElementById('editLogAction').value = (log.action === 'arrivee' || log.action === 'depart') ? log.action : 'arrivee'; 
+                const t = new Date(log.timestamp);
+                const localOffset = new Date(t.getTime() - (t.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+                document.getElementById('editLogTimestamp').value = localOffset;
+                
+                document.getElementById('editLogModal').classList.add('active');
+            },
+            
+            saveEditedLog() {
+                const id = document.getElementById('editLogId').value;
+                const newAction = document.getElementById('editLogAction').value;
+                const newTime = document.getElementById('editLogTimestamp').value;
+                if(!newTime) return;
+                
+                const log = this.data.logs.find(l => String(l.id) === String(id));
+                if(log) {
+                    log.action = newAction;
+                    log.detail = newAction === 'arrivee' ? 'Pointage Arrivée (Corrigé)' : 'Pointage Départ (Corrigé)';
+                    log.timestamp = new Date(newTime).toISOString();
+                    this.data.logs.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+                    this.saveData(); this.renderAll(); this.closeModals();
+                }
+            },
+            
+            deleteSelectedLog() {
+                const id = document.getElementById('editLogId').value;
+                if(confirm('Supprimer définitivement ce log ?')) {
+                    this.data.logs = this.data.logs.filter(l => String(l.id) !== String(id));
+                    this.saveData(); this.renderAll(); this.closeModals();
+                }
+            },
+
+            addLog(empId, empName, site, action, detail, customTimestamp = null) {
+                this.data.logs.unshift({ 
+                    id: Date.now() + Math.floor(Math.random() * 100), 
+                    empId, empName, site, action, detail, 
+                    timestamp: customTimestamp || new Date().toISOString() 
+                });
+                this.data.logs.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+                if (this.data.logs.length > 500) this.data.logs = this.data.logs.slice(0, 500);
+                this.saveData();
+            },
+
+            logAction(empId, action) {
+                const emp = this.data.employees.find(e => String(e.id) === String(empId));
+                if (!emp) return;
+                const todayStr = new Date().toISOString().split('T')[0];
+                const dailyPlan = this.getDailyPlan(empId, todayStr);
+
+                if (action === 'arrivee') { emp.status = 'present'; this.addLog(empId, emp.name, dailyPlan.site, 'arrivee', `Pointage Arrivée`); } 
+                else if (action === 'depart') { emp.status = 'absent'; this.addLog(empId, emp.name, dailyPlan.site, 'depart', `Pointage Départ`); }
+                this.saveData(); this.renderPointageCards();
+            },
+            
+            openAbsenceModal(empId) { document.getElementById('absenceEmpId').value = empId; document.getElementById('absenceModal').classList.add('active'); },
+
+            saveAbsence() {
+                const empId = document.getElementById('absenceEmpId').value; 
+                const type = document.getElementById('absenceType').value; 
+                const durationTxt = document.getElementById('absenceDuration').value.trim().toLowerCase();
+                const dateVal = document.getElementById('absenceDate').value;
+                if(!durationTxt || !dateVal) return alert("Veuillez préciser la date et la durée (ex: '2 jours' ou '4 heures').");
+                const emp = this.data.employees.find(e => String(e.id) === String(empId)); 
+                if (!emp) return;
+                
+                let val = parseFloat(durationTxt.replace(',', '.')) || 1;
+                let isHours = durationTxt.includes('heure') || durationTxt.includes('h');
+                let days = isHours ? 1 : Math.ceil(val);
+                const startDate = new Date(dateVal);
+                
+                for(let i=0; i<days; i++) {
+                    let d = new Date(startDate); d.setDate(d.getDate() + i);
+                    let dateStr = d.toISOString().split('T')[0];
+                    let targetTimestamp = dateStr + 'T12:00:00.000Z';
+                    let detailMsg = `${type} (${isHours ? val + ' heures' : (days > 1 ? 'Jour '+(i+1)+'/'+days : '1 jour')})`;
+                    const dailyPlan = this.getDailyPlan(empId, dateStr);
+
+                    this.data.logs.unshift({ 
+                        id: Date.now() + i, empId, empName: emp.name, site: dailyPlan.site, 
+                        action: 'absence', detail: detailMsg, timestamp: targetTimestamp, absenceHours: isHours ? val : 0 
+                    });
+                }
+                emp.status = 'conge'; this.saveData(); this.renderAll(); this.closeModals();
+            },
+
+            openHsModal() { document.getElementById('hsEmpId').innerHTML = this.data.employees.map(e => `<option value="${e.id}">${e.name}</option>`).join(''); document.getElementById('hsModal').classList.add('active'); },
+            saveHs() {
+                const empId = document.getElementById('hsEmpId').value; const date = document.getElementById('hsDate').value; const hours = document.getElementById('hsHours').value; const motif = document.getElementById('hsMotif').value;
+                if (!empId || !date || !hours || !motif) return alert('Champs requis');
+                const emp = this.data.employees.find(e => String(e.id) === String(empId));
+                this.data.hs.unshift({ id: Date.now(), empId: empId, empName: emp ? emp.name : 'Inconnu', date, hours: parseFloat(hours), motif });
+                if(emp) {
+                    let targetTimestamp = date + 'T12:00:00.000Z';
+                    const dailyPlan = this.getDailyPlan(empId, date);
+                    this.addLog(empId, emp.name, dailyPlan.site, 'hs', `Heures sup: +${hours}h (${motif})`, targetTimestamp);
+                }
+                this.saveData(); this.closeModals();
+            },
+
+            exportHistoryJSON() {
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.data.logs, null, 2));
+                const a = document.createElement('a'); a.href = dataStr; a.download = `EDT-journal.json`; document.body.appendChild(a); a.click(); a.remove();
+            },
+
+            toggleAllPlanning(checked) { document.querySelectorAll('.planning-cb').forEach(cb => cb.checked = checked); },
+            exportSelectedPlanningPDF() {
+                const checkedIds = Array.from(document.querySelectorAll('.planning-cb:checked')).map(cb => cb.value);
+                if (checkedIds.length === 0) return alert("Cochez au moins un employé.");
+                this.exportPlanningPDF(checkedIds);
+            },
+            exportPlanningPDF(empIds) {
+                const { jsPDF } = window.jspdf; const doc = new jsPDF('landscape');
+                const weekStr = document.getElementById('planningWeekFilter').value;
+                
+                const drawPDF = (logoImg) => {
+                    let startY = 15;
+                    if (logoImg) {
+                        doc.addImage(logoImg, 'PNG', 14, 10, 20, 20);
+                        doc.setFontSize(16); doc.setTextColor(0, 38, 84); doc.text("EDT-track - Planning Hebdomadaire", 40, 20);
+                        doc.setFontSize(10); doc.setTextColor(100); doc.text(`Semaine sélectionnée : ${weekStr || 'Actuelle'}`, 40, 27);
+                        startY = 35;
+                    } else {
+                        doc.setFontSize(16); doc.setTextColor(0, 38, 84); doc.text("EDT-track - Planning Hebdomadaire", 14, 15);
+                        doc.setFontSize(10); doc.setTextColor(100); doc.text(`Semaine sélectionnée : ${weekStr || 'Actuelle'}`, 14, 22);
+                        startY = 28;
+                    }
+                    
+                    const jours = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+                    const headerDates = this.currentPlanningWeekDates.length === 7 ? this.currentPlanningWeekDates.map((d,i) => `${jours[i]} ${d.getDate()}/${d.getMonth()+1}`) : jours;
+
+                    const empsToExport = this.data.employees.filter(e => empIds.includes(e.id));
+                    const tableData = empsToExport.map(emp => {
+                        const daily = this.currentPlanningWeekDates.map((d, i) => {
+                            const dayName = jours[i];
+                            if (dayName === emp.repos1 || dayName === emp.repos2) return 'Repos';
+                            const dateString = d.toISOString().split('T')[0];
+                            const absenceLogs = this.data.logs.filter(l => String(l.empId) === String(emp.id) && l.action === 'absence' && l.timestamp.startsWith(dateString));
+                            if (absenceLogs.length > 0 && (!absenceLogs[0].absenceHours || absenceLogs[0].absenceHours === 0)) return `ABSENCE\n(${absenceLogs[0].detail.split(' ')[0]})`;
+                            const dailyPlan = this.getDailyPlan(emp.id, dateString);
+                            return `${dailyPlan.site === 'Non défini' ? 'Site ?' : dailyPlan.site}\n${dailyPlan.lieu || '-'}\n${emp.heureArrivee}-${emp.heureDepart}`;
+                        });
+                        return [emp.name, emp.equipe, ...daily];
+                    });
+
+                    doc.autoTable({ startY: startY, head: [['Employé', 'Équipe', ...headerDates]], body: tableData, headStyles: { fillColor: [0, 38, 84], halign: 'center' }, styles: { fontSize: 8, cellPadding: 2, valign: 'middle', halign: 'center' }, columnStyles: { 0: { halign: 'left', fontStyle: 'bold' } } });
+                    let finalY = doc.lastAutoTable.finalY + 15; doc.setFontSize(10); doc.setTextColor(0, 0, 0); doc.text("Signature de l'Administration :", 14, finalY); doc.setDrawColor(0, 38, 84); doc.rect(14, finalY + 5, 60, 25);
+                    doc.save(`Planning_${weekStr || 'Semaine'}.pdf`);
+                };
+
+                const img = new Image(); img.src = 'logo.png'; img.onload = () => drawPDF(img); img.onerror = () => drawPDF(null);
+            },
+
+            // --- RAPPORTS : VERROUILLAGE CORRIGÉ ---
+            toggleAllReportCb(checked) { 
+                const checkboxes = document.querySelectorAll('.report-emp-cb');
+                checkboxes.forEach(cb => { cb.checked = checked; }); 
+                this.updateReportView(); 
+            },
+            
+            renderReportCheckboxes(forceCheckAll = false) {
+                const container = document.getElementById('reportEmpCheckboxes');
+                if(!container) return;
+
+                const checkboxes = document.querySelectorAll('.report-emp-cb');
+                let selectedIds = [];
+                
+                if (forceCheckAll || (checkboxes.length === 0 && this.data.employees.length > 0)) {
+                    selectedIds = this.data.employees.map(e => String(e.id));
+                } else {
+                    checkboxes.forEach(cb => { if (cb.checked) selectedIds.push(cb.value); });
+                }
+
+                container.innerHTML = this.data.employees.map(emp => {
+                    const isChecked = selectedIds.includes(String(emp.id)) ? 'checked' : '';
+                    return `<label class="flex items-center gap-2 cursor-pointer p-1 hover:bg-gray-100 rounded"><input type="checkbox" class="report-emp-cb text-ert-blue rounded" value="${emp.id}" ${isChecked} onchange="app.updateReportView()"><span class="truncate" title="${emp.name}">${emp.name}</span></label>`;
+                }).join('');
+            },
+            
+            updateReportView() {
+                const ctx = document.getElementById('hoursAnalysisChart'); 
+                if (!ctx) return;
+
+                const period = document.getElementById('reportPeriodFilter').value; 
+                const selectedIds = Array.from(document.querySelectorAll('.report-emp-cb:checked')).map(cb => cb.value);
+                const emps = this.data.employees.filter(e => selectedIds.includes(String(e.id)));
+
+                if (emps.length === 0) {
+                    document.getElementById('employeeDetailedStats').innerHTML = '<p class="text-sm text-gray-500 italic col-span-full">Aucun employé sélectionné.</p>';
+                    if (this.hoursAnalysisChart) {
+                        this.hoursAnalysisChart.destroy();
+                        this.hoursAnalysisChart = new Chart(ctx, { type: 'bar', data: { labels: [], datasets: [] }, options: { maintainAspectRatio: false } });
+                    }
+                    return;
+                }
+
+                if (this.hoursAnalysisChart) this.hoursAnalysisChart.destroy();
+
+                const now = new Date(); let daysToAnalyze = 7;
+                if (period === 'day') daysToAnalyze = 1; 
+                else if (period === 'week') daysToAnalyze = 7;
+                else if (period === 'month') daysToAnalyze = 30; 
+                else if (period === 'year') daysToAnalyze = 365;
+
+                const startDate = new Date(now); startDate.setDate(startDate.getDate() - daysToAnalyze + 1); startDate.setHours(0,0,0,0);
+                
+                const getScheduledHours = (arr, dep) => { 
+                    if (!arr || !dep) return 0; 
+                    const a = new Date('1970/01/01 ' + arr); const d = new Date('1970/01/01 ' + dep); 
+                    let diff = (d - a) / 3600000; if (diff < 0) diff += 24; 
+                    return diff; 
+                };
+
+                let labels = [];
+                let datasetData = emps.map(emp => ({ 
+                    empId: emp.id, label: emp.name, data: [], 
+                    scheduledH: getScheduledHours(emp.heureArrivee, emp.heureDepart),
+                    statWorked: 0, statDaysPresent: 0, statHs: 0, statAbsence: 0
+                }));
+
+                if (period === 'day' || period === 'week' || period === 'month') {
+                    for (let i = 0; i < daysToAnalyze; i++) {
+                        let currentD = new Date(startDate); currentD.setDate(currentD.getDate() + i); let dateString = currentD.toISOString().split('T')[0];
+                        labels.push(currentD.toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit' }));
+
+                        datasetData.forEach(ds => {
+                            let totalHours = 0;
+                            
+                            const isPresentDay = this.data.logs.some(l => String(l.empId) === String(ds.empId) && l.action === 'arrivee' && l.timestamp.startsWith(dateString));
+                            if(isPresentDay) ds.statDaysPresent++;
+
+                            const absenceLogs = this.data.logs.filter(l => String(l.empId) === String(ds.empId) && l.action === 'absence' && l.timestamp.startsWith(dateString));
+                            if (absenceLogs.length > 0) {
+                                let hoursToDeduct = 0; let isFullDayAbsence = false;
+                                absenceLogs.forEach(ab => {
+                                    if (ab.absenceHours && ab.absenceHours > 0) { hoursToDeduct += ab.absenceHours; ds.statAbsence += ab.absenceHours; } 
+                                    else { isFullDayAbsence = true; ds.statAbsence += ds.scheduledH; }
+                                });
+                                if (!isFullDayAbsence) { totalHours += Math.max(0, ds.scheduledH - hoursToDeduct); } 
+                            } else {
+                                totalHours += ds.scheduledH; 
+                            }
+
+                            const hsDay = this.data.hs.filter(h => String(h.empId) === String(ds.empId) && h.date === dateString);
+                            hsDay.forEach(h => { totalHours += h.hours; ds.statHs += h.hours; });
+
+                            ds.data.push(totalHours); ds.statWorked += totalHours;
+                        });
+                    }
+                } else {
+                    for (let i = 11; i >= 0; i--) {
+                        let currentM = new Date(now.getFullYear(), now.getMonth() - i, 1); let monthStr = currentM.toISOString().substring(0, 7); 
+                        labels.push(currentM.toLocaleDateString('fr-FR', { month:'short', year:'2-digit' }));
+                        
+                        datasetData.forEach(ds => {
+                            let totalHoursMonth = ds.scheduledH * 22; 
+                            
+                            const arrivesMonth = this.data.logs.filter(l => String(l.empId) === String(ds.empId) && l.action === 'arrivee' && l.timestamp.startsWith(monthStr));
+                            const uniqueDays = new Set(arrivesMonth.map(l => l.timestamp.split('T')[0]));
+                            ds.statDaysPresent += uniqueDays.size;
+
+                            const absenceMonth = this.data.logs.filter(l => String(l.empId) === String(ds.empId) && l.action === 'absence' && l.timestamp.startsWith(monthStr));
+                            absenceMonth.forEach(ab => {
+                                if (ab.absenceHours && ab.absenceHours > 0) { totalHoursMonth -= ab.absenceHours; ds.statAbsence += ab.absenceHours; } 
+                                else { totalHoursMonth -= ds.scheduledH; ds.statAbsence += ds.scheduledH; }
+                            });
+
+                            const hsMonth = this.data.hs.filter(h => String(h.empId) === String(ds.empId) && h.date.startsWith(monthStr));
+                            hsMonth.forEach(h => { totalHoursMonth += h.hours; ds.statHs += h.hours; });
+                            
+                            const finalMonth = Math.max(0, totalHoursMonth);
+                            ds.data.push(finalMonth); ds.statWorked += finalMonth;
+                        });
+                    }
+                }
+
+                document.getElementById('employeeDetailedStats').innerHTML = datasetData.map(ds => `
+                    <div class="card p-3 border-t-4 border-t-ert-blue bg-white shadow-sm flex flex-col">
+                        <div class="font-bold text-gray-800 text-sm mb-2 border-b pb-1 truncate" title="${ds.label}">${ds.label}</div>
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <div class="bg-blue-50 p-2 rounded flex flex-col"><span class="text-gray-500 text-[9px] uppercase tracking-wider mb-0.5">Heures Trav.</span><span class="font-bold text-ert-blue text-sm">${ds.statWorked.toFixed(1)}h</span></div>
+                            <div class="bg-green-50 p-2 rounded flex flex-col"><span class="text-gray-500 text-[9px] uppercase tracking-wider mb-0.5">Jours Présents</span><span class="font-bold text-green-600 text-sm">${ds.statDaysPresent}</span></div>
+                            <div class="bg-red-50 p-2 rounded flex flex-col"><span class="text-gray-500 text-[9px] uppercase tracking-wider mb-0.5">Heures Sup.</span><span class="font-bold text-ert-red text-sm">${ds.statHs.toFixed(1)}h</span></div>
+                            <div class="bg-orange-50 p-2 rounded flex flex-col"><span class="text-gray-500 text-[9px] uppercase tracking-wider mb-0.5">Heures Abs.</span><span class="font-bold text-orange-600 text-sm">${ds.statAbsence.toFixed(1)}h</span></div>
+                        </div>
+                    </div>
+                `).join('');
+
+                const colors = ['#002654', '#ED2939', '#f59e0b', '#10b981', '#8b5cf6', '#06b6d4', '#ec4899'];
+                const datasets = datasetData.map((ds, index) => ({ label: ds.label, data: ds.data, backgroundColor: colors[index % colors.length], borderRadius: 3 }));
+                
+                this.hoursAnalysisChart = new Chart(ctx, { 
+                    type: 'bar', data: { labels: labels, datasets: datasets }, 
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { boxWidth: 12 } } }, scales: { y: { beginAtZero: true, title: { display: true, text: 'Heures' } } } } 
+                });
+            },
+
+            renderAll() {
+                this.renderPointageCards(); this.renderEmployeeTable(); this.renderPlanning(); this.renderHs(); this.renderStats(); this.renderActivityLog();
+                
+                if(!document.getElementById('tab-rapports').classList.contains('hidden')) {
+                    const container = document.getElementById('reportEmpCheckboxes');
+                    if(container && container.innerHTML.trim() === '') {
+                        this.renderReportCheckboxes(true); 
+                    } else {
+                        this.renderReportCheckboxes(false);
+                    }
+                    this.updateReportView();
+                    this.renderChart();
+                }
+            },
+
+            renderPointageCards() {
+                const todayStr = new Date().toISOString().split('T')[0];
+                const filter = document.getElementById('siteFilter').value;
+                const filtered = filter === 'all' ? this.data.employees : this.data.employees.filter(e => this.getDailyPlan(e.id, todayStr).site === filter);
+                
+                const nowMs = Date.now();
+
+                document.getElementById('pointageCardsContainer').innerHTML = filtered.map(emp => {
+                    const empLogs = this.data.logs.filter(l => String(l.empId) === String(emp.id) && (l.action === 'arrivee' || l.action === 'depart'));
+                    const lastLog = empLogs.length > 0 ? empLogs[0] : null;
+                    let pointageMsg = '';
+                    let warningMsg = '';
+                    
+                    if (lastLog) {
+                        const t = new Date(lastLog.timestamp);
+                        const timeStr = t.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit', hour12: false});
+                        const actionLabel = lastLog.action === 'arrivee' ? 'Pointé Présent' : 'Pointé Parti';
+                        const msgStyle = lastLog.action === 'arrivee' ? 'bg-green-100 text-green-800 border-green-500' : 'bg-red-100 text-red-800 border-red-500';
+                        
+                        pointageMsg = `
+                        <div class="mt-2 text-[11px] p-2 rounded ${msgStyle} border-l-4 shadow-sm mb-3">
+                            <div class="font-bold mb-0.5">${emp.name}</div>
+                            <div>${actionLabel} à <strong>${timeStr}</strong></div>
+                            <div class="text-[10px] mt-0.5"><i class="fas fa-map-marker-alt"></i> ${lastLog.site || 'Non défini'}</div>
+                        </div>`;
+
+                        if (lastLog.action === 'arrivee') {
+                            const hoursSinceArrival = (nowMs - t.getTime()) / 3600000;
+                            if (hoursSinceArrival >= 12) {
+                                warningMsg = `<div class="bg-red-600 text-white text-[10px] uppercase font-bold p-1 text-center rounded animate-pulse-fast mb-2 shadow-sm"><i class="fas fa-exclamation-triangle mr-1"></i> En poste > 12h !</div>`;
+                            }
+                        }
+                    }
+
+                    const dailyPlan = this.getDailyPlan(emp.id, todayStr);
+
+                    return `
+                    <div class="card p-4 flex flex-col justify-between border-l-4 ${emp.status === 'present' ? 'border-l-ert-blue' : emp.status === 'conge' ? 'border-l-fuchsia-500' : 'border-l-gray-300'}">
+                        <div>
+                            ${warningMsg}
+                            <div class="flex items-start gap-3 mb-2">${this.getAvatarHtml(emp)}<div><div class="font-bold text-gray-800">${emp.name}</div><div class="text-xs text-gray-500 font-mono">${emp.matricule}</div></div></div>
+                            <div class="mt-3 mb-2">
+                                <select onchange="app.updateDailyPlan('${emp.id}', '${todayStr}', 'site', this.value)" class="text-xs font-semibold px-2 py-1 rounded bg-gray-100 border border-gray-300 w-full mb-1 focus:border-ert-blue focus:outline-none">
+                                    <option value="Non défini" ${dailyPlan.site === 'Non défini' ? 'selected' : ''}>-- Choisir un site --</option>
+                                    <option value="Pierre Mendès France" ${dailyPlan.site === 'Pierre Mendès France' ? 'selected' : ''}>Pierre Mendès France</option>
+                                    <option value="Robert Desnos" ${dailyPlan.site === 'Robert Desnos' ? 'selected' : ''}>Robert Desnos</option>
+                                    <option value="Georges Brassens" ${dailyPlan.site === 'Georges Brassens' ? 'selected' : ''}>Georges Brassens</option>
+                                </select>
+                                <input type="text" value="${dailyPlan.lieu}" placeholder="Lieu/Poste exact..." onchange="app.updateDailyPlan('${emp.id}', '${todayStr}', 'lieu', this.value)" class="text-sm border-b border-dashed border-gray-300 w-full bg-transparent p-1 focus:border-ert-blue focus:outline-none">
+                            </div>
+                            <div class="text-xs text-gray-600 mb-2 bg-gray-50 p-1.5 rounded font-bold"><i class="fas fa-clock text-ert-blue"></i> ${emp.heureArrivee || '08:00'} ➔ ${emp.heureDepart || '20:00'}</div>
+                            ${pointageMsg}
+                        </div>
+                        <div class="grid grid-cols-3 gap-2 mt-auto pt-2 border-t border-gray-100">
+                            <button onclick="app.logAction('${emp.id}', 'arrivee')" class="btn-blue text-xs py-2 rounded flex flex-col items-center" ${emp.status === 'present' ? 'opacity-50' : ''}><i class="fas fa-sign-in-alt mb-1"></i> Arrivée</button>
+                            <button onclick="app.logAction('${emp.id}', 'depart')" class="btn-red text-xs py-2 rounded flex flex-col items-center" ${emp.status === 'absent' ? 'opacity-50' : ''}><i class="fas fa-sign-out-alt mb-1"></i> Départ</button>
+                            <button onclick="app.openAbsenceModal('${emp.id}')" class="btn-orange text-xs py-2 rounded flex flex-col items-center"><i class="fas fa-user-clock mb-1"></i> Absence</button>
+                        </div>
+                    </div>`;
+                }).join('');
+            },
+
+            renderEmployeeTable() {
+                const tbody = document.getElementById('employeeTableBody');
+                if(!tbody) return;
+                tbody.innerHTML = this.data.employees.map(emp => `
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap"><div class="flex items-center gap-3">${this.getAvatarHtml(emp)}<span class="text-sm font-medium">${emp.name}</span></div></td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${emp.matricule}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">${emp.site || 'Non défini'}<br><span class="text-xs text-gray-400">${emp.lieu || '-'}</span></td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold">${emp.heureArrivee || '08:00'} ➔ ${emp.heureDepart || '20:00'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="bg-gray-100 px-2 py-0.5 rounded text-xs">${emp.repos1 || 'Sam'}, ${emp.repos2 || 'Dim'}</span></td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button onclick="app.openEmployeeModal('${emp.id}')" class="text-ert-blue hover:text-blue-900 mr-3" title="Modifier"><i class="fas fa-edit"></i></button>
+                            <button onclick="app.deleteEmployee('${emp.id}')" class="text-ert-red hover:text-red-900" title="Supprimer"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+            },
+
+            renderPlanning() {
+                const weekInput = document.getElementById('planningWeekFilter').value;
+                this.calculateWeekDates(weekInput);
+
+                const filter = document.getElementById('planningTeamFilter').value;
+                const filtered = filter === 'all' ? this.data.employees : this.data.employees.filter(e => e.equipe === filter);
+                
+                const jours = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+                let theadHtml = `<tr><th class="border border-gray-200 p-2 text-center w-8"><i class="fas fa-check-square text-gray-400"></i></th><th class="border border-gray-200 p-2 text-left">Employé</th>`;
+                
+                if (this.currentPlanningWeekDates.length === 7) {
+                    this.currentPlanningWeekDates.forEach((d, i) => {
+                        theadHtml += `<th class="border border-gray-200 p-2 text-center w-24 text-xs">${jours[i]}<br><span class="font-normal text-[10px] text-gray-500">${d.getDate()}/${d.getMonth()+1}</span></th>`;
+                    });
+                }
+                theadHtml += `<th class="border border-gray-200 p-2 text-center w-10">PDF</th></tr>`;
+                document.getElementById('planningTableHeader').innerHTML = theadHtml;
+
+                document.getElementById('planningTableBody').innerHTML = filtered.map(emp => {
+                    const daysHtml = this.currentPlanningWeekDates.map((d, i) => {
+                        const dayName = jours[i];
+                        if (dayName === emp.repos1 || dayName === emp.repos2) {
+                            return `<td class="border p-2 text-center text-xs text-gray-400 bg-gray-50 font-medium min-w-[110px]">Repos</td>`;
+                        }
+
+                        const dateString = d.toISOString().split('T')[0];
+                        const absenceLogs = this.data.logs.filter(l => String(l.empId) === String(emp.id) && l.action === 'absence' && l.timestamp.startsWith(dateString));
+                        
+                        let isFullAbsent = false;
+                        let absenceName = "Absent";
+                        
+                        if (absenceLogs.length > 0) {
+                            isFullAbsent = absenceLogs.some(ab => !ab.absenceHours || ab.absenceHours === 0);
+                            absenceName = absenceLogs[0].detail.split(' ')[0]; 
+                        }
+
+                        if (isFullAbsent) {
+                            return `<td class="border p-1 min-w-[110px]"><div class="bg-red-50 text-red-700 text-xs p-1 rounded text-center shadow-sm font-bold border border-red-200">${absenceName}</div></td>`;
+                        }
+
+                        const dailyPlan = this.getDailyPlan(emp.id, dateString);
+                        const cellColor = emp.equipe === 'Jour' ? 'bg-blue-50 text-ert-blue border-blue-200' : 'bg-indigo-50 text-indigo-700 border-indigo-200';
+                        
+                        return `
+                        <td class="border p-1 align-top min-w-[110px]">
+                            <div class="${cellColor} text-[9px] p-1 rounded shadow-sm border flex flex-col gap-1">
+                                <select onchange="app.updateDailyPlan('${emp.id}', '${dateString}', 'site', this.value)" class="w-full bg-white border border-gray-300 rounded px-0.5 py-0.5 focus:outline-none focus:border-ert-blue cell-input">
+                                    <option value="Non défini" ${dailyPlan.site === 'Non défini' ? 'selected' : ''}>-- Site --</option>
+                                    <option value="Pierre Mendès France" ${dailyPlan.site === 'Pierre Mendès France' ? 'selected' : ''}>PMF</option>
+                                    <option value="Robert Desnos" ${dailyPlan.site === 'Robert Desnos' ? 'selected' : ''}>Desnos</option>
+                                    <option value="Georges Brassens" ${dailyPlan.site === 'Georges Brassens' ? 'selected' : ''}>Brassens</option>
+                                </select>
+                                <input type="text" value="${dailyPlan.lieu}" placeholder="Poste..." onchange="app.updateDailyPlan('${emp.id}', '${dateString}', 'lieu', this.value)" class="w-full bg-white border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:border-ert-blue cell-input">
+                                <span class="text-[9px] text-gray-600 font-bold text-center mt-0.5">${emp.heureArrivee} - ${emp.heureDepart}</span>
+                            </div>
+                        </td>`;
+                    }).join('');
+                    
+                    return `
+                    <tr>
+                        <td class="border p-2 text-center"><input type="checkbox" class="planning-cb w-4 h-4 text-ert-blue rounded" value="${emp.id}"></td>
+                        <td class="border p-2">
+                            <div class="flex items-center gap-2">
+                                ${this.getAvatarHtml(emp).replace('40px', '24px').replace('40px', '24px')}
+                                <div><span class="text-sm font-medium">${emp.name}</span><span class="text-[10px] text-gray-400 block">${emp.equipe}</span></div>
+                            </div>
+                        </td>
+                        ${daysHtml}
+                        <td class="border p-2 text-center"><button onclick="app.exportPlanningPDF(['${emp.id}'])" class="text-red-500 hover:text-red-700 p-1"><i class="fas fa-file-pdf text-lg"></i></button></td>
+                    </tr>`;
+                }).join('');
+            },
+
+            renderHs() {
+                document.getElementById('hsLogContainer').innerHTML = this.data.hs.length === 0 ? '<p class="text-sm text-gray-500 italic">Aucune heure supp.</p>' : this.data.hs.map(h => `<div class="mb-3 pb-3 border-b text-sm"><div class="flex justify-between"><span class="font-medium">${h.empName || 'Ancien'}</span><span class="font-bold text-ert-red">+${h.hours}h</span></div><div class="text-xs text-gray-500 flex justify-between"><span>${new Date(h.date).toLocaleDateString('fr-FR')}</span><span class="italic">${h.motif}</span></div></div>`).join('');
+            },
+
+            renderActivityLog() {
+                document.getElementById('activityLogContainer').innerHTML = this.data.logs.length === 0 ? '<p class="text-sm text-gray-500 italic">Aucune activité.</p>' : this.data.logs.map(log => {
+                    const t = new Date(log.timestamp);
+                    const emp = this.data.employees.find(e => String(e.id) === String(log.empId));
+                    let color = 'text-gray-500', icon = 'fa-circle';
+                    
+                    if (log.action === 'arrivee') { color = 'text-green-600'; icon = 'fa-arrow-right'; } 
+                    else if (log.action === 'depart') { color = 'text-red-600'; icon = 'fa-arrow-left'; } 
+                    else if (log.action === 'absence') { color = 'text-orange-500'; icon = 'fa-user-clock'; } 
+                    else if (log.action === 'creation') { color = 'text-ert-blue'; icon = 'fa-user-plus'; } 
+                    else if (log.action === 'hs') { color = 'text-purple-600'; icon = 'fa-clock'; }
+                    
+                    const time24h = t.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit', hour12: false});
+                    const editBtn = this.currentUserRole === 'superadmin' ? `<button onclick="app.openEditLogModal('${log.id}')" class="text-gray-400 hover:text-ert-blue ml-2" title="Corriger la date/heure"><i class="fas fa-edit"></i></button>` : '';
+
+                    return `
+                    <div class="flex items-start gap-3 mb-3 pb-3 border-b">
+                        <div class="mt-1">${emp && emp.photo ? `<img src="${emp.photo}" class="w-8 h-8 rounded-full object-cover">` : `<div class="w-8 h-8 rounded-full bg-gray-200 text-xs flex items-center justify-center font-bold">${emp ? emp.name.charAt(0) : '?'}</div>`}</div>
+                        <div class="flex-1">
+                            <div class="text-sm font-medium">${emp ? emp.name : log.empName} <span class="text-xs text-gray-500">(${log.site || 'Non défini'})</span></div>
+                            <div class="text-xs text-gray-600 font-medium"><i class="fas ${icon} ${color} mr-1"></i> ${log.detail}</div>
+                        </div>
+                        <div class="text-right text-xs flex flex-col items-end">
+                            <div class="flex items-center">
+                                <span class="font-semibold">${time24h}</span> ${editBtn}
+                            </div>
+                            <div class="text-[10px] text-gray-400">${t.toLocaleDateString('fr-FR')}</div>
+                        </div>
+                    </div>`;
+                }).join('');
+            },
+
+            renderStats() {
+                document.getElementById('stat-total').textContent = this.data.employees.length; document.getElementById('stat-present').textContent = this.data.employees.filter(e => e.status === 'present').length; document.getElementById('stat-absent').textContent = this.data.employees.filter(e => e.status === 'conge').length; document.getElementById('stat-hs').textContent = this.data.hs.reduce((s, h) => s + h.hours, 0) + 'h';
+            },
+
+            renderChart() {
+                const ctx = document.getElementById('siteChart');
+                if (!ctx) return;
+                if (this.chartInstance) this.chartInstance.destroy();
+                const sites = ['Pierre Mendès France', 'Robert Desnos', 'Georges Brassens'];
+                
+                const todayStr = new Date().toISOString().split('T')[0];
+
+                this.chartInstance = new Chart(ctx, { 
+                    type: 'doughnut', 
+                    data: { 
+                        labels: sites, 
+                        datasets: [{ 
+                            data: sites.map(s => this.data.employees.filter(e => this.getDailyPlan(e.id, todayStr).site === s).length), 
+                            backgroundColor: ['#002654', '#ED2939', '#e2e8f0'], borderWidth: 0 
+                        }] 
+                    }, 
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, cutout: '70%' } 
+                });
+            },
+
+            generatePDF() {
+                const { jsPDF } = window.jspdf; const doc = new jsPDF(); const d = new Date().toLocaleDateString('fr-FR');
+                doc.setFontSize(20); doc.setTextColor(0, 38, 84); doc.text("Rapport Global d'Effectifs", 14, 20);
+                doc.setFontSize(10); doc.setTextColor(100); doc.text(`ERT - ${d}`, 14, 28);
+                doc.autoTable({ startY: 40, head: [['Matricule', 'Nom', 'Horaires', 'Repos', 'Statut']], body: this.data.employees.map(e => [ e.matricule, e.name, `${e.heureArrivee} - ${e.heureDepart}`, `${e.repos1}, ${e.repos2}`, e.status ]), headStyles: { fillColor: [0, 38, 84] } });
+                doc.save(`EDT-Rapport-Effectifs-${d.replace(/\//g, '-')}.pdf`);
+            }
+        };
+
+        window.onload = () => app.init();
+    </script>
+</body>
+</html>
