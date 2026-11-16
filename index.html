@@ -178,7 +178,6 @@
 
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full pb-10">
                         <div class="lg:col-span-2 card p-4 flex flex-col">
-                            
                             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-4 border-b pb-3 gap-4">
                                 <div class="w-full sm:w-auto">
                                     <h3 class="text-lg font-semibold text-gray-800 mb-2">Affectations Journalières</h3>
@@ -204,8 +203,7 @@
 
                             <div class="flex-1 overflow-auto custom-scrollbar">
                                 <table class="min-w-full border-collapse border border-gray-200 text-sm">
-                                    <thead class="bg-gray-50" id="planningTableHeader">
-                                    </thead>
+                                    <thead class="bg-gray-50" id="planningTableHeader"></thead>
                                     <tbody id="planningTableBody"></tbody>
                                 </table>
                             </div>
@@ -275,14 +273,13 @@
                                 <canvas id="hoursAnalysisChart"></canvas>
                             </div>
                         </div>
-                        
                         <div id="employeeDetailedStats" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mt-6 pt-4 border-t border-gray-200">
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-[300px]">
                         <div class="card p-4 flex flex-col">
-                            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Répartition par Site (Aujourd'hui)</h3>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Répartition par Site Global</h3>
                             <div class="flex-1 relative w-full h-full min-h-[250px]"><canvas id="siteChart"></canvas></div>
                         </div>
                         <div class="card p-4 flex flex-col">
@@ -375,7 +372,7 @@
                         <div class="card p-6 border-l-4 border-ert-red">
                             <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Réinitialisation Globale (DANGER)</h3>
                             <p class="text-sm text-gray-600 mb-4">Effacer **tous les employés, plannings, et historiques** de la base de données. Irréversible.</p>
-                            <button onclick="app.resetGlobalData()" class="btn-red px-4 py-2 rounded-md text-sm font-medium w-full flex justify-center items-center"><i class="fas fa-exclamation-triangle mr-2"></i> SUPPRIMER TOUTES LES DONNÉES DE L'APPLICATION</button>
+                            <button onclick="app.resetGlobalData()" class="btn-red px-4 py-2 rounded-md text-sm font-medium w-full flex justify-center items-center"><i class="fas fa-exclamation-triangle mr-2"></i> SUPPRIMER TOUTES LES DONNÉES</button>
                         </div>
                     </div>
                 </div>
@@ -546,6 +543,19 @@
                 this.loadData();
             },
 
+            // --- LECTURE DYNAMIQUE DU STATUT ---
+            getEmpStatus(empId) {
+                const empLogs = this.data.logs.filter(l => String(l.empId) === String(empId) && ['arrivee', 'depart', 'absence'].includes(l.action));
+                if (empLogs.length === 0) return 'absent';
+                
+                empLogs.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+                const last = empLogs[0];
+                
+                if (last.action === 'arrivee') return 'present';
+                if (last.action === 'absence') return 'conge';
+                return 'absent';
+            },
+
             async sendChatbotCommand() {
                 const input = document.getElementById('chatbotInput');
                 const text = input.value.trim();
@@ -603,7 +613,7 @@
                         input.value = '';
                     }
                 } catch (err) {
-                    alert("Erreur de l'assistant IA. Assurez-vous que la clé d'API commence bien par AIzaSy.");
+                    alert("Erreur de l'assistant IA. Assurez-vous que la clé d'API est correcte.");
                 }
                 btn.innerHTML = originalText;
             },
@@ -635,11 +645,24 @@
             },
 
             loadData() {
+                this.migrateOldData(); 
                 if (database) {
-                    database.ref('edt_data').on('value', (snapshot) => { this.syncData(snapshot.val()); }, (e) => { this.syncData(JSON.parse(localStorage.getItem('edt_data_v29'))); });
+                    database.ref('edt_data').on('value', (snapshot) => { this.syncData(snapshot.val()); }, (e) => { this.syncData(JSON.parse(localStorage.getItem('edt_data_v30'))); });
                 } else {
-                    this.syncData(JSON.parse(localStorage.getItem('edt_data_v29')));
+                    this.syncData(JSON.parse(localStorage.getItem('edt_data_v30')));
                 }
+            },
+
+            migrateOldData() {
+                if (localStorage.getItem('edt_migrated_v30')) return;
+                const oldVersions = ['edt_data_v29', 'edt_data_v28', 'edt_data_v27', 'edt_data_v26', 'edt_data_v25', 'edt_data_v24', 'edt_data_v23'];
+                for (let v of oldVersions) {
+                    const oldData = JSON.parse(localStorage.getItem(v));
+                    if (oldData && oldData.employees && oldData.employees.length > 0) {
+                        this.data = oldData; this.saveData(); break;
+                    }
+                }
+                localStorage.setItem('edt_migrated_v30', 'true');
             },
 
             syncData(val) {
@@ -654,20 +677,6 @@
                 if (!this.data.hs) this.data.hs = [];
                 if (!this.data.users) this.data.users = [];
                 if (!this.data.planning) this.data.planning = {}; 
-
-                // Migration unique
-                if (this.data.employees.length === 0 && !localStorage.getItem('edt_migrated_v29')) {
-                    const oldVersions = ['edt_data_v28', 'edt_data_v27', 'edt_data_v26', 'edt_data_v25', 'edt_data_v24', 'edt_data_v23'];
-                    for (let v of oldVersions) {
-                        const oldData = JSON.parse(localStorage.getItem(v));
-                        if (oldData && oldData.employees && oldData.employees.length > 0) {
-                            this.data = oldData; 
-                            this.saveData(); 
-                            break;
-                        }
-                    }
-                    localStorage.setItem('edt_migrated_v29', 'true');
-                }
 
                 if (this.data.users.length === 0) {
                     this.data.users = [{ email: 'elahssen.malek@gmail.com', password: '123456', role: 'superadmin' }, { email: 'seyma.elahsen@ert.tn', password: '123456', role: 'superadmin' }];
@@ -688,7 +697,7 @@
             },
 
             saveData() {
-                localStorage.setItem('edt_data_v29', JSON.stringify(this.data));
+                localStorage.setItem('edt_data_v30', JSON.stringify(this.data));
                 if (database) { try { database.ref('edt_data').set(this.data); } catch (e) {} }
             },
             
@@ -729,7 +738,6 @@
                 const note = document.getElementById('retroNote').value;
                 
                 if(!empId || !action || !datetime) return alert("Remplissez tous les champs obligatoires.");
-                
                 const emp = this.data.employees.find(e => String(e.id) === String(empId));
                 if (!emp) return;
                 
@@ -753,8 +761,7 @@
                 });
                 
                 this.data.logs.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
-                this.saveData();
-                this.renderAll();
+                this.saveData(); this.renderAll();
                 alert("Donnée ajoutée rétroactivement avec succès.");
                 document.getElementById('retroNote').value = "";
             },
@@ -876,12 +883,9 @@
                 if(activeNav) { activeNav.classList.remove('tab-inactive'); activeNav.classList.add('tab-active'); }
 
                 if (tabId === 'rapports') {
-                    // Délai pour que le conteneur soit bien visible avant de dessiner les graphiques
+                    // Force refresh quand l'onglet devient visible
                     setTimeout(() => {
-                        const container = document.getElementById('reportEmpCheckboxes');
-                        if (container && container.innerHTML.trim() === '') {
-                            this.renderReportCheckboxes(true);
-                        }
+                        this.renderReportCheckboxes(false);
                         this.updateReportView();
                         this.renderChart();
                     }, 50);
@@ -933,6 +937,7 @@
                 if (!name || !matricule) return alert('Nom et Matricule requis');
                 
                 const existingIndex = this.data.employees.findIndex(e => String(e.id) === String(id));
+                const existingEmp = existingIndex >= 0 ? this.data.employees[existingIndex] : null;
 
                 const empData = { 
                     id, name, matricule, 
@@ -947,11 +952,9 @@
                 };
                 
                 if (existingIndex >= 0) { 
-                    empData.status = this.data.employees[existingIndex].status; 
                     this.data.employees[existingIndex] = empData; 
                 } 
                 else { 
-                    empData.status = 'absent'; 
                     this.data.employees.push(empData); 
                     this.addLog(id, name, empData.site, 'creation', 'Création profil'); 
                 }
@@ -1039,8 +1042,8 @@
                 const todayStr = new Date().toISOString().split('T')[0];
                 const dailyPlan = this.getDailyPlan(empId, todayStr);
 
-                if (action === 'arrivee') { emp.status = 'present'; this.addLog(empId, emp.name, dailyPlan.site, 'arrivee', `Pointage Arrivée`); } 
-                else if (action === 'depart') { emp.status = 'absent'; this.addLog(empId, emp.name, dailyPlan.site, 'depart', `Pointage Départ`); }
+                if (action === 'arrivee') { this.addLog(empId, emp.name, dailyPlan.site, 'arrivee', `Pointage Arrivée`); } 
+                else if (action === 'depart') { this.addLog(empId, emp.name, dailyPlan.site, 'depart', `Pointage Départ`); }
                 this.saveData(); this.renderPointageCards();
             },
             
@@ -1072,7 +1075,7 @@
                         action: 'absence', detail: detailMsg, timestamp: targetTimestamp, absenceHours: isHours ? val : 0 
                     });
                 }
-                emp.status = 'conge'; this.saveData(); this.renderAll(); this.closeModals();
+                this.saveData(); this.renderAll(); this.closeModals();
             },
 
             openHsModal() { document.getElementById('hsEmpId').innerHTML = this.data.employees.map(e => `<option value="${e.id}">${e.name}</option>`).join(''); document.getElementById('hsModal').classList.add('active'); },
@@ -1142,13 +1145,7 @@
                 const img = new Image(); img.src = 'logo.png'; img.onload = () => drawPDF(img); img.onerror = () => drawPDF(null);
             },
 
-            // --- RAPPORTS : VERROUILLAGE CORRIGÉ ---
-            toggleAllReportCb(checked) { 
-                const checkboxes = document.querySelectorAll('.report-emp-cb');
-                checkboxes.forEach(cb => { cb.checked = checked; }); 
-                this.updateReportView(); 
-            },
-            
+            // --- CORRECTION ABSOLUE : RAPPORTS INTERACTIFS ---
             renderReportCheckboxes(forceCheckAll = false) {
                 const container = document.getElementById('reportEmpCheckboxes');
                 if(!container) return;
@@ -1167,6 +1164,12 @@
                     return `<label class="flex items-center gap-2 cursor-pointer p-1 hover:bg-gray-100 rounded"><input type="checkbox" class="report-emp-cb text-ert-blue rounded" value="${emp.id}" ${isChecked} onchange="app.updateReportView()"><span class="truncate" title="${emp.name}">${emp.name}</span></label>`;
                 }).join('');
             },
+
+            toggleAllReportCb(checked) { 
+                const checkboxes = document.querySelectorAll('.report-emp-cb');
+                checkboxes.forEach(cb => { cb.checked = checked; }); 
+                this.updateReportView(); 
+            },
             
             updateReportView() {
                 const ctx = document.getElementById('hoursAnalysisChart'); 
@@ -1176,16 +1179,13 @@
                 const selectedIds = Array.from(document.querySelectorAll('.report-emp-cb:checked')).map(cb => cb.value);
                 const emps = this.data.employees.filter(e => selectedIds.includes(String(e.id)));
 
+                if (this.hoursAnalysisChart) this.hoursAnalysisChart.destroy();
+
                 if (emps.length === 0) {
                     document.getElementById('employeeDetailedStats').innerHTML = '<p class="text-sm text-gray-500 italic col-span-full">Aucun employé sélectionné.</p>';
-                    if (this.hoursAnalysisChart) {
-                        this.hoursAnalysisChart.destroy();
-                        this.hoursAnalysisChart = new Chart(ctx, { type: 'bar', data: { labels: [], datasets: [] }, options: { maintainAspectRatio: false } });
-                    }
+                    this.hoursAnalysisChart = new Chart(ctx, { type: 'bar', data: { labels: [], datasets: [] }, options: { maintainAspectRatio: false } });
                     return;
                 }
-
-                if (this.hoursAnalysisChart) this.hoursAnalysisChart.destroy();
 
                 const now = new Date(); let daysToAnalyze = 7;
                 if (period === 'day') daysToAnalyze = 1; 
@@ -1217,18 +1217,22 @@
                         datasetData.forEach(ds => {
                             let totalHours = 0;
                             
+                            // On base le travail sur la vérification stricte du pointage d'arrivée pour ce jour précis
                             const isPresentDay = this.data.logs.some(l => String(l.empId) === String(ds.empId) && l.action === 'arrivee' && l.timestamp.startsWith(dateString));
                             if(isPresentDay) ds.statDaysPresent++;
 
                             const absenceLogs = this.data.logs.filter(l => String(l.empId) === String(ds.empId) && l.action === 'absence' && l.timestamp.startsWith(dateString));
+                            
                             if (absenceLogs.length > 0) {
                                 let hoursToDeduct = 0; let isFullDayAbsence = false;
                                 absenceLogs.forEach(ab => {
                                     if (ab.absenceHours && ab.absenceHours > 0) { hoursToDeduct += ab.absenceHours; ds.statAbsence += ab.absenceHours; } 
                                     else { isFullDayAbsence = true; ds.statAbsence += ds.scheduledH; }
                                 });
-                                if (!isFullDayAbsence) { totalHours += Math.max(0, ds.scheduledH - hoursToDeduct); } 
-                            } else {
+                                // S'il a une absence partielle et qu'il était présent
+                                if (!isFullDayAbsence && isPresentDay) { totalHours += Math.max(0, ds.scheduledH - hoursToDeduct); } 
+                            } else if (isPresentDay) {
+                                // S'il est présent et pas absent, il a ses heures prévues complètes
                                 totalHours += ds.scheduledH; 
                             }
 
@@ -1244,16 +1248,17 @@
                         labels.push(currentM.toLocaleDateString('fr-FR', { month:'short', year:'2-digit' }));
                         
                         datasetData.forEach(ds => {
-                            let totalHoursMonth = ds.scheduledH * 22; 
-                            
+                            // On compte les vrais jours travaillés, pas un 22 théorique
                             const arrivesMonth = this.data.logs.filter(l => String(l.empId) === String(ds.empId) && l.action === 'arrivee' && l.timestamp.startsWith(monthStr));
                             const uniqueDays = new Set(arrivesMonth.map(l => l.timestamp.split('T')[0]));
                             ds.statDaysPresent += uniqueDays.size;
+                            
+                            let totalHoursMonth = uniqueDays.size * ds.scheduledH; 
 
                             const absenceMonth = this.data.logs.filter(l => String(l.empId) === String(ds.empId) && l.action === 'absence' && l.timestamp.startsWith(monthStr));
                             absenceMonth.forEach(ab => {
                                 if (ab.absenceHours && ab.absenceHours > 0) { totalHoursMonth -= ab.absenceHours; ds.statAbsence += ab.absenceHours; } 
-                                else { totalHoursMonth -= ds.scheduledH; ds.statAbsence += ds.scheduledH; }
+                                else { ds.statAbsence += ds.scheduledH; } // Absence complète enregistrée
                             });
 
                             const hsMonth = this.data.hs.filter(h => String(h.empId) === String(ds.empId) && h.date.startsWith(monthStr));
@@ -1287,9 +1292,15 @@
             },
 
             renderAll() {
-                this.renderPointageCards(); this.renderEmployeeTable(); this.renderPlanning(); this.renderHs(); this.renderStats(); this.renderActivityLog();
+                this.renderPointageCards(); 
+                this.renderEmployeeTable(); 
+                this.renderPlanning(); 
+                this.renderHs(); 
+                this.renderStats(); 
+                this.renderActivityLog();
                 
                 if(!document.getElementById('tab-rapports').classList.contains('hidden')) {
+                    // Checkbox maintenance
                     const container = document.getElementById('reportEmpCheckboxes');
                     if(container && container.innerHTML.trim() === '') {
                         this.renderReportCheckboxes(true); 
@@ -1311,6 +1322,7 @@
                 document.getElementById('pointageCardsContainer').innerHTML = filtered.map(emp => {
                     const empLogs = this.data.logs.filter(l => String(l.empId) === String(emp.id) && (l.action === 'arrivee' || l.action === 'depart'));
                     const lastLog = empLogs.length > 0 ? empLogs[0] : null;
+                    const status = this.getEmpStatus(emp.id);
                     let pointageMsg = '';
                     let warningMsg = '';
                     
@@ -1338,7 +1350,7 @@
                     const dailyPlan = this.getDailyPlan(emp.id, todayStr);
 
                     return `
-                    <div class="card p-4 flex flex-col justify-between border-l-4 ${emp.status === 'present' ? 'border-l-ert-blue' : emp.status === 'conge' ? 'border-l-fuchsia-500' : 'border-l-gray-300'}">
+                    <div class="card p-4 flex flex-col justify-between border-l-4 ${status === 'present' ? 'border-l-ert-blue' : status === 'conge' ? 'border-l-fuchsia-500' : 'border-l-gray-300'}">
                         <div>
                             ${warningMsg}
                             <div class="flex items-start gap-3 mb-2">${this.getAvatarHtml(emp)}<div><div class="font-bold text-gray-800">${emp.name}</div><div class="text-xs text-gray-500 font-mono">${emp.matricule}</div></div></div>
@@ -1355,8 +1367,8 @@
                             ${pointageMsg}
                         </div>
                         <div class="grid grid-cols-3 gap-2 mt-auto pt-2 border-t border-gray-100">
-                            <button onclick="app.logAction('${emp.id}', 'arrivee')" class="btn-blue text-xs py-2 rounded flex flex-col items-center" ${emp.status === 'present' ? 'opacity-50' : ''}><i class="fas fa-sign-in-alt mb-1"></i> Arrivée</button>
-                            <button onclick="app.logAction('${emp.id}', 'depart')" class="btn-red text-xs py-2 rounded flex flex-col items-center" ${emp.status === 'absent' ? 'opacity-50' : ''}><i class="fas fa-sign-out-alt mb-1"></i> Départ</button>
+                            <button onclick="app.logAction('${emp.id}', 'arrivee')" class="btn-blue text-xs py-2 rounded flex flex-col items-center" ${status === 'present' ? 'opacity-50' : ''}><i class="fas fa-sign-in-alt mb-1"></i> Arrivée</button>
+                            <button onclick="app.logAction('${emp.id}', 'depart')" class="btn-red text-xs py-2 rounded flex flex-col items-center" ${status === 'absent' ? 'opacity-50' : ''}><i class="fas fa-sign-out-alt mb-1"></i> Départ</button>
                             <button onclick="app.openAbsenceModal('${emp.id}')" class="btn-orange text-xs py-2 rounded flex flex-col items-center"><i class="fas fa-user-clock mb-1"></i> Absence</button>
                         </div>
                     </div>`;
@@ -1366,11 +1378,12 @@
             renderEmployeeTable() {
                 const tbody = document.getElementById('employeeTableBody');
                 if(!tbody) return;
-                tbody.innerHTML = this.data.employees.map(emp => `
+                tbody.innerHTML = this.data.employees.map(emp => {
+                    return `
                     <tr>
                         <td class="px-6 py-4 whitespace-nowrap"><div class="flex items-center gap-3">${this.getAvatarHtml(emp)}<span class="text-sm font-medium">${emp.name}</span></div></td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${emp.matricule}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm">${emp.site || 'Non défini'}<br><span class="text-xs text-gray-400">${emp.lieu || '-'}</span></td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400 italic">Affectation gérée<br>au quotidien</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold">${emp.heureArrivee || '08:00'} ➔ ${emp.heureDepart || '20:00'}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="bg-gray-100 px-2 py-0.5 rounded text-xs">${emp.repos1 || 'Sam'}, ${emp.repos2 || 'Dim'}</span></td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -1378,120 +1391,17 @@
                             <button onclick="app.deleteEmployee('${emp.id}')" class="text-ert-red hover:text-red-900" title="Supprimer"><i class="fas fa-trash"></i></button>
                         </td>
                     </tr>
-                `).join('');
-            },
-
-            renderPlanning() {
-                const weekInput = document.getElementById('planningWeekFilter').value;
-                this.calculateWeekDates(weekInput);
-
-                const filter = document.getElementById('planningTeamFilter').value;
-                const filtered = filter === 'all' ? this.data.employees : this.data.employees.filter(e => e.equipe === filter);
-                
-                const jours = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
-                let theadHtml = `<tr><th class="border border-gray-200 p-2 text-center w-8"><i class="fas fa-check-square text-gray-400"></i></th><th class="border border-gray-200 p-2 text-left">Employé</th>`;
-                
-                if (this.currentPlanningWeekDates.length === 7) {
-                    this.currentPlanningWeekDates.forEach((d, i) => {
-                        theadHtml += `<th class="border border-gray-200 p-2 text-center w-24 text-xs">${jours[i]}<br><span class="font-normal text-[10px] text-gray-500">${d.getDate()}/${d.getMonth()+1}</span></th>`;
-                    });
-                }
-                theadHtml += `<th class="border border-gray-200 p-2 text-center w-10">PDF</th></tr>`;
-                document.getElementById('planningTableHeader').innerHTML = theadHtml;
-
-                document.getElementById('planningTableBody').innerHTML = filtered.map(emp => {
-                    const daysHtml = this.currentPlanningWeekDates.map((d, i) => {
-                        const dayName = jours[i];
-                        if (dayName === emp.repos1 || dayName === emp.repos2) {
-                            return `<td class="border p-2 text-center text-xs text-gray-400 bg-gray-50 font-medium min-w-[110px]">Repos</td>`;
-                        }
-
-                        const dateString = d.toISOString().split('T')[0];
-                        const absenceLogs = this.data.logs.filter(l => String(l.empId) === String(emp.id) && l.action === 'absence' && l.timestamp.startsWith(dateString));
-                        
-                        let isFullAbsent = false;
-                        let absenceName = "Absent";
-                        
-                        if (absenceLogs.length > 0) {
-                            isFullAbsent = absenceLogs.some(ab => !ab.absenceHours || ab.absenceHours === 0);
-                            absenceName = absenceLogs[0].detail.split(' ')[0]; 
-                        }
-
-                        if (isFullAbsent) {
-                            return `<td class="border p-1 min-w-[110px]"><div class="bg-red-50 text-red-700 text-xs p-1 rounded text-center shadow-sm font-bold border border-red-200">${absenceName}</div></td>`;
-                        }
-
-                        const dailyPlan = this.getDailyPlan(emp.id, dateString);
-                        const cellColor = emp.equipe === 'Jour' ? 'bg-blue-50 text-ert-blue border-blue-200' : 'bg-indigo-50 text-indigo-700 border-indigo-200';
-                        
-                        return `
-                        <td class="border p-1 align-top min-w-[110px]">
-                            <div class="${cellColor} text-[9px] p-1 rounded shadow-sm border flex flex-col gap-1">
-                                <select onchange="app.updateDailyPlan('${emp.id}', '${dateString}', 'site', this.value)" class="w-full bg-white border border-gray-300 rounded px-0.5 py-0.5 focus:outline-none focus:border-ert-blue cell-input">
-                                    <option value="Non défini" ${dailyPlan.site === 'Non défini' ? 'selected' : ''}>-- Site --</option>
-                                    <option value="Pierre Mendès France" ${dailyPlan.site === 'Pierre Mendès France' ? 'selected' : ''}>PMF</option>
-                                    <option value="Robert Desnos" ${dailyPlan.site === 'Robert Desnos' ? 'selected' : ''}>Desnos</option>
-                                    <option value="Georges Brassens" ${dailyPlan.site === 'Georges Brassens' ? 'selected' : ''}>Brassens</option>
-                                </select>
-                                <input type="text" value="${dailyPlan.lieu}" placeholder="Poste..." onchange="app.updateDailyPlan('${emp.id}', '${dateString}', 'lieu', this.value)" class="w-full bg-white border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:border-ert-blue cell-input">
-                                <span class="text-[9px] text-gray-600 font-bold text-center mt-0.5">${emp.heureArrivee} - ${emp.heureDepart}</span>
-                            </div>
-                        </td>`;
-                    }).join('');
-                    
-                    return `
-                    <tr>
-                        <td class="border p-2 text-center"><input type="checkbox" class="planning-cb w-4 h-4 text-ert-blue rounded" value="${emp.id}"></td>
-                        <td class="border p-2">
-                            <div class="flex items-center gap-2">
-                                ${this.getAvatarHtml(emp).replace('40px', '24px').replace('40px', '24px')}
-                                <div><span class="text-sm font-medium">${emp.name}</span><span class="text-[10px] text-gray-400 block">${emp.equipe}</span></div>
-                            </div>
-                        </td>
-                        ${daysHtml}
-                        <td class="border p-2 text-center"><button onclick="app.exportPlanningPDF(['${emp.id}'])" class="text-red-500 hover:text-red-700 p-1"><i class="fas fa-file-pdf text-lg"></i></button></td>
-                    </tr>`;
-                }).join('');
-            },
-
-            renderHs() {
-                document.getElementById('hsLogContainer').innerHTML = this.data.hs.length === 0 ? '<p class="text-sm text-gray-500 italic">Aucune heure supp.</p>' : this.data.hs.map(h => `<div class="mb-3 pb-3 border-b text-sm"><div class="flex justify-between"><span class="font-medium">${h.empName || 'Ancien'}</span><span class="font-bold text-ert-red">+${h.hours}h</span></div><div class="text-xs text-gray-500 flex justify-between"><span>${new Date(h.date).toLocaleDateString('fr-FR')}</span><span class="italic">${h.motif}</span></div></div>`).join('');
-            },
-
-            renderActivityLog() {
-                document.getElementById('activityLogContainer').innerHTML = this.data.logs.length === 0 ? '<p class="text-sm text-gray-500 italic">Aucune activité.</p>' : this.data.logs.map(log => {
-                    const t = new Date(log.timestamp);
-                    const emp = this.data.employees.find(e => String(e.id) === String(log.empId));
-                    let color = 'text-gray-500', icon = 'fa-circle';
-                    
-                    if (log.action === 'arrivee') { color = 'text-green-600'; icon = 'fa-arrow-right'; } 
-                    else if (log.action === 'depart') { color = 'text-red-600'; icon = 'fa-arrow-left'; } 
-                    else if (log.action === 'absence') { color = 'text-orange-500'; icon = 'fa-user-clock'; } 
-                    else if (log.action === 'creation') { color = 'text-ert-blue'; icon = 'fa-user-plus'; } 
-                    else if (log.action === 'hs') { color = 'text-purple-600'; icon = 'fa-clock'; }
-                    
-                    const time24h = t.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit', hour12: false});
-                    const editBtn = this.currentUserRole === 'superadmin' ? `<button onclick="app.openEditLogModal('${log.id}')" class="text-gray-400 hover:text-ert-blue ml-2" title="Corriger la date/heure"><i class="fas fa-edit"></i></button>` : '';
-
-                    return `
-                    <div class="flex items-start gap-3 mb-3 pb-3 border-b">
-                        <div class="mt-1">${emp && emp.photo ? `<img src="${emp.photo}" class="w-8 h-8 rounded-full object-cover">` : `<div class="w-8 h-8 rounded-full bg-gray-200 text-xs flex items-center justify-center font-bold">${emp ? emp.name.charAt(0) : '?'}</div>`}</div>
-                        <div class="flex-1">
-                            <div class="text-sm font-medium">${emp ? emp.name : log.empName} <span class="text-xs text-gray-500">(${log.site || 'Non défini'})</span></div>
-                            <div class="text-xs text-gray-600 font-medium"><i class="fas ${icon} ${color} mr-1"></i> ${log.detail}</div>
-                        </div>
-                        <div class="text-right text-xs flex flex-col items-end">
-                            <div class="flex items-center">
-                                <span class="font-semibold">${time24h}</span> ${editBtn}
-                            </div>
-                            <div class="text-[10px] text-gray-400">${t.toLocaleDateString('fr-FR')}</div>
-                        </div>
-                    </div>`;
-                }).join('');
+                `}).join('');
             },
 
             renderStats() {
-                document.getElementById('stat-total').textContent = this.data.employees.length; document.getElementById('stat-present').textContent = this.data.employees.filter(e => e.status === 'present').length; document.getElementById('stat-absent').textContent = this.data.employees.filter(e => e.status === 'conge').length; document.getElementById('stat-hs').textContent = this.data.hs.reduce((s, h) => s + h.hours, 0) + 'h';
+                document.getElementById('stat-total').textContent = this.data.employees.length; 
+                
+                const statuses = this.data.employees.map(e => this.getEmpStatus(e.id));
+                document.getElementById('stat-present').textContent = statuses.filter(s => s === 'present').length; 
+                document.getElementById('stat-absent').textContent = statuses.filter(s => s === 'conge').length; 
+                
+                document.getElementById('stat-hs').textContent = this.data.hs.reduce((s, h) => s + h.hours, 0) + 'h';
             },
 
             renderChart() {
@@ -1519,7 +1429,14 @@
                 const { jsPDF } = window.jspdf; const doc = new jsPDF(); const d = new Date().toLocaleDateString('fr-FR');
                 doc.setFontSize(20); doc.setTextColor(0, 38, 84); doc.text("Rapport Global d'Effectifs", 14, 20);
                 doc.setFontSize(10); doc.setTextColor(100); doc.text(`ERT - ${d}`, 14, 28);
-                doc.autoTable({ startY: 40, head: [['Matricule', 'Nom', 'Horaires', 'Repos', 'Statut']], body: this.data.employees.map(e => [ e.matricule, e.name, `${e.heureArrivee} - ${e.heureDepart}`, `${e.repos1}, ${e.repos2}`, e.status ]), headStyles: { fillColor: [0, 38, 84] } });
+                
+                const tableData = this.data.employees.map(e => {
+                    const status = this.getEmpStatus(e.id);
+                    const statusLabel = status === 'present' ? 'Présent' : (status === 'conge' ? 'En Congé' : 'Absent');
+                    return [ e.matricule, e.name, `${e.heureArrivee} - ${e.heureDepart}`, `${e.repos1}, ${e.repos2}`, statusLabel ];
+                });
+
+                doc.autoTable({ startY: 40, head: [['Matricule', 'Nom', 'Horaires', 'Repos', 'Statut Actuel']], body: tableData, headStyles: { fillColor: [0, 38, 84] } });
                 doc.save(`EDT-Rapport-Effectifs-${d.replace(/\//g, '-')}.pdf`);
             }
         };
