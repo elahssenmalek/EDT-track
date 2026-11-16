@@ -102,6 +102,8 @@
                             <button onclick="app.switchTab('planning')" id="nav-planning" class="tab-inactive border-transparent inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium h-16"><i class="fas fa-calendar-alt mr-2"></i> Planning & HS</button>
                             <button onclick="app.switchTab('rapports')" id="nav-rapports" class="tab-inactive border-transparent inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium h-16"><i class="fas fa-chart-bar mr-2"></i> Rapports</button>
                             <button onclick="app.switchTab('parametres')" id="nav-parametres" class="tab-inactive border-transparent inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium h-16"><i class="fas fa-cog mr-2"></i> Paramètres</button>
+                            <!-- ONGLET SUPERADMIN CACHÉ PAR DEFAUT -->
+                            <button onclick="app.switchTab('superadmin')" id="nav-superadmin" class="hidden tab-inactive border-transparent inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium h-16 text-ert-red"><i class="fas fa-shield-alt mr-2"></i> SuperAdmin</button>
                         </nav>
                         <div class="flex items-center gap-3 pl-4 border-l border-gray-200">
                             <div class="text-right hidden sm:block">
@@ -146,7 +148,7 @@
                                     <tr>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employé</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matricule</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Site / Lieu Actuel</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Affectation par défaut</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Horaires</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jours de Repos</th>
                                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -165,7 +167,7 @@
                         <button onclick="app.openHsModal()" class="btn-blue px-4 py-2 rounded-md text-sm font-medium shadow-sm"><i class="fas fa-clock mr-2"></i> Saisir Heures Sup.</button>
                     </div>
 
-                    <!-- NOUVEAU : CHATBOT IA PLANNING -->
+                    <!-- CHATBOT IA PLANNING -->
                     <div class="bg-indigo-50 p-3 rounded-md mb-6 border border-indigo-200 shadow-sm flex gap-3 items-center">
                         <i class="fas fa-robot text-indigo-600 text-2xl ml-2"></i>
                         <div class="flex-1">
@@ -275,13 +277,14 @@
                                 <canvas id="hoursAnalysisChart"></canvas>
                             </div>
                         </div>
+                        
                         <div id="employeeDetailedStats" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mt-6 pt-4 border-t border-gray-200">
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-[300px]">
                         <div class="card p-4 flex flex-col">
-                            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Répartition par Site Global</h3>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Répartition par Site Global (Aujourd'hui)</h3>
                             <div class="flex-1 relative w-full h-full min-h-[250px]"><canvas id="siteChart"></canvas></div>
                         </div>
                         <div class="card p-4 flex flex-col">
@@ -294,7 +297,7 @@
                 <!-- TAB: PARAMÈTRES -->
                 <div id="tab-parametres" class="hidden h-full flex flex-col">
                     <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-2xl font-bold text-ert-blue">Paramètres du Système</h2>
+                        <h2 class="text-2xl font-bold text-ert-blue">Paramètres Utilisateur</h2>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="card p-6">
@@ -305,10 +308,21 @@
                             <button onclick="app.changePassword()" class="btn-blue px-4 py-2 rounded-md text-sm font-medium">Mettre à jour le mot de passe</button>
                             <p id="pwdMsg" class="text-sm mt-3 hidden"></p>
                         </div>
+                    </div>
+                </div>
 
-                        <div class="card p-6 hidden" id="superAdminPanel">
-                            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2 flex items-center"><i class="fas fa-shield-alt text-ert-red mr-2"></i> Gestion des Accès (Admin)</h3>
-                            <p class="text-sm text-gray-600 mb-4">Gérer les accès à la plateforme.</p>
+                <!-- TAB: SUPERADMIN -->
+                <div id="tab-superadmin" class="hidden h-full flex flex-col">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-ert-red"><i class="fas fa-shield-alt mr-2"></i> Centre de Contrôle SuperAdmin</h2>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        
+                        <!-- Gestion des Accès -->
+                        <div class="card p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Gestion des Accès</h3>
+                            <p class="text-sm text-gray-600 mb-4">Créer de nouveaux utilisateurs.</p>
                             <div class="grid grid-cols-1 gap-2 mb-3">
                                 <input type="email" id="newAccountEmail" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-ert-blue" placeholder="E-mail du nouvel utilisateur">
                                 <div class="flex gap-2">
@@ -322,15 +336,63 @@
                             </div>
                             <ul id="usersList" class="divide-y divide-gray-200 border border-gray-200 rounded-md max-h-32 overflow-y-auto custom-scrollbar mt-3"></ul>
                         </div>
+
+                        <!-- Correction Rétroactive -->
+                        <div class="card p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Correction Rétroactive Pointage</h3>
+                            <p class="text-sm text-gray-600 mb-4">Ajouter un pointage oublié ou corriger une absence dans le passé.</p>
+                            
+                            <div class="mb-3">
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Employé :</label>
+                                <select id="retroEmpId" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-ert-blue"></select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Type d'action :</label>
+                                <select id="retroAction" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-ert-blue">
+                                    <option value="arrivee">Arrivée</option>
+                                    <option value="depart">Départ</option>
+                                    <option value="absence">Absence</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Date et Heure exacte :</label>
+                                <input type="datetime-local" id="retroDate" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-ert-blue">
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Motif / Note (Optionnel) :</label>
+                                <input type="text" id="retroNote" placeholder="Ex: Oubli de pointage validé par RH" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-ert-blue">
+                            </div>
+                            
+                            <button onclick="app.saveRetroLog()" class="btn-blue px-4 py-2 rounded-md text-sm font-medium w-full">Ajouter à l'historique</button>
+                        </div>
+
+                        <!-- Reset Individuel -->
+                        <div class="card p-6 border-l-4 border-orange-500">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Réinitialisation Individuelle</h3>
+                            <p class="text-sm text-gray-600 mb-4">Effacer tous les historiques, pointages et heures supplémentaires d'un employé spécifique.</p>
+                            <div class="flex gap-2">
+                                <select id="resetEmpId" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-ert-blue"></select>
+                                <button onclick="app.resetIndividualData()" class="btn-orange px-4 py-2 rounded-md text-sm font-medium whitespace-nowrap">Effacer l'historique</button>
+                            </div>
+                        </div>
+
+                        <!-- Reset Global -->
+                        <div class="card p-6 border-l-4 border-ert-red">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Réinitialisation Globale (DANGER)</h3>
+                            <p class="text-sm text-gray-600 mb-4">Effacer **tous les employés, plannings, et historiques** de la base de données. Irréversible.</p>
+                            <button onclick="app.resetGlobalData()" class="btn-red px-4 py-2 rounded-md text-sm font-medium w-full flex justify-center items-center"><i class="fas fa-exclamation-triangle mr-2"></i> SUPPRIMER TOUTES LES DONNÉES DE L'APPLICATION</button>
+                        </div>
+
                     </div>
                 </div>
+
             </div>
         </main>
     </div>
 
     <!-- MODALS -->
     
-    <!-- Edit Log Modal (NOUVEAU - Rétroactif) -->
+    <!-- Edit Log Modal -->
     <div id="editLogModal" class="modal">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-sm mx-4 overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
@@ -391,7 +453,22 @@
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Repos 2</label><select id="empRepos2" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue"><option value="Sam" selected>Samedi</option><option value="Dim">Dimanche</option><option value="Ven">Vendredi</option><option value="Lun">Lundi</option><option value="Mar">Mardi</option><option value="Mer">Mercredi</option><option value="Jeu">Jeudi</option></select></div>
                 </div>
                 <div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">Équipe</label><select id="empEquipe" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue"><option value="Jour">Équipe de Jour (12h)</option><option value="Nuit">Équipe de Nuit (12h)</option></select></div>
-                <p class="text-xs text-gray-500 italic mt-2"><i class="fas fa-info-circle mr-1"></i> Le site et le lieu d'affectation se modifient désormais directement depuis l'onglet Pointage ou Planning.</p>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Site d'affectation globale (Défaut)</label>
+                    <select id="empSite" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue">
+                        <option value="Non défini">Non défini</option>
+                        <option value="Pierre Mendès France">Pierre Mendès France</option>
+                        <option value="Robert Desnos">Robert Desnos</option>
+                        <option value="Georges Brassens">Georges Brassens</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Lieu de travail global (Défaut)</label>
+                    <input type="text" id="empLieu" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-1 focus:ring-ert-blue" placeholder="Ex: Accueil, Entrepôt...">
+                </div>
+                
+                <p class="text-xs text-gray-500 italic mt-2"><i class="fas fa-info-circle mr-1"></i> Ces lieux sont l'affectation de base. Ils peuvent être modifiés jour par jour directement dans le tableau Planning ou le Pointage.</p>
             </div>
             <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3"><button onclick="app.closeModals()" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700">Annuler</button><button onclick="app.saveEmployee()" class="btn-blue px-4 py-2 rounded-md text-sm font-medium">Enregistrer</button></div>
         </div>
@@ -448,7 +525,7 @@
             messagingSenderId: "806362987169",
             appId: "1:806362987169:web:1f9680fcc28a2ef6300ee0"
         };
-        const GEMINI_API_KEY = "AQ.Ab8RN6LeCWNjv8lKZEpaHsJZiqF3iOgf-Lz20NiH5rgl5XY59g";
+        const GEMINI_API_KEY = "AIzaSy_REMPLACER_PAR_NOUVELLE_CLE";
         
         let database = null;
         try {
@@ -469,12 +546,12 @@
                     const todayStr = new Date().toISOString().split('T')[0];
                     document.getElementById('hsDate').value = todayStr; 
                     document.getElementById('absenceDate').value = todayStr;
+                    document.getElementById('retroDate').value = new Date().toISOString().slice(0, 16);
                 } catch(e) {}
                 this.initWeekPicker();
                 this.loadData();
             },
 
-            // --- NOUVEAU : CHATBOT IA GEMINI ---
             async sendChatbotCommand() {
                 const input = document.getElementById('chatbotInput');
                 const text = input.value.trim();
@@ -513,7 +590,7 @@
                         body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
                     });
                     
-                    if(!response.ok) throw new Error("Clé API invalide ou quota dépassé.");
+                    if(!response.ok) throw new Error("Erreur API Gemini.");
                     
                     const result = await response.json();
                     let jsonText = result.candidates[0].content.parts[0].text;
@@ -533,7 +610,6 @@
                     }
                 } catch (err) {
                     alert("Erreur de l'assistant IA. Le format de la clé API n'est peut-être pas reconnu ou la requête a échoué.");
-                    console.error(err);
                 }
                 btn.innerHTML = originalText;
             },
@@ -566,9 +642,9 @@
 
             loadData() {
                 if (database) {
-                    database.ref('edt_data').on('value', (snapshot) => { this.syncData(snapshot.val()); }, (e) => { this.syncData(JSON.parse(localStorage.getItem('edt_data_v26'))); });
+                    database.ref('edt_data').on('value', (snapshot) => { this.syncData(snapshot.val()); }, (e) => { this.syncData(JSON.parse(localStorage.getItem('edt_data_v27'))); });
                 } else {
-                    this.syncData(JSON.parse(localStorage.getItem('edt_data_v26')));
+                    this.syncData(JSON.parse(localStorage.getItem('edt_data_v27')));
                 }
             },
 
@@ -582,7 +658,7 @@
                 if (!this.data.planning) this.data.planning = {}; 
 
                 if (this.data.employees.length === 0) {
-                    const oldVersions = ['edt_data_v25', 'edt_data_v24', 'edt_data_v23', 'edt_data_v22', 'edt_data_v21'];
+                    const oldVersions = ['edt_data_v26', 'edt_data_v25', 'edt_data_v24', 'edt_data_v23', 'edt_data_v22', 'edt_data_v21'];
                     for (let v of oldVersions) {
                         const oldData = JSON.parse(localStorage.getItem(v));
                         if (oldData && oldData.employees && oldData.employees.length > 0) {
@@ -605,20 +681,88 @@
 
                 if (this.currentUserEmail) {
                     this.renderAll();
-                    if (this.currentUserRole === 'superadmin') this.renderUsersList();
+                    if (this.currentUserRole === 'superadmin') this.renderSuperAdminPanel();
                 }
             },
 
             saveData() {
-                localStorage.setItem('edt_data_v26', JSON.stringify(this.data));
+                localStorage.setItem('edt_data_v27', JSON.stringify(this.data));
                 if (database) { try { database.ref('edt_data').set(this.data); } catch (e) {} }
             },
             
-            resetData() {
-                if(confirm("Êtes-vous sûr de vouloir tout effacer ? (Comptes admin conservés)")) {
+            // NOUVEAU: Reset Global (Danger)
+            resetGlobalData() {
+                if(confirm("DANGER : Êtes-vous ABSOLUMENT SÛR de vouloir effacer TOUS les employés, TOUS les plannings et TOUT l'historique ? Cette action est irréversible.")) {
                     this.data.employees = []; this.data.logs = []; this.data.hs = []; this.data.planning = {};
                     this.saveData();
+                    this.renderAll();
+                    alert("Base de données entièrement effacée (comptes admin conservés).");
                 }
+            },
+            
+            // NOUVEAU: Reset Individuel
+            resetIndividualData() {
+                const empId = document.getElementById('resetEmpId').value;
+                if(!empId) return;
+                const emp = this.data.employees.find(e => String(e.id) === String(empId));
+                
+                if(confirm(`Voulez-vous effacer tout l'historique et les pointages de ${emp.name} ?`)) {
+                    this.data.logs = this.data.logs.filter(l => String(l.empId) !== String(empId));
+                    this.data.hs = this.data.hs.filter(h => String(h.empId) !== String(empId));
+                    this.saveData();
+                    this.renderAll();
+                    alert(`Historique de ${emp.name} effacé avec succès.`);
+                }
+            },
+            
+            // NOUVEAU : Log Rétroactif manuel
+            saveRetroLog() {
+                const empId = document.getElementById('retroEmpId').value;
+                const action = document.getElementById('retroAction').value;
+                const datetime = document.getElementById('retroDate').value;
+                const note = document.getElementById('retroNote').value;
+                
+                if(!empId || !action || !datetime) return alert("Remplissez tous les champs obligatoires.");
+                
+                const emp = this.data.employees.find(e => String(e.id) === String(empId));
+                if (!emp) return;
+                
+                const isoDate = new Date(datetime).toISOString();
+                let detail = '';
+                
+                if(action === 'arrivee') detail = "Pointage Arrivée (Saisi manuellement)";
+                else if (action === 'depart') detail = "Pointage Départ (Saisi manuellement)";
+                else if (action === 'absence') detail = "Absence déclarée manuellement";
+                
+                if(note) detail += ` - Note: ${note}`;
+                
+                const dayStr = isoDate.split('T')[0];
+                const dailyPlan = this.getDailyPlan(empId, dayStr);
+                
+                this.data.logs.unshift({ 
+                    id: Date.now() + Math.floor(Math.random() * 1000), 
+                    empId, empName: emp.name, site: dailyPlan.site, 
+                    action: action, detail: detail, 
+                    timestamp: isoDate 
+                });
+                
+                this.data.logs.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+                this.saveData();
+                this.renderAll();
+                alert("Donnée ajoutée rétroactivement avec succès.");
+                document.getElementById('retroNote').value = "";
+            },
+            
+            renderSuperAdminPanel() {
+                document.getElementById('nav-superadmin').classList.remove('hidden');
+                document.getElementById('superAdminPanel').classList.remove('hidden');
+                
+                // Peupler les selects des admins
+                const empOptions = this.data.employees.map(e => `<option value="${e.id}">${e.name} (${e.matricule})</option>`).join('');
+                document.getElementById('retroEmpId').innerHTML = empOptions;
+                document.getElementById('resetEmpId').innerHTML = empOptions;
+                
+                this.renderUsersList();
             },
 
             login() {
@@ -675,11 +819,12 @@
                 if (this.data.users.find(u => u.email === email)) return alert("Cet email existe déjà.");
                 this.data.users.push({ email, password: pwd, role }); this.saveData();
                 document.getElementById('newAccountEmail').value = ''; document.getElementById('newAccountPwd').value = '';
+                this.renderUsersList();
             },
 
             removeUserAccount(email) {
                 if (email === this.currentUserEmail) return alert("Impossible de supprimer votre propre compte actif.");
-                if (confirm(`Supprimer l'accès pour ${email} ?`)) { this.data.users = this.data.users.filter(u => u.email !== email); this.saveData(); }
+                if (confirm(`Supprimer l'accès pour ${email} ?`)) { this.data.users = this.data.users.filter(u => u.email !== email); this.saveData(); this.renderUsersList(); }
             },
 
             renderUsersList() {
@@ -692,15 +837,22 @@
                 document.getElementById('currentUserDisplay').textContent = this.currentUserEmail.split('@')[0];
                 document.getElementById('currentUserRoleDisplay').textContent = this.currentUserRole === 'superadmin' ? 'Super Administrateur' : 'Utilisateur autorisé';
                 this.renderAll(); this.switchTab('pointage');
+                
+                if (this.currentUserRole === 'superadmin') {
+                    this.renderSuperAdminPanel();
+                }
             },
 
             switchTab(tabId) {
-                ['pointage', 'personnel', 'planning', 'rapports', 'parametres'].forEach(id => {
+                ['pointage', 'personnel', 'planning', 'rapports', 'parametres', 'superadmin'].forEach(id => {
                     document.getElementById(`tab-${id}`).classList.add('hidden');
-                    const nav = document.getElementById(`nav-${id}`); nav.classList.remove('tab-active'); nav.classList.add('tab-inactive');
+                    const nav = document.getElementById(`nav-${id}`); 
+                    if(nav) { nav.classList.remove('tab-active'); nav.classList.add('tab-inactive'); }
                 });
+                
                 document.getElementById(`tab-${tabId}`).classList.remove('hidden');
-                const activeNav = document.getElementById(`nav-${tabId}`); activeNav.classList.remove('tab-inactive'); activeNav.classList.add('tab-active');
+                const activeNav = document.getElementById(`nav-${tabId}`); 
+                if(activeNav) { activeNav.classList.remove('tab-inactive'); activeNav.classList.add('tab-active'); }
 
                 if (tabId === 'rapports') {
                     this.renderChart();
@@ -709,10 +861,6 @@
                         this.renderReportCheckboxes(true);
                     }
                     this.updateReportView();
-                }
-                if (tabId === 'parametres') {
-                    if (this.currentUserRole === 'superadmin') { document.getElementById('superAdminPanel').classList.remove('hidden'); this.renderUsersList(); } 
-                    else { document.getElementById('superAdminPanel').classList.add('hidden'); }
                 }
             },
             closeModals() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('active')); },
@@ -744,6 +892,8 @@
                 document.getElementById('empName').value = emp ? emp.name : ''; 
                 document.getElementById('empMatricule').value = emp ? emp.matricule : ''; 
                 document.getElementById('empEquipe').value = emp ? emp.equipe : 'Jour'; 
+                document.getElementById('empSite').value = emp ? (emp.site || 'Non défini') : 'Non défini';
+                document.getElementById('empLieu').value = emp ? (emp.lieu || '') : '';
                 document.getElementById('empHeureArrivee').value = emp && emp.heureArrivee ? emp.heureArrivee : '08:00'; 
                 document.getElementById('empHeureDepart').value = emp && emp.heureDepart ? emp.heureDepart : '20:00'; 
                 document.getElementById('empRepos1').value = emp && emp.repos1 ? emp.repos1 : 'Sam'; 
@@ -763,7 +913,8 @@
                 const empData = { 
                     id, name, matricule, 
                     equipe: document.getElementById('empEquipe').value, 
-                    site: 'Non défini', lieu: '', 
+                    site: document.getElementById('empSite').value, 
+                    lieu: document.getElementById('empLieu').value, 
                     heureArrivee: document.getElementById('empHeureArrivee').value, 
                     heureDepart: document.getElementById('empHeureDepart').value, 
                     repos1: document.getElementById('empRepos1').value, 
@@ -774,22 +925,25 @@
                 if (existingIndex >= 0) { 
                     empData.status = this.data.employees[existingIndex].status; 
                     this.data.employees[existingIndex] = empData; 
-                } else { 
+                } 
+                else { 
                     empData.status = 'absent'; 
                     this.data.employees.push(empData); 
-                    this.addLog(id, name, 'Non défini', 'creation', 'Création profil'); 
+                    this.addLog(id, name, empData.site, 'creation', 'Création profil'); 
                 }
                 
                 this.saveData(); this.renderAll(); this.closeModals();
+                if(this.currentUserRole === 'superadmin') this.renderSuperAdminPanel(); // Rafraichir les selects superadmin
             },
             deleteEmployee(id) {
-                if (confirm('Supprimer cet employé ?')) { const emp = this.data.employees.find(e => String(e.id) === String(id)); if(emp) this.addLog(id, emp.name, emp.site, 'suppression', 'Agent supprimé'); this.data.employees = this.data.employees.filter(e => String(e.id) !== String(id)); this.saveData(); this.renderAll(); }
+                if (confirm('Supprimer cet employé ?')) { const emp = this.data.employees.find(e => String(e.id) === String(id)); if(emp) this.addLog(id, emp.name, emp.site, 'suppression', 'Agent supprimé'); this.data.employees = this.data.employees.filter(e => String(e.id) !== String(id)); this.saveData(); this.renderAll(); if(this.currentUserRole === 'superadmin') this.renderSuperAdminPanel(); }
             },
 
-            // --- AFFECTATIONS JOURNALIERES ---
             getDailyPlan(empId, dateStr) {
                 const key = empId + '_' + dateStr;
                 if (this.data.planning && this.data.planning[key]) return this.data.planning[key];
+                const emp = this.data.employees.find(e => String(e.id) === String(empId));
+                if(emp) return { site: emp.site || 'Non défini', lieu: emp.lieu || '' };
                 return { site: 'Non défini', lieu: '' };
             },
 
@@ -797,24 +951,22 @@
                 if (!this.data.planning) this.data.planning = {};
                 const key = empId + '_' + dateStr;
                 if (!this.data.planning[key]) {
-                    this.data.planning[key] = { site: 'Non défini', lieu: '' };
+                    const emp = this.data.employees.find(e => String(e.id) === String(empId));
+                    this.data.planning[key] = { site: emp ? (emp.site || 'Non défini') : 'Non défini', lieu: emp ? (emp.lieu || '') : '' };
                 }
                 this.data.planning[key][field] = value;
                 this.saveData();
-                // Si on modifie aujourd'hui depuis le planning, on actualise le pointage
                 const todayStr = new Date().toISOString().split('T')[0];
                 if (dateStr === todayStr && !document.getElementById('tab-pointage').classList.contains('hidden')) {
                     this.renderPointageCards();
                 }
             },
 
-            // --- NOUVEAU : EDITION RETROACTIVE LOG ---
             openEditLogModal(logId) {
                 const log = this.data.logs.find(l => String(l.id) === String(logId));
                 if(!log) return;
                 document.getElementById('editLogId').value = log.id;
-                document.getElementById('editLogAction').value = (log.action === 'arrivee' || log.action === 'depart') ? log.action : 'arrivee'; // Simplification pour entrées/sorties
-                // Convert to datetime-local format YYYY-MM-DDTHH:mm
+                document.getElementById('editLogAction').value = (log.action === 'arrivee' || log.action === 'depart') ? log.action : 'arrivee'; 
                 const t = new Date(log.timestamp);
                 const localOffset = new Date(t.getTime() - (t.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
                 document.getElementById('editLogTimestamp').value = localOffset;
@@ -832,24 +984,17 @@
                 if(log) {
                     log.action = newAction;
                     log.detail = newAction === 'arrivee' ? 'Pointage Arrivée (Corrigé)' : 'Pointage Départ (Corrigé)';
-                    // Convert back to UTC ISO
                     log.timestamp = new Date(newTime).toISOString();
-                    
-                    // Ré-trier et sauver
                     this.data.logs.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
-                    this.saveData();
-                    this.renderAll();
-                    this.closeModals();
+                    this.saveData(); this.renderAll(); this.closeModals();
                 }
             },
             
             deleteSelectedLog() {
                 const id = document.getElementById('editLogId').value;
-                if(confirm('Supprimer définitivement ce pointage ?')) {
+                if(confirm('Supprimer définitivement ce log ?')) {
                     this.data.logs = this.data.logs.filter(l => String(l.id) !== String(id));
-                    this.saveData();
-                    this.renderAll();
-                    this.closeModals();
+                    this.saveData(); this.renderAll(); this.closeModals();
                 }
             },
 
@@ -867,58 +1012,43 @@
             logAction(empId, action) {
                 const emp = this.data.employees.find(e => String(e.id) === String(empId));
                 if (!emp) return;
-                
                 const todayStr = new Date().toISOString().split('T')[0];
                 const dailyPlan = this.getDailyPlan(empId, todayStr);
 
                 if (action === 'arrivee') { emp.status = 'present'; this.addLog(empId, emp.name, dailyPlan.site, 'arrivee', `Pointage Arrivée`); } 
                 else if (action === 'depart') { emp.status = 'absent'; this.addLog(empId, emp.name, dailyPlan.site, 'depart', `Pointage Départ`); }
-                this.saveData();
-                this.renderPointageCards();
+                this.saveData(); this.renderPointageCards();
             },
             
-            openAbsenceModal(empId) { 
-                document.getElementById('absenceEmpId').value = empId; 
-                document.getElementById('absenceModal').classList.add('active'); 
-            },
+            openAbsenceModal(empId) { document.getElementById('absenceEmpId').value = empId; document.getElementById('absenceModal').classList.add('active'); },
 
             saveAbsence() {
                 const empId = document.getElementById('absenceEmpId').value; 
                 const type = document.getElementById('absenceType').value; 
                 const durationTxt = document.getElementById('absenceDuration').value.trim().toLowerCase();
                 const dateVal = document.getElementById('absenceDate').value;
-                
                 if(!durationTxt || !dateVal) return alert("Veuillez préciser la date et la durée (ex: '2 jours' ou '4 heures').");
-                
                 const emp = this.data.employees.find(e => String(e.id) === String(empId)); 
                 if (!emp) return;
                 
                 let val = parseFloat(durationTxt.replace(',', '.')) || 1;
                 let isHours = durationTxt.includes('heure') || durationTxt.includes('h');
                 let days = isHours ? 1 : Math.ceil(val);
-
                 const startDate = new Date(dateVal);
                 
                 for(let i=0; i<days; i++) {
-                    let d = new Date(startDate);
-                    d.setDate(d.getDate() + i);
+                    let d = new Date(startDate); d.setDate(d.getDate() + i);
                     let dateStr = d.toISOString().split('T')[0];
                     let targetTimestamp = dateStr + 'T12:00:00.000Z';
                     let detailMsg = `${type} (${isHours ? val + ' heures' : (days > 1 ? 'Jour '+(i+1)+'/'+days : '1 jour')})`;
-                    
                     const dailyPlan = this.getDailyPlan(empId, dateStr);
 
                     this.data.logs.unshift({ 
-                        id: Date.now() + i, 
-                        empId, empName: emp.name, site: dailyPlan.site, 
-                        action: 'absence', detail: detailMsg, 
-                        timestamp: targetTimestamp,
-                        absenceHours: isHours ? val : 0 
+                        id: Date.now() + i, empId, empName: emp.name, site: dailyPlan.site, 
+                        action: 'absence', detail: detailMsg, timestamp: targetTimestamp, absenceHours: isHours ? val : 0 
                     });
                 }
-
-                emp.status = 'conge'; 
-                this.saveData(); this.renderAll(); this.closeModals();
+                emp.status = 'conge'; this.saveData(); this.renderAll(); this.closeModals();
             },
 
             openHsModal() { document.getElementById('hsEmpId').innerHTML = this.data.employees.map(e => `<option value="${e.id}">${e.name}</option>`).join(''); document.getElementById('hsModal').classList.add('active'); },
@@ -941,16 +1071,13 @@
             },
 
             toggleAllPlanning(checked) { document.querySelectorAll('.planning-cb').forEach(cb => cb.checked = checked); },
-            
             exportSelectedPlanningPDF() {
                 const checkedIds = Array.from(document.querySelectorAll('.planning-cb:checked')).map(cb => cb.value);
                 if (checkedIds.length === 0) return alert("Cochez au moins un employé.");
                 this.exportPlanningPDF(checkedIds);
             },
-            
             exportPlanningPDF(empIds) {
-                const { jsPDF } = window.jspdf; 
-                const doc = new jsPDF('landscape');
+                const { jsPDF } = window.jspdf; const doc = new jsPDF('landscape');
                 const weekStr = document.getElementById('planningWeekFilter').value;
                 
                 const drawPDF = (logoImg) => {
@@ -974,50 +1101,26 @@
                         const daily = this.currentPlanningWeekDates.map((d, i) => {
                             const dayName = jours[i];
                             if (dayName === emp.repos1 || dayName === emp.repos2) return 'Repos';
-                            
                             const dateString = d.toISOString().split('T')[0];
                             const absenceLogs = this.data.logs.filter(l => String(l.empId) === String(emp.id) && l.action === 'absence' && l.timestamp.startsWith(dateString));
-                            
-                            if (absenceLogs.length > 0 && (!absenceLogs[0].absenceHours || absenceLogs[0].absenceHours === 0)) {
-                                return `ABSENCE\n(${absenceLogs[0].detail.split(' ')[0]})`;
-                            }
-                            
+                            if (absenceLogs.length > 0 && (!absenceLogs[0].absenceHours || absenceLogs[0].absenceHours === 0)) return `ABSENCE\n(${absenceLogs[0].detail.split(' ')[0]})`;
                             const dailyPlan = this.getDailyPlan(emp.id, dateString);
-                            const displaySite = dailyPlan.site === 'Non défini' ? 'Site ?' : dailyPlan.site;
-                            
-                            return `${displaySite}\n${dailyPlan.lieu || '-'}\n${emp.heureArrivee}-${emp.heureDepart}`;
+                            return `${dailyPlan.site === 'Non défini' ? 'Site ?' : dailyPlan.site}\n${dailyPlan.lieu || '-'}\n${emp.heureArrivee}-${emp.heureDepart}`;
                         });
                         return [emp.name, emp.equipe, ...daily];
                     });
 
-                    doc.autoTable({ 
-                        startY: startY, 
-                        head: [['Employé', 'Équipe', ...headerDates]], 
-                        body: tableData, 
-                        headStyles: { fillColor: [0, 38, 84], halign: 'center' }, 
-                        styles: { fontSize: 8, cellPadding: 2, valign: 'middle', halign: 'center' }, 
-                        columnStyles: { 0: { halign: 'left', fontStyle: 'bold' } } 
-                    });
-
-                    let finalY = doc.lastAutoTable.finalY + 15;
-                    doc.setFontSize(10); doc.setTextColor(0, 0, 0);
-                    doc.text("Signature de l'Administration :", 14, finalY);
-                    doc.setDrawColor(0, 38, 84);
-                    doc.rect(14, finalY + 5, 60, 25);
-
+                    doc.autoTable({ startY: startY, head: [['Employé', 'Équipe', ...headerDates]], body: tableData, headStyles: { fillColor: [0, 38, 84], halign: 'center' }, styles: { fontSize: 8, cellPadding: 2, valign: 'middle', halign: 'center' }, columnStyles: { 0: { halign: 'left', fontStyle: 'bold' } } });
+                    let finalY = doc.lastAutoTable.finalY + 15; doc.setFontSize(10); doc.setTextColor(0, 0, 0); doc.text("Signature de l'Administration :", 14, finalY); doc.setDrawColor(0, 38, 84); doc.rect(14, finalY + 5, 60, 25);
                     doc.save(`Planning_${weekStr || 'Semaine'}.pdf`);
                 };
 
-                const img = new Image(); img.src = 'logo.png';
-                img.onload = () => drawPDF(img); img.onerror = () => drawPDF(null);
+                const img = new Image(); img.src = 'logo.png'; img.onload = () => drawPDF(img); img.onerror = () => drawPDF(null);
             },
 
-            // --- BUG RAPPORTS "TOUS/AUCUN" CORRIGE ---
+            // --- RAPPORTS : VERROUILLAGE CORRIGÉ ---
             toggleAllReportCb(checked) { 
-                document.querySelectorAll('.report-emp-cb').forEach(cb => {
-                    cb.checked = checked;
-                }); 
-                // On met a jour manuellement l'affichage
+                document.querySelectorAll('.report-emp-cb').forEach(cb => { cb.checked = checked; }); 
                 this.updateReportView(); 
             },
             
@@ -1054,7 +1157,6 @@
                 if (!ctx) return;
 
                 const period = document.getElementById('reportPeriodFilter').value; 
-                // On récupère directement depuis le DOM pour éviter tout décalage
                 const selectedIds = Array.from(document.querySelectorAll('.report-emp-cb:checked')).map(cb => cb.value);
                 const emps = this.data.employees.filter(e => selectedIds.includes(String(e.id)));
 
@@ -1098,25 +1200,17 @@
 
                         datasetData.forEach(ds => {
                             let totalHours = 0;
-                            
                             const isPresentDay = this.data.logs.some(l => String(l.empId) === String(ds.empId) && l.action === 'arrivee' && l.timestamp.startsWith(dateString));
                             if(isPresentDay) ds.statDaysPresent++;
 
                             const absenceLogs = this.data.logs.filter(l => String(l.empId) === String(ds.empId) && l.action === 'absence' && l.timestamp.startsWith(dateString));
                             if (absenceLogs.length > 0) {
-                                let hoursToDeduct = 0;
-                                let isFullDayAbsence = false;
-                                
+                                let hoursToDeduct = 0; let isFullDayAbsence = false;
                                 absenceLogs.forEach(ab => {
-                                    if (ab.absenceHours && ab.absenceHours > 0) { 
-                                        hoursToDeduct += ab.absenceHours; ds.statAbsence += ab.absenceHours;
-                                    } else { 
-                                        isFullDayAbsence = true; ds.statAbsence += ds.scheduledH;
-                                    }
+                                    if (ab.absenceHours && ab.absenceHours > 0) { hoursToDeduct += ab.absenceHours; ds.statAbsence += ab.absenceHours; } 
+                                    else { isFullDayAbsence = true; ds.statAbsence += ds.scheduledH; }
                                 });
-                                
                                 if (!isFullDayAbsence) { totalHours += Math.max(0, ds.scheduledH - hoursToDeduct); } 
-                                else { totalHours += 0; } 
                             } else {
                                 totalHours += ds.scheduledH; 
                             }
@@ -1124,8 +1218,7 @@
                             const hsDay = this.data.hs.filter(h => String(h.empId) === String(ds.empId) && h.date === dateString);
                             hsDay.forEach(h => { totalHours += h.hours; ds.statHs += h.hours; });
 
-                            ds.data.push(totalHours);
-                            ds.statWorked += totalHours;
+                            ds.data.push(totalHours); ds.statWorked += totalHours;
                         });
                     }
                 } else {
@@ -1177,26 +1270,16 @@
             },
 
             renderAll() {
-                this.renderPointageCards(); 
-                this.renderEmployeeTable(); 
-                this.renderPlanning(); 
-                this.renderHs(); 
-                this.renderStats(); 
-                this.renderActivityLog();
-                
+                this.renderPointageCards(); this.renderEmployeeTable(); this.renderPlanning(); this.renderHs(); this.renderStats(); this.renderActivityLog();
                 if(!document.getElementById('tab-rapports').classList.contains('hidden')) {
-                    this.updateReportView();
-                    this.renderChart();
+                    this.updateReportView(); this.renderChart();
                 }
             },
 
-            // --- NOUVEAU : ALERTE > 12H ---
             renderPointageCards() {
                 const todayStr = new Date().toISOString().split('T')[0];
                 const filter = document.getElementById('siteFilter').value;
-                const filtered = filter === 'all' 
-                    ? this.data.employees 
-                    : this.data.employees.filter(e => this.getDailyPlan(e.id, todayStr).site === filter);
+                const filtered = filter === 'all' ? this.data.employees : this.data.employees.filter(e => this.getDailyPlan(e.id, todayStr).site === filter);
                 
                 const nowMs = Date.now();
 
@@ -1219,7 +1302,6 @@
                             <div class="text-[10px] mt-0.5"><i class="fas fa-map-marker-alt"></i> ${lastLog.site || 'Non défini'}</div>
                         </div>`;
 
-                        // Vérification Alerte 12h
                         if (lastLog.action === 'arrivee') {
                             const hoursSinceArrival = (nowMs - t.getTime()) / 3600000;
                             if (hoursSinceArrival >= 12) {
@@ -1351,7 +1433,6 @@
                 document.getElementById('hsLogContainer').innerHTML = this.data.hs.length === 0 ? '<p class="text-sm text-gray-500 italic">Aucune heure supp.</p>' : this.data.hs.map(h => `<div class="mb-3 pb-3 border-b text-sm"><div class="flex justify-between"><span class="font-medium">${h.empName || 'Ancien'}</span><span class="font-bold text-ert-red">+${h.hours}h</span></div><div class="text-xs text-gray-500 flex justify-between"><span>${new Date(h.date).toLocaleDateString('fr-FR')}</span><span class="italic">${h.motif}</span></div></div>`).join('');
             },
 
-            // --- CRAYON RETROACTIF POUR LES ADMINS ---
             renderActivityLog() {
                 document.getElementById('activityLogContainer').innerHTML = this.data.logs.length === 0 ? '<p class="text-sm text-gray-500 italic">Aucune activité.</p>' : this.data.logs.map(log => {
                     const t = new Date(log.timestamp);
@@ -1365,7 +1446,6 @@
                     else if (log.action === 'hs') { color = 'text-purple-600'; icon = 'fa-clock'; }
                     
                     const time24h = t.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit', hour12: false});
-                    
                     const editBtn = this.currentUserRole === 'superadmin' ? `<button onclick="app.openEditLogModal('${log.id}')" class="text-gray-400 hover:text-ert-blue ml-2" title="Corriger la date/heure"><i class="fas fa-edit"></i></button>` : '';
 
                     return `
@@ -1402,6 +1482,7 @@
                     data: { 
                         labels: sites, 
                         datasets: [{ 
+                            // BUG CORRIGÉ : On lit le dailyPlan du jour, et non plus emp.site
                             data: sites.map(s => this.data.employees.filter(e => this.getDailyPlan(e.id, todayStr).site === s).length), 
                             backgroundColor: ['#002654', '#ED2939', '#e2e8f0'], borderWidth: 0 
                         }] 
