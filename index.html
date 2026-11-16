@@ -102,7 +102,6 @@
                             <button onclick="app.switchTab('planning')" id="nav-planning" class="tab-inactive border-transparent inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium h-16"><i class="fas fa-calendar-alt mr-2"></i> Planning & HS</button>
                             <button onclick="app.switchTab('rapports')" id="nav-rapports" class="tab-inactive border-transparent inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium h-16"><i class="fas fa-chart-bar mr-2"></i> Rapports</button>
                             <button onclick="app.switchTab('parametres')" id="nav-parametres" class="tab-inactive border-transparent inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium h-16"><i class="fas fa-cog mr-2"></i> Paramètres</button>
-                            <!-- ONGLET SUPERADMIN CACHÉ PAR DEFAUT -->
                             <button onclick="app.switchTab('superadmin')" id="nav-superadmin" class="hidden tab-inactive border-transparent inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium h-16 text-ert-red"><i class="fas fa-shield-alt mr-2"></i> SuperAdmin</button>
                         </nav>
                         <div class="flex items-center gap-3 pl-4 border-l border-gray-200">
@@ -148,7 +147,7 @@
                                     <tr>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employé</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matricule</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Affectation par défaut</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Site / Lieu Actuel</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Horaires</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jours de Repos</th>
                                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -179,8 +178,6 @@
 
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full pb-10">
                         <div class="lg:col-span-2 card p-4 flex flex-col">
-                            
-                            <!-- CONTROLES DU PLANNING -->
                             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-4 border-b pb-3 gap-4">
                                 <div class="w-full sm:w-auto">
                                     <h3 class="text-lg font-semibold text-gray-800 mb-2">Affectations Journalières</h3>
@@ -203,11 +200,9 @@
                                     </button>
                                 </div>
                             </div>
-
                             <div class="flex-1 overflow-auto custom-scrollbar">
                                 <table class="min-w-full border-collapse border border-gray-200 text-sm">
-                                    <thead class="bg-gray-50" id="planningTableHeader">
-                                    </thead>
+                                    <thead class="bg-gray-50" id="planningTableHeader"></thead>
                                     <tbody id="planningTableBody"></tbody>
                                 </table>
                             </div>
@@ -277,14 +272,13 @@
                                 <canvas id="hoursAnalysisChart"></canvas>
                             </div>
                         </div>
-                        
                         <div id="employeeDetailedStats" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mt-6 pt-4 border-t border-gray-200">
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-[300px]">
                         <div class="card p-4 flex flex-col">
-                            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Répartition par Site Global (Aujourd'hui)</h3>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Répartition par Site (Aujourd'hui)</h3>
                             <div class="flex-1 relative w-full h-full min-h-[250px]"><canvas id="siteChart"></canvas></div>
                         </div>
                         <div class="card p-4 flex flex-col">
@@ -525,7 +519,7 @@
             messagingSenderId: "806362987169",
             appId: "1:806362987169:web:1f9680fcc28a2ef6300ee0"
         };
-        const GEMINI_API_KEY = "AIzaSy_REMPLACER_PAR_NOUVELLE_CLE";
+        const GEMINI_API_KEY = "AIzaSy_REMPLACER_PAR_VOTRE_CLE"; 
         
         let database = null;
         try {
@@ -641,31 +635,48 @@
             },
 
             loadData() {
+                this.migrateOldData(); // Une seule migration au chargement
+                
                 if (database) {
-                    database.ref('edt_data').on('value', (snapshot) => { this.syncData(snapshot.val()); }, (e) => { this.syncData(JSON.parse(localStorage.getItem('edt_data_v27'))); });
+                    database.ref('edt_data').on('value', (snapshot) => { 
+                        this.syncData(snapshot.val()); 
+                    }, (e) => { 
+                        this.syncData(JSON.parse(localStorage.getItem('edt_data_v28'))); 
+                    });
                 } else {
-                    this.syncData(JSON.parse(localStorage.getItem('edt_data_v27')));
+                    this.syncData(JSON.parse(localStorage.getItem('edt_data_v28')));
                 }
             },
 
+            // Fonction séparée pour la migration afin de ne pas bloquer le RESET
+            migrateOldData() {
+                if (localStorage.getItem('edt_migrated_v28')) return; // Ne s'exécute qu'une seule fois
+
+                const oldVersions = ['edt_data_v27', 'edt_data_v26', 'edt_data_v25', 'edt_data_v24', 'edt_data_v23'];
+                for (let v of oldVersions) {
+                    const oldData = JSON.parse(localStorage.getItem(v));
+                    if (oldData && oldData.employees && oldData.employees.length > 0) {
+                        this.data = oldData; 
+                        this.saveData(); 
+                        break;
+                    }
+                }
+                localStorage.setItem('edt_migrated_v28', 'true');
+            },
+
             syncData(val) {
-                if (val) this.data = val;
-                if (!this.data) this.data = {};
+                if (val) {
+                    this.data = val;
+                } else {
+                    // Si val est null, c'est que la base a été intentionnellement vidée
+                    this.data = { employees: [], logs: [], hs: [], users: [], planning: {} };
+                }
+                
                 if (!this.data.employees) this.data.employees = [];
                 if (!this.data.logs) this.data.logs = [];
                 if (!this.data.hs) this.data.hs = [];
                 if (!this.data.users) this.data.users = [];
                 if (!this.data.planning) this.data.planning = {}; 
-
-                if (this.data.employees.length === 0) {
-                    const oldVersions = ['edt_data_v26', 'edt_data_v25', 'edt_data_v24', 'edt_data_v23', 'edt_data_v22', 'edt_data_v21'];
-                    for (let v of oldVersions) {
-                        const oldData = JSON.parse(localStorage.getItem(v));
-                        if (oldData && oldData.employees && oldData.employees.length > 0) {
-                            this.data = oldData; this.saveData(); break;
-                        }
-                    }
-                }
 
                 if (this.data.users.length === 0) {
                     this.data.users = [{ email: 'elahssen.malek@gmail.com', password: '123456', role: 'superadmin' }, { email: 'seyma.elahsen@ert.tn', password: '123456', role: 'superadmin' }];
@@ -686,36 +697,40 @@
             },
 
             saveData() {
-                localStorage.setItem('edt_data_v27', JSON.stringify(this.data));
+                localStorage.setItem('edt_data_v28', JSON.stringify(this.data));
                 if (database) { try { database.ref('edt_data').set(this.data); } catch (e) {} }
             },
             
-            // NOUVEAU: Reset Global (Danger)
             resetGlobalData() {
                 if(confirm("DANGER : Êtes-vous ABSOLUMENT SÛR de vouloir effacer TOUS les employés, TOUS les plannings et TOUT l'historique ? Cette action est irréversible.")) {
-                    this.data.employees = []; this.data.logs = []; this.data.hs = []; this.data.planning = {};
+                    this.data.employees = []; 
+                    this.data.logs = []; 
+                    this.data.hs = []; 
+                    this.data.planning = {};
                     this.saveData();
                     this.renderAll();
                     alert("Base de données entièrement effacée (comptes admin conservés).");
                 }
             },
             
-            // NOUVEAU: Reset Individuel
             resetIndividualData() {
                 const empId = document.getElementById('resetEmpId').value;
                 if(!empId) return;
                 const emp = this.data.employees.find(e => String(e.id) === String(empId));
+                if(!emp) return;
                 
-                if(confirm(`Voulez-vous effacer tout l'historique et les pointages de ${emp.name} ?`)) {
+                if(confirm(`Voulez-vous effacer tout l'historique, le planning et les pointages de ${emp.name} ?`)) {
                     this.data.logs = this.data.logs.filter(l => String(l.empId) !== String(empId));
                     this.data.hs = this.data.hs.filter(h => String(h.empId) !== String(empId));
+                    for (let key in this.data.planning) {
+                        if (key.startsWith(empId + '_')) { delete this.data.planning[key]; }
+                    }
                     this.saveData();
                     this.renderAll();
                     alert(`Historique de ${emp.name} effacé avec succès.`);
                 }
             },
             
-            // NOUVEAU : Log Rétroactif manuel
             saveRetroLog() {
                 const empId = document.getElementById('retroEmpId').value;
                 const action = document.getElementById('retroAction').value;
@@ -754,13 +769,16 @@
             },
             
             renderSuperAdminPanel() {
-                document.getElementById('nav-superadmin').classList.remove('hidden');
-                document.getElementById('superAdminPanel').classList.remove('hidden');
+                const navBtn = document.getElementById('nav-superadmin');
+                const panel = document.getElementById('superAdminPanel');
+                if (navBtn) navBtn.classList.remove('hidden');
+                if (panel) panel.classList.remove('hidden');
                 
-                // Peupler les selects des admins
                 const empOptions = this.data.employees.map(e => `<option value="${e.id}">${e.name} (${e.matricule})</option>`).join('');
-                document.getElementById('retroEmpId').innerHTML = empOptions;
-                document.getElementById('resetEmpId').innerHTML = empOptions;
+                const retroSelect = document.getElementById('retroEmpId');
+                const resetSelect = document.getElementById('resetEmpId');
+                if(retroSelect) retroSelect.innerHTML = empOptions;
+                if(resetSelect) resetSelect.innerHTML = empOptions;
                 
                 this.renderUsersList();
             },
@@ -836,7 +854,8 @@
                 document.getElementById('loginScreen').classList.add('hidden'); document.getElementById('mainApp').classList.remove('hidden');
                 document.getElementById('currentUserDisplay').textContent = this.currentUserEmail.split('@')[0];
                 document.getElementById('currentUserRoleDisplay').textContent = this.currentUserRole === 'superadmin' ? 'Super Administrateur' : 'Utilisateur autorisé';
-                this.renderAll(); this.switchTab('pointage');
+                this.renderAll(); 
+                this.switchTab('pointage');
                 
                 if (this.currentUserRole === 'superadmin') {
                     this.renderSuperAdminPanel();
@@ -855,12 +874,14 @@
                 if(activeNav) { activeNav.classList.remove('tab-inactive'); activeNav.classList.add('tab-active'); }
 
                 if (tabId === 'rapports') {
-                    this.renderChart();
-                    const container = document.getElementById('reportEmpCheckboxes');
-                    if (container && container.innerHTML.trim() === '') {
-                        this.renderReportCheckboxes(true);
-                    }
-                    this.updateReportView();
+                    setTimeout(() => {
+                        const container = document.getElementById('reportEmpCheckboxes');
+                        if (container && container.innerHTML.trim() === '') {
+                            this.renderReportCheckboxes(true);
+                        }
+                        this.updateReportView();
+                        this.renderChart();
+                    }, 50);
                 }
             },
             closeModals() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('active')); },
@@ -933,7 +954,7 @@
                 }
                 
                 this.saveData(); this.renderAll(); this.closeModals();
-                if(this.currentUserRole === 'superadmin') this.renderSuperAdminPanel(); // Rafraichir les selects superadmin
+                if(this.currentUserRole === 'superadmin') this.renderSuperAdminPanel();
             },
             deleteEmployee(id) {
                 if (confirm('Supprimer cet employé ?')) { const emp = this.data.employees.find(e => String(e.id) === String(id)); if(emp) this.addLog(id, emp.name, emp.site, 'suppression', 'Agent supprimé'); this.data.employees = this.data.employees.filter(e => String(e.id) !== String(id)); this.saveData(); this.renderAll(); if(this.currentUserRole === 'superadmin') this.renderSuperAdminPanel(); }
@@ -1118,19 +1139,13 @@
                 const img = new Image(); img.src = 'logo.png'; img.onload = () => drawPDF(img); img.onerror = () => drawPDF(null);
             },
 
-            // --- RAPPORTS : VERROUILLAGE CORRIGÉ ---
+            // --- RAPPORTS : VERROUILLAGE CORRIGE ---
             toggleAllReportCb(checked) { 
-                document.querySelectorAll('.report-emp-cb').forEach(cb => { cb.checked = checked; }); 
+                const checkboxes = document.querySelectorAll('.report-emp-cb');
+                checkboxes.forEach(cb => { cb.checked = checked; }); 
                 this.updateReportView(); 
             },
             
-            initializeReportSelection() {
-                const container = document.getElementById('reportEmpCheckboxes');
-                if (container && container.innerHTML.trim() === '') {
-                    this.renderReportCheckboxes(true);
-                }
-            },
-
             renderReportCheckboxes(forceCheckAll = false) {
                 const container = document.getElementById('reportEmpCheckboxes');
                 if(!container) return;
@@ -1138,7 +1153,7 @@
                 const checkboxes = document.querySelectorAll('.report-emp-cb');
                 let selectedIds = [];
                 
-                if (forceCheckAll || checkboxes.length === 0) {
+                if (forceCheckAll || (checkboxes.length === 0 && this.data.employees.length > 0)) {
                     selectedIds = this.data.employees.map(e => String(e.id));
                 } else {
                     checkboxes.forEach(cb => { if (cb.checked) selectedIds.push(cb.value); });
@@ -1151,8 +1166,6 @@
             },
             
             updateReportView() {
-                this.initializeReportSelection();
-                
                 const ctx = document.getElementById('hoursAnalysisChart'); 
                 if (!ctx) return;
 
@@ -1164,7 +1177,7 @@
                     document.getElementById('employeeDetailedStats').innerHTML = '<p class="text-sm text-gray-500 italic col-span-full">Aucun employé sélectionné.</p>';
                     if (this.hoursAnalysisChart) {
                         this.hoursAnalysisChart.destroy();
-                        this.hoursAnalysisChart = new Chart(ctx, { type: 'bar', data: { labels: [], datasets: [] } });
+                        this.hoursAnalysisChart = new Chart(ctx, { type: 'bar', data: { labels: [], datasets: [] }, options: { maintainAspectRatio: false } });
                     }
                     return;
                 }
@@ -1271,11 +1284,21 @@
 
             renderAll() {
                 this.renderPointageCards(); this.renderEmployeeTable(); this.renderPlanning(); this.renderHs(); this.renderStats(); this.renderActivityLog();
+                
+                const container = document.getElementById('reportEmpCheckboxes');
+                if(container && container.innerHTML.trim() === '') {
+                    this.renderReportCheckboxes(true); 
+                } else {
+                    this.renderReportCheckboxes(false);
+                }
+                
                 if(!document.getElementById('tab-rapports').classList.contains('hidden')) {
-                    this.updateReportView(); this.renderChart();
+                    this.updateReportView(); 
+                    this.renderChart();
                 }
             },
 
+            // --- ALERTE 12H ---
             renderPointageCards() {
                 const todayStr = new Date().toISOString().split('T')[0];
                 const filter = document.getElementById('siteFilter').value;
@@ -1482,7 +1505,6 @@
                     data: { 
                         labels: sites, 
                         datasets: [{ 
-                            // BUG CORRIGÉ : On lit le dailyPlan du jour, et non plus emp.site
                             data: sites.map(s => this.data.employees.filter(e => this.getDailyPlan(e.id, todayStr).site === s).length), 
                             backgroundColor: ['#002654', '#ED2939', '#e2e8f0'], borderWidth: 0 
                         }] 
